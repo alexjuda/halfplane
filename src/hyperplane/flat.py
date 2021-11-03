@@ -24,6 +24,7 @@ class AffineTransform:
         y = Ax + b
         z = Cy + d = C(Ax + b) + d = CAx + Cb + d = (CA)x + (Cb + d)
         """
+        # TODO: rename "inner" to "outer" because it's the other way round
         return AffineTransform(
             A=inner.A @ self.A,
             b=inner.A @ self.b + inner.b,
@@ -34,11 +35,21 @@ class AffineTransform:
         return AffineTransform(np.eye(2), np.zeros(2))
 
 
+class Shape(abc.ABC):
+    @abc.abstractmethod
+    def points(self) -> np.ndarray:
+        """Array of shape [2 x n_points], where:
+        - the 0 row are X coords
+        - the 1 row are Y coords
+        """
+        pass
+
+
 class Node(abc.ABC):
     @abc.abstractmethod
     def iter_shapes(
         self, transform: AffineTransform
-    ) -> t.Iterable[t.Tuple[AffineTransform, "Node"]]:
+    ) -> t.Iterable[t.Tuple[AffineTransform, Shape]]:
         pass
 
 
@@ -46,20 +57,31 @@ class Node(abc.ABC):
 
 
 @dataclass
-class Circle(Node):
+class Circle(Node, Shape):
     radius: Value
 
     def iter_shapes(self, transform):
         yield transform, self
 
+    # def points(self):
+    #     pass
+
 
 @dataclass
-class Rectangle(Node):
+class Rectangle(Node, Shape):
     width: Value
     height: Value
 
     def iter_shapes(self, transform):
         yield transform, self
+
+    def points(self):
+        return np.array(
+            [
+                [0, self.width, self.width, 0],
+                [0, 0, self.height, self.height],
+            ]
+        )
 
 
 # ---- transformations ----
