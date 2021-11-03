@@ -1,13 +1,45 @@
 import typing as t
-from abc import ABC
+import abc
 from dataclasses import dataclass
+
+import numpy as np
 
 
 Value = float
 
 
-class Node(ABC):
-    pass
+@dataclass
+class AffineTransform:
+    """
+    Source: https://en.wikipedia.org/wiki/Affine_transformation
+
+    y = Ax + b
+    """
+
+    A: np.ndarray
+    b: np.ndarray
+
+    def compose(self, inner: "AffineTransform") -> "AffineTransform":
+        """
+        y = Ax + b
+        z = Cy + d = C(Ax + b) + d = CAx + Cb + d = (CA)x + (Cb + d)
+        """
+        return AffineTransform(
+            A=inner.A @ self.A,
+            b=inner.A @ self.b + inner.b,
+        )
+
+    @classmethod
+    def identity(cls):
+        return AffineTransform(np.eye(2), np.zeros(2))
+
+
+class Node(abc.ABC):
+    @abc.abstractmethod
+    def iter_shapes(
+        self, transform: AffineTransform
+    ) -> t.Iterable[t.Tuple[AffineTransform, "Node"]]:
+        pass
 
 
 # ---- shapes ----
@@ -17,11 +49,17 @@ class Node(ABC):
 class Circle(Node):
     radius: Value
 
+    def iter_shapes(self, transform):
+        yield transform, self
+
 
 @dataclass
 class Rectangle(Node):
     width: Value
     height: Value
+
+    def iter_shapes(self, transform):
+        yield transform, self
 
 
 # ---- transformations ----
@@ -33,11 +71,31 @@ class Translation(Node):
     y: Value
     child: Node
 
+    def iter_shapes(self, transform: AffineTransform):
+        new_transform = transform.compose(
+            AffineTransform(np.eye(2), np.array([self.x, self.y]))
+        )
+        yield from self.child.iter_shapes(new_transform)
+
 
 @dataclass
 class Rotation(Node):
     radians: Value
     child: Node
+
+    def iter_shapes(self, transform):
+        new_transform = transform.compose(
+            AffineTransform(
+                np.array(
+                    [
+                        [np.cos(self.radians), -np.sin(self.radians)],
+                        [np.sin(self.radians), np.cos(self.radians)],
+                    ]
+                ),
+                np.zeros(2),
+            )
+        )
+        yield from self.child.iter_shapes(new_transform)
 
 
 @dataclass
@@ -45,6 +103,21 @@ class Scaling(Node):
     ratio_x: Value
     ratio_y: Value
     child: Node
+
+    def iter_shapes(self, transform):
+        new_transform = transform.compose(
+            AffineTransform(
+                np.array(
+                    [
+                        [self.ratio_x, 0],
+                        [0, self.ratio_y],
+                    ]
+                ),
+                np.zeros(2),
+            )
+        )
+
+        yield from self.child.iter_shapes(new_transform)
 
 
 # ---- grouping ----
@@ -54,6 +127,10 @@ class Scaling(Node):
 class Group(Node):
     children: t.Tuple[Node, ...]
 
+    def iter_shapes(self, transform):
+        for child in self.children:
+            yield from self.child.iter_shapes(transform)
+
 
 # ---- operators ----
 
@@ -62,12 +139,31 @@ class Group(Node):
 class Union(Node):
     operands: t.Tuple[Node, ...]
 
+    def iter_shapes(self, transform):
+        for operand in self.operands:
+            yield from self.child.iter_shapes(transform)
+
 
 @dataclass
 class Product(Node):
     operands: t.Tuple[Node, ...]
 
+    def iter_shapes(self, transform):
+        for operand in self.operands:
+            yield from self.child.iter_shapes(transform)
+
 
 @dataclass
 class Difference(Node):
     operands: t.Tuple[Node, ...]
+
+    def iter_shapes(self, transform):
+        for operand in self.operands:
+            yield from self.child.iter_shapes(transform)
+
+
+# ---- functions ----
+
+
+def iter_shapes(root: Node):
+    yield from root.iter_shapes(AffineTransform.identity())

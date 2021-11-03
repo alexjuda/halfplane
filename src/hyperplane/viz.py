@@ -5,7 +5,17 @@ import hyperplane.flat as hp
 
 
 def main():
-    solid = hp.Rectangle(width=3, height=4)
+    solid = hp.Rotation(
+        3.14 / 6,
+        hp.Translation(
+            -3,
+            -2,
+            hp.Rectangle(
+                3,
+                4,
+            ),
+        ),
+    )
 
     fig, ax = plt.subplots()
     ax.add_patch(
