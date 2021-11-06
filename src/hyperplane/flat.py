@@ -21,15 +21,40 @@ class AffineTransform:
     b: np.ndarray
 
     def compose(self, inner: "AffineTransform") -> "AffineTransform":
+        """Compose with another transform and return the merged one.
+        The result is the same as first applying `inner` and then `self` to the vector.
+        ```
+        y(x) = Ax + b  -- inner
+        z(x) = Cx + d  -- outer
+
+        z . y (x) = z(y(x))
+
+        z(y(x)) = Cy(x) + d = C(Ax + b) + d = CAx + Cb + d = (CA)x + (Cb + d)
+        ```
         """
-        y = Ax + b
-        z = Cy + d = C(Ax + b) + d = CAx + Cb + d = (CA)x + (Cb + d)
-        """
-        # TODO: rename "inner" to "outer" because it's the other way round
+        A = inner.A
+        b = inner.b
+        C = self.A
+        d = self.b
+
         return AffineTransform(
-            A=inner.A @ self.A,
-            b=inner.A @ self.b + inner.b,
+            A=C @ A,
+            b=(C @ b + d)
         )
+
+    def apply(self, v: np.ndarray) -> np.ndarray:
+        """Apply the transformation to a vector.
+
+        u = Av + b
+
+        Args:
+            v: array of shape [2]
+
+        Returns:
+            array of shape [2]
+        """
+        # TODO: make it work with set of vectors
+        return self.A @ v + self.b
 
     @classmethod
     def identity(cls):
