@@ -17,7 +17,9 @@ class AffineTransform:
     y = Ax + b
     """
 
+    # Shape: [2 x 2]
     A: np.ndarray
+    # Shape: [2]
     b: np.ndarray
 
     def compose(self, inner: "AffineTransform") -> "AffineTransform":
@@ -48,13 +50,12 @@ class AffineTransform:
         u = Av + b
 
         Args:
-            v: array of shape [2]
+            v: array of shape [2 x batch_size]
 
         Returns:
-            array of shape [2]
+            array of shape [2 x batch_size]
         """
-        # TODO: make it work with set of vectors
-        return self.A @ v + self.b
+        return self.A @ v + self.b.reshape(-1, 1)
 
     @classmethod
     def identity(cls):

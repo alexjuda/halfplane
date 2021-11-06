@@ -8,7 +8,7 @@ from hyperplane import flat
 
 class TestAffineTransform:
     @given(
-        vector=arrays(dtype=int, shape=2),
+        vector=arrays(dtype=int, shape=(2, 1)),
         A1=arrays(dtype=int, shape=(2, 2), unique=True),
         b1=arrays(dtype=int, shape=2),
         A2=arrays(dtype=int, shape=(2, 2), unique=True),
