@@ -6,9 +6,10 @@ import numpy as np
 
 
 Value = float
+model = dataclass(frozen=True)
 
 
-@dataclass
+@model
 class AffineTransform:
     """
     Source: https://en.wikipedia.org/wiki/Affine_transformation
@@ -56,7 +57,7 @@ class Node(abc.ABC):
 # ---- shapes ----
 
 
-@dataclass
+@model
 class Circle(Node, Shape):
     radius: Value
 
@@ -67,7 +68,7 @@ class Circle(Node, Shape):
     #     pass
 
 
-@dataclass
+@model
 class Rectangle(Node, Shape):
     width: Value
     height: Value
@@ -87,7 +88,7 @@ class Rectangle(Node, Shape):
 # ---- transformations ----
 
 
-@dataclass
+@model
 class Translation(Node):
     x: Value
     y: Value
@@ -100,27 +101,25 @@ class Translation(Node):
         yield from self.child.iter_shapes(new_transform)
 
 
-@dataclass
+@model
 class Rotation(Node):
     radians: Value
     child: Node
 
     def iter_shapes(self, transform):
-        new_transform = transform.compose(
-            AffineTransform(
-                np.array(
-                    [
-                        [np.cos(self.radians), -np.sin(self.radians)],
-                        [np.sin(self.radians), np.cos(self.radians)],
-                    ]
-                ),
-                np.zeros(2),
-            )
-        )
+        new_transform = AffineTransform(
+            np.array(
+                [
+                    [np.cos(self.radians), -np.sin(self.radians)],
+                    [np.sin(self.radians), np.cos(self.radians)],
+                ]
+            ),
+            np.zeros(2),
+        ).compose(transform)
         yield from self.child.iter_shapes(new_transform)
 
 
-@dataclass
+@model
 class Scaling(Node):
     ratio_x: Value
     ratio_y: Value
@@ -145,19 +144,19 @@ class Scaling(Node):
 # ---- grouping ----
 
 
-@dataclass
+@model
 class Group(Node):
-    children: t.Tuple[Node, ...]
+    children: t.List[Node]
 
     def iter_shapes(self, transform):
         for child in self.children:
-            yield from self.child.iter_shapes(transform)
+            yield from child.iter_shapes(transform)
 
 
 # ---- operators ----
 
 
-@dataclass
+@model
 class Union(Node):
     operands: t.Tuple[Node, ...]
 
@@ -166,7 +165,7 @@ class Union(Node):
             yield from self.child.iter_shapes(transform)
 
 
-@dataclass
+@model
 class Product(Node):
     operands: t.Tuple[Node, ...]
 
@@ -175,7 +174,7 @@ class Product(Node):
             yield from self.child.iter_shapes(transform)
 
 
-@dataclass
+@model
 class Difference(Node):
     operands: t.Tuple[Node, ...]
 
