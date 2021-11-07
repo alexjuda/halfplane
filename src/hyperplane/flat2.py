@@ -56,6 +56,7 @@ class Triangle:
 
     @property
     def vertices(self) -> np.ndarray:
+        """Array of shape [n x 2]"""
         return line_intersections(hp.line for hp in self.halfplanes)
 
 
