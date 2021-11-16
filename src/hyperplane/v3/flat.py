@@ -55,9 +55,17 @@ def segments_intersect(s1: Segment, s2: Segment) -> bool:
     dy13 = s1.p1.y - s2.p1.y
     dy34 = s2.p1.y - s2.p2.y
 
+    t_numerator = dx13 * dy34 - dy13 * dx34
+    u_numerator = dx13 * dy12 - dy12 * dx12
+
     denominator = dx12 * dy34 - dy12 * dx34
 
-    t = (dx13 * dy34 - dy13 * dx34) / denominator
-    u = (dx13 * dy12 - dy12 * dx12) / denominator
+    if denominator == 0:
+        # This probably means the segments are collinear
+        # TODO: detect if segments overlap
+        return False
+
+    t = t_numerator / denominator
+    u = u_numerator / denominator
 
     return 0 <= t <= 1 and 0 <= u <= 1
