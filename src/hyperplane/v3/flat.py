@@ -1,3 +1,4 @@
+import abc
 import typing as t
 from hyperplane.core import Coord
 
@@ -69,3 +70,128 @@ def segments_intersect(s1: Segment, s2: Segment) -> bool:
     u = u_numerator / denominator
 
     return 0 <= t <= 1 and 0 <= u <= 1
+
+
+# class HasSegments:
+#     @abc.abstractproperty
+#     def segments(self) -> t.Sequence[Segment]:
+#         ...
+
+
+# class ContainsSegmentMixin(HasSegments):
+#     def contains_segment(self, segment: Segment) -> bool:
+#         pass
+#         # self.segments
+
+
+class Container(abc.ABC):
+    @abc.abstractmethod
+    def contains_point(self, point: Point) -> bool:
+        pass
+
+
+class Polygon(Container):
+    def __init__(self, vertices: t.Sequence[Point]):
+        """
+        Args:
+            points: sequence of points. Order matters!
+        """
+        if len(vertices) < 3:
+            raise ValueError(f"Polygon needs at least 3 vertices. Got: {vertices}")
+
+        self._vertices = vertices
+
+    @property
+    def segments(self):
+        return [
+            *(
+                Segment(self._vertices[i], self._vertices[i + 1])
+                for i in range(len(self._vertices) - 1)
+            ),
+            Segment(self._vertices[-1], self._vertices[0]),
+        ]
+
+    def contains_point(self, point: Point):
+        pass
+
+
+class Halfplane(Container):
+    def __init__(self, a: Coord, b: Coord, c: Coord):
+        """
+        Representation of a halfplane using an inequality based on Carthesian plane
+        coordinates:
+            L = {(x, y) | ax + by = c}
+
+        The inequality is `ax + by ≤ c`
+        """
+        self._a = a
+        self._b = b
+        self._c = c
+
+    def contains_point(self, point: Point) -> bool:
+        return self._a * point.x + self._b * point.y <= self._c
+
+    @classmethod
+    def from_segment(cls, segment: Segment) -> "Halfplane":
+        """Treats a segment like it was a line. Figures out the inequality direction
+        based on the segment direction.
+        """
+        # ax1 + by1 = c
+        # ax2 + by2 = c
+        # ax + by = c
+        # by = ax + c
+        # y = ax/b + c/b
+        # m = (y2 - y1) / (x2 - x1)
+        # m = a/b
+
+        if segment.p1.x == segment.p2.x:
+            # vertical line
+            # b = 0
+            # ax ≤ c
+            # a = 1 | a = -1
+            # x ≤ c | x ≤ -c
+            if segment.p1.y < segment.p2.y:
+                # x ≥ x1 = x2
+                # -x + 0y ≤ -x1 = - x2
+                return Halfplane(-1, 0, -segment.p1.x)
+            else:
+                # x ≤ x1 = x2
+                # x + 0y ≤ x1 = x2
+                return Halfplane(1, 0, segment.p1.x)
+
+        # ax + by ≤ c
+        # by ≤ ax + c
+        # b = 1
+        # y ≤ ax + c
+        # y - ax ≤ c
+        m = (segment.p2.y - segment.p1.y) / (segment.p2.x - segment.p1.x)
+        y0 = segment.p1.y - m * segment.p1.x
+        return Halfplane(m, 1, y0)
+
+
+def triangle(p1: Point, p2: Point, p3: Point) -> Polygon:
+    # We need to figure out the segment direction.
+    # 1. Start with p1
+    # 2. Select p2 or p3 as the next one
+    # 3. Add the remaining one
+    # 4. Go back to p1
+    #
+    # Scenario 1. Valid sequence: ABC
+    #
+    #   B
+    #            C
+    #
+    #     A
+    #
+    #
+    # Scenario 1. Valid sequence: ACB
+    #
+    #   C
+    #            B
+    #
+    #     A
+    #
+    points = [p1]
+
+    # middl
+    return points
