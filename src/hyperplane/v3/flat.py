@@ -166,7 +166,17 @@ class Halfplane(Container):
         # y - ax ≤ c
         m = (segment.p2.y - segment.p1.y) / (segment.p2.x - segment.p1.x)
         y0 = segment.p1.y - m * segment.p1.x
-        return Halfplane(m, 1, y0)
+
+        # Motivation: we're looking at the diff vector to determine the sign of the
+        # inequality. If the diff vector points more to the left than to the right then:
+        # - the segment normal will point upwards
+        # - the inequality is y ≥ mx + y0
+        # - we have to invert the coefficients
+        dx = segment.p2.x - segment.p1.x
+        if dx < 0:
+            return Halfplane(m, -1, -y0)
+        else:
+            return Halfplane(m, 1, y0)
 
 
 def triangle(p1: Point, p2: Point, p3: Point) -> Polygon:
