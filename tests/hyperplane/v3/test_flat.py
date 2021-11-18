@@ -72,8 +72,41 @@ class TestSegmentsIntersect:
 
 
 class TestHalfplane:
-    def test_from_segment(self):
-        segment = flat.Segment(flat.Point(0, 1), flat.Point(0, 4))
-        point = flat.Point(1, 2)
+    POSITIVE_EXAMPLES = [
+        # --- vertical line ---
+        (flat.Segment(flat.Point(0, 1), flat.Point(0, 4)), flat.Point(1, 2)),
+        # point on segment
+        (flat.Segment(flat.Point(0, 1), flat.Point(0, 4)), flat.Point(0, 2)),
+        # point outside the segment boundary
+        (flat.Segment(flat.Point(0, 1), flat.Point(0, 4)), flat.Point(1, 6)),
+        (flat.Segment(flat.Point(0, 1), flat.Point(0, 4)), flat.Point(1, -1)),
+        # segment vertices
+        (flat.Segment(flat.Point(0, 1), flat.Point(0, 4)), flat.Point(0, 1)),
+        (flat.Segment(flat.Point(0, 1), flat.Point(0, 4)), flat.Point(0, 4)),
+        # --- horizontal line ---
+        (flat.Segment(flat.Point(1, 1), flat.Point(4, 1)), flat.Point(2, -2)),
+        # point on segment
+        (flat.Segment(flat.Point(1, 1), flat.Point(4, 1)), flat.Point(2, 1)),
+    ]
+
+    @pytest.mark.parametrize("segment,point", POSITIVE_EXAMPLES)
+    def test_positive(self, segment, point):
         hp = flat.Halfplane.from_segment(segment)
+        assert hp.contains_point(point)
+
+    NEGATIVE_EXAMPLES = [
+        # --- vertical line ---
+        (flat.Segment(flat.Point(0, 1), flat.Point(0, 4)), flat.Point(-1, 2)),
+        # --- horizontal line ---
+        (flat.Segment(flat.Point(1, 1), flat.Point(4, 1)), flat.Point(2, 2)),
+    ]
+
+    @pytest.mark.parametrize("segment,point", NEGATIVE_EXAMPLES)
+    def test_negative(self, segment, point):
+        hp = flat.Halfplane.from_segment(segment)
+        assert not hp.contains_point(point)
+
+    @pytest.mark.parametrize("segment,point", NEGATIVE_EXAMPLES)
+    def test_negative_is_positive_after_flipping(self, segment, point):
+        hp = flat.Halfplane.from_segment(flat.Segment(segment.p2, segment.p1))
         assert hp.contains_point(point)
