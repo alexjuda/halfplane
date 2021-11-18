@@ -97,8 +97,17 @@ class TestHalfplane:
     NEGATIVE_EXAMPLES = [
         # --- vertical line ---
         (flat.Segment(flat.Point(0, 1), flat.Point(0, 4)), flat.Point(-1, 2)),
+        (flat.Segment(flat.Point(0, 1), flat.Point(0, 4)), flat.Point(-1, -3)),
+        (flat.Segment(flat.Point(0, 1), flat.Point(0, 4)), flat.Point(-1, 7)),
         # --- horizontal line ---
         (flat.Segment(flat.Point(1, 1), flat.Point(4, 1)), flat.Point(2, 2)),
+        (flat.Segment(flat.Point(1, 1), flat.Point(4, 1)), flat.Point(0, 2)),
+        (flat.Segment(flat.Point(1, 1), flat.Point(4, 1)), flat.Point(7, 2)),
+        # --- top-right line ---
+        (flat.Segment(flat.Point(1, 1), flat.Point(4, 5)), flat.Point(0, 1)),
+        (flat.Segment(flat.Point(1, 1), flat.Point(4, 5)), flat.Point(0, 0)),
+        # --- top-left line ---
+        (flat.Segment(flat.Point(6, 1), flat.Point(1, 5.5)), flat.Point(-0.01, 0)),
     ]
 
     @pytest.mark.parametrize("segment,point", NEGATIVE_EXAMPLES)
