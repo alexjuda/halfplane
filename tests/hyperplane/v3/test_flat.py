@@ -127,7 +127,6 @@ class TestHalfplane:
 
 
 class TestTriangle:
-    @pytest.mark.skip("Needs fixing in halfplane")
     @pytest.mark.parametrize(
         "points",
         [
