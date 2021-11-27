@@ -87,6 +87,8 @@ class TestHalfplane:
         (flat.Segment(flat.Point(1, 1), flat.Point(4, 1)), flat.Point(2, -2)),
         # point on segment
         (flat.Segment(flat.Point(1, 1), flat.Point(4, 1)), flat.Point(2, 1)),
+        # --- problematic samples ---
+        (flat.Segment(flat.Point(0, 0), flat.Point(5, 5)), flat.Point(10, 0)),
     ]
 
     @pytest.mark.parametrize("segment,point", POSITIVE_EXAMPLES)
@@ -119,3 +121,22 @@ class TestHalfplane:
     def test_negative_is_positive_after_flipping(self, segment, point):
         hp = flat.Halfplane.from_segment(flat.Segment(segment.p2, segment.p1))
         assert hp.contains_point(point)
+
+
+class TestTriangle:
+    @pytest.mark.skip("Needs fixing in halfplane")
+    @pytest.mark.parametrize(
+        "points",
+        [
+            [
+                flat.Point(0, 0),
+                flat.Point(10, 0),
+                flat.Point(5, 5),
+            ]
+        ],
+    )
+    def test_point_sequence_invariance(self, points):
+        p1, p2, p3 = points
+        t1 = flat.triangle(p1, p2, p3)
+        t2 = flat.triangle(p1, p3, p2)
+        assert t1 == t2

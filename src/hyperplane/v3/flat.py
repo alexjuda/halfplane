@@ -197,7 +197,12 @@ def triangle(p1: Point, p2: Point, p3: Point) -> Polygon:
     #
     #     A
     #
-    points = [p1]
 
-    # middl
-    return points
+    # Start with any point, e.g. p1. Decide whether to add p2 or p3. To do that we can
+    # get the AB directed segment and check if C lies on the halfplane spanned by the
+    # segment.
+    halfplane = Halfplane.from_segment(Segment(p1, p2))
+    if halfplane.contains_point(p3):
+        return Polygon([p1, p2, p3])
+    else:
+        return Polygon([p1, p3, p2])
