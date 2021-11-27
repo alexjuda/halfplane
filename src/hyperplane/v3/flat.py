@@ -172,7 +172,7 @@ class Halfplane(Container):
         if dx < 0:
             return Halfplane(m, -1, -y0)
         else:
-            return Halfplane(m, 1, y0)
+            return Halfplane(-m, 1, y0)
 
 
 def triangle(p1: Point, p2: Point, p3: Point) -> Polygon:

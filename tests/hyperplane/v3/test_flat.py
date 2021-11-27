@@ -88,6 +88,9 @@ class TestHalfplane:
         # point on segment
         (flat.Segment(flat.Point(1, 1), flat.Point(4, 1)), flat.Point(2, 1)),
         # --- problematic samples ---
+        #     B
+        #  A     C
+        # hp(AB) -> y <= x -> -x + y <= 0
         (flat.Segment(flat.Point(0, 0), flat.Point(5, 5)), flat.Point(10, 0)),
     ]
 
