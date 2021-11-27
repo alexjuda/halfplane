@@ -1,5 +1,6 @@
 import abc
 import typing as t
+from dataclasses import dataclass
 from hyperplane.core import Coord
 
 
@@ -90,46 +91,41 @@ class Container(abc.ABC):
         pass
 
 
+@dataclass(frozen=True)
 class Polygon(Container):
-    def __init__(self, vertices: t.Sequence[Point]):
-        """
-        Args:
-            points: sequence of points. Order matters!
-        """
-        if len(vertices) < 3:
-            raise ValueError(f"Polygon needs at least 3 vertices. Got: {vertices}")
+    vertices: t.Sequence[Point]
 
-        self._vertices = vertices
+    # TODO: validate sequence length > 2
 
     @property
     def segments(self):
         return [
             *(
-                Segment(self._vertices[i], self._vertices[i + 1])
-                for i in range(len(self._vertices) - 1)
+                Segment(self.vertices[i], self.vertices[i + 1])
+                for i in range(len(self.vertices) - 1)
             ),
-            Segment(self._vertices[-1], self._vertices[0]),
+            Segment(self.vertices[-1], self.vertices[0]),
         ]
 
     def contains_point(self, point: Point):
         pass
 
 
+@dataclass(frozen=True)
 class Halfplane(Container):
-    def __init__(self, a: Coord, b: Coord, c: Coord):
-        """
-        Representation of a halfplane using an inequality based on Carthesian plane
-        coordinates:
-            L = {(x, y) | ax + by = c}
+    """
+    Representation of a halfplane using an inequality based on Carthesian plane
+    coordinates:
+        L = {(x, y) | ax + by = c}
 
-        The inequality is `ax + by ≤ c`
-        """
-        self._a = a
-        self._b = b
-        self._c = c
+    The inequality is `ax + by ≤ c`
+    """
+    a: Coord
+    b: Coord
+    c: Coord
 
     def contains_point(self, point: Point) -> bool:
-        return self._a * point.x + self._b * point.y <= self._c
+        return self.a * point.x + self.b * point.y <= self.c
 
     @classmethod
     def from_segment(cls, segment: Segment) -> "Halfplane":
