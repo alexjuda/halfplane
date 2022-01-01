@@ -1,4 +1,6 @@
 import functools
+import math
+import typing as t
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,6 +21,18 @@ def _plot_hs(hs, ax: plt.Axes):
     raise NotImplementedError()
 
 
+def _rotate_vector(x: float, y: float, degrees) -> t.Tuple[float, float]:
+    # Rotation matrix is:
+    # [[ cos(t), -sin(t) ],
+    #  [ sin(t),  cos(t) ]]
+
+    angle = math.radians(degrees)
+    new_x = math.cos(angle) * x - math.sin(angle) * y
+    new_y = math.sin(angle) * x + math.cos(angle) * y
+
+    return new_x, new_y
+
+
 @_plot_hs.register
 def _plot_hp(hp: Hp, ax: plt.Axes):
     ax.plot(
@@ -26,6 +40,7 @@ def _plot_hp(hp: Hp, ax: plt.Axes):
         [hp[0][1], hp[1][1]],
         linestyle=":",
     )
+    _plot_hs_arrow(hp, ax, -90)
 
 
 @_plot_hs.register
@@ -33,6 +48,21 @@ def _plot_hpc(hpc: Hpc, ax: plt.Axes):
     ax.plot(
         [hpc[0][0], hpc[1][0]],
         [hpc[0][1], hpc[1][1]],
+    )
+    _plot_hs_arrow(hpc, ax, 90)
+
+
+def _plot_hs_arrow(hs: Hs, ax: plt.Axes, angle):
+    p1, p2 = [p.position for p in hs]
+
+    delta = p2 - p1
+    center = (p1 + p2) / 2
+    delta_normalized = delta / np.linalg.norm(delta)
+
+    ax.arrow(
+        *center[:2],
+        *_rotate_vector(*delta_normalized[:2], angle),
+        width=0.1,
     )
 
 
