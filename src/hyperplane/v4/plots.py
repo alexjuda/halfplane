@@ -68,12 +68,6 @@ def _plot_hs_arrow(hs: Hs, ax: plt.Axes, angle, color: str):
 
 
 def main():
-    # hs = Hp(Pt(3, 5), Pt(9, 5))
-    # hs = Hp(Pt(1, 1), Pt(4, 1))
-    # hs = Hp(Pt(1, 6), Pt(4, 6))
-    # hs = Hp(Pt(1, 6), Pt(8, 8))
-    # hs = Hpc(Pt(1, 6), Pt(8, 8))
-
     esum = Esum(
         {
             frozenset(
@@ -105,7 +99,13 @@ def main():
 
     fig, ax = plt.subplots()
 
-    ax.imshow(_pixel_mask(esum, range(20), range(20)), origin="lower")
+    mask = _pixel_mask(esum, range(20), range(20))
+
+    ones_ys, ones_xs = np.where(mask)
+    zeros_ys, zeros_xs = np.where(~mask)
+
+    ax.scatter(zeros_xs, zeros_ys, alpha=0.1)
+    ax.scatter(ones_xs, ones_ys)
 
     for term in esum.terms:
         for hs in term:
