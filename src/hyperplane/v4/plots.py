@@ -35,24 +35,24 @@ def _rotate_vector(x: float, y: float, degrees) -> t.Tuple[float, float]:
 
 @_plot_hs.register
 def _plot_hp(hp: Hp, ax: plt.Axes):
-    ax.plot(
+    lines = ax.plot(
         [hp[0][0], hp[1][0]],
         [hp[0][1], hp[1][1]],
         linestyle=":",
     )
-    _plot_hs_arrow(hp, ax, -90)
+    _plot_hs_arrow(hp, ax, angle=-90, color=lines[0].get_color())
 
 
 @_plot_hs.register
 def _plot_hpc(hpc: Hpc, ax: plt.Axes):
-    ax.plot(
+    lines = ax.plot(
         [hpc[0][0], hpc[1][0]],
         [hpc[0][1], hpc[1][1]],
     )
-    _plot_hs_arrow(hpc, ax, 90)
+    _plot_hs_arrow(hpc, ax, angle=90, color=lines[0].get_color())
 
 
-def _plot_hs_arrow(hs: Hs, ax: plt.Axes, angle):
+def _plot_hs_arrow(hs: Hs, ax: plt.Axes, angle, color: str):
     p1, p2 = [p.position for p in hs]
 
     delta = p2 - p1
@@ -63,6 +63,7 @@ def _plot_hs_arrow(hs: Hs, ax: plt.Axes, angle):
         *center[:2],
         *_rotate_vector(*delta_normalized[:2], angle),
         width=0.1,
+        color=color,
     )
 
 
