@@ -1,4 +1,5 @@
 import typing as t
+import itertools
 
 import numpy as np
 
@@ -19,7 +20,7 @@ from hyperplane.core import Coord
 # - [x] merge two Esum with intersection
 # - [x] hP conjugate
 # - [x] hPC conjugate
-# - [ ] Esum conjugate
+# - [x] Esum conjugate
 # - [ ] select intersecting segments
 
 # Plotting:
@@ -84,10 +85,18 @@ def _z_factor(half_space: Hs, point: Pt) -> float:
     return v_cross[-1]
 
 
+# A group of intersecting halfspaces.
 Term = t.Set[Hs]
 
 
 class Esum(t.NamedTuple):
+    """Expression sum. Basic shape representation.
+
+    Uses two-level sets of halfspaces. The outer set is considered a union of
+    terms. The inner set (AKA a term) is considered an intersection of
+    halfspaces.
+    """
+
     terms: t.Set[Term]
 
     def union(self, other: "Esum") -> "Esum":
@@ -100,3 +109,22 @@ class Esum(t.NamedTuple):
                 new_terms.append(self_term ^ other_term)
 
         return Esum(frozenset(new_terms))
+
+    @property
+    def conjugate(self) -> "Esum":
+        # I think the general pattern is like this:
+        # 1. Start with Esum
+        # 2. Generate Carthesian product of items in terms. Each generated
+        #     tuple will be a term in the output Esum.
+        # 3. Negate each item in each term.
+        conjugate_terms = []
+        for product_term in itertools.product(*self.terms):
+            conjugate_term = []
+            for hs in product_term:
+                conjugate_term.append(hs.conjugate)
+
+            # Avoid empty inner sets
+            if len(conjugate_term) > 0:
+                conjugate_terms.append(frozenset(conjugate_term))
+
+        return Esum(frozenset(conjugate_terms))
