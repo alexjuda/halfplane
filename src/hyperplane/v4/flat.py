@@ -9,14 +9,14 @@ from hyperplane.core import Coord
 # - [x] pt
 # - [x] hP
 # - [x] hPC
-# - [ ] Esum
+# - [x] Esum
 # - [ ] segment
 
 # Operations needed:
 # - [x] hP contains pt?
 # - [x] hPC contains pt?
-# - [ ] merge two Esum with union
-# - [ ] merge two Esum with intersection
+# - [x] merge two Esum with union
+# - [x] merge two Esum with intersection
 # - [ ] hP conjugate
 # - [ ] hPC conjugate
 # - [ ] Esum conjugate
@@ -37,6 +37,10 @@ class Pt(t.NamedTuple):
 
 
 class Hp(t.NamedTuple):
+    """Half plane, where the boundary is a line that crosses p1 & p1. Doesn't
+    include the boundary itself. Contains all points "on the left" of the
+    P1->P2 vector.
+    """
     p1: Pt
     p2: Pt
 
@@ -45,6 +49,9 @@ class Hp(t.NamedTuple):
 
 
 class Hpc(t.NamedTuple):
+    """Half plane, where the boundary is a line that crosses p1 & p1. Includes
+    the boundary. Contains all points "on the right" of the P1->P2 vector.
+    """
     p1: Pt
     p2: Pt
 
@@ -65,3 +72,21 @@ def _z_factor(half_space: Hs, point: Pt) -> float:
     v_cross = np.cross(v_hs, v_test)
 
     return v_cross[-1]
+
+
+Term = t.Set[Hs]
+
+
+class Esum(t.NamedTuple):
+    terms: t.Set[Term]
+
+    def union(self, other: "Esum") -> "Esum":
+        return Esum(self.terms | other.terms)
+
+    def intersection(self, other: "Esum") -> "Esum":
+        new_terms = []
+        for self_term in self.terms:
+            for other_term in other.terms:
+                new_terms.append(self_term ^ other_term)
+
+        return Esum(frozenset(new_terms))
