@@ -110,6 +110,9 @@ class Esum(t.NamedTuple):
 
         return Esum(frozenset(new_terms))
 
+    def contains(self, point: Pt) -> bool:
+        return any(all(hs.contains(point) for hs in term) for term in self.terms)
+
     @property
     def conjugate(self) -> "Esum":
         # I think the general pattern is like this:
