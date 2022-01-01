@@ -2,6 +2,10 @@ from hyperplane.v4.flat import Pt, Hp, Hpc, Esum
 import pytest
 
 
+def _translate_point(pt: Pt, dx, dy):
+    return Pt(pt[0] + dx, pt[1] + dy)
+
+
 class TestHSContainsPt:
     HP_POINT_EXAMPLES = [
         # --- vertical line ---
@@ -71,6 +75,21 @@ class TestHSContainsPt:
     def test_hpc_conjugate_flips_content(self, p1, p2, tested_point):
         hpc = Hp(p1, p2)
         assert hpc.contains(tested_point) != hpc.conjugate.contains(tested_point)
+
+    @pytest.mark.parametrize(
+        "p1,p2,tested_point", [*HP_POINT_EXAMPLES, *HPC_POINT_EXAMPLES]
+    )
+    @pytest.mark.parametrize("dx", [0, 10, -14])
+    @pytest.mark.parametrize("dy", [0, 12, -25])
+    @pytest.mark.parametrize("hs_class", [Hp, Hpc])
+    def test_translation_invariance(self, hs_class, p1, p2, tested_point, dx, dy):
+        original_contains = hs_class(p1, p2).contains(tested_point)
+        translated_contains = hs_class(
+            _translate_point(p1, dx, dy),
+            _translate_point(p2, dx, dy),
+        ).contains(_translate_point(tested_point, dx, dy))
+
+        assert original_contains == translated_contains
 
 
 class TestMergingEsum:

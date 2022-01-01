@@ -39,7 +39,7 @@ class Pt(t.NamedTuple):
 
 class Hp(t.NamedTuple):
     """Half plane, where the boundary is a line that crosses p1 & p1. Doesn't
-    include the boundary itself. Contains all points "on the left" of the
+    include the boundary itself. Contains all points "on the right" of the
     P1->P2 vector.
     """
 
@@ -56,7 +56,7 @@ class Hp(t.NamedTuple):
 
 class Hpc(t.NamedTuple):
     """Half plane, where the boundary is a line that crosses p1 & p1. Includes
-    the boundary. Contains all points "on the right" of the P1->P2 vector.
+    the boundary. Contains all points "on the left" of the P1->P2 vector.
     """
 
     p1: Pt
@@ -79,7 +79,7 @@ def _z_factor(half_space: Hs, point: Pt) -> float:
     """
     p1, p2 = [p.position for p in half_space]
     v_hs = p2 - p1
-    v_test = point.position
+    v_test = point.position - p1
     v_cross = np.cross(v_hs, v_test)
 
     return v_cross[-1]
