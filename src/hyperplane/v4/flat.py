@@ -17,8 +17,8 @@ from hyperplane.core import Coord
 # - [x] hPC contains pt?
 # - [x] merge two Esum with union
 # - [x] merge two Esum with intersection
-# - [ ] hP conjugate
-# - [ ] hPC conjugate
+# - [x] hP conjugate
+# - [x] hPC conjugate
 # - [ ] Esum conjugate
 # - [ ] select intersecting segments
 
@@ -41,22 +41,32 @@ class Hp(t.NamedTuple):
     include the boundary itself. Contains all points "on the left" of the
     P1->P2 vector.
     """
+
     p1: Pt
     p2: Pt
 
     def contains(self, point: Pt) -> bool:
         return _z_factor(self, point) < 0
 
+    @property
+    def conjugate(self) -> "Hpc":
+        return Hpc(*self)
+
 
 class Hpc(t.NamedTuple):
     """Half plane, where the boundary is a line that crosses p1 & p1. Includes
     the boundary. Contains all points "on the right" of the P1->P2 vector.
     """
+
     p1: Pt
     p2: Pt
 
     def contains(self, point: Pt) -> bool:
         return _z_factor(self, point) >= 0
+
+    @property
+    def conjugate(self) -> Hp:
+        return Hp(*self)
 
 
 Hs = t.Union[Hp, Hpc]

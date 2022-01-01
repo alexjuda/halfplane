@@ -3,7 +3,7 @@ import pytest
 
 
 class TestHSContainsPt:
-    HP_EXAMPLES = [
+    HP_POINT_EXAMPLES = [
         # --- vertical line ---
         (Pt(0, 1), Pt(0, 4), Pt(1, 2)),
         # point outside the segment boundary
@@ -20,7 +20,7 @@ class TestHSContainsPt:
         (Pt(0, 0), Pt(5, 5), Pt(10, 0)),
     ]
 
-    HPC_EXAMPLES = [
+    HPC_POINT_EXAMPLES = [
         # --- vertical line ---
         (Pt(0, 1), Pt(0, 4), Pt(-1, 2)),
         (Pt(0, 1), Pt(0, 4), Pt(-1, -3)),
@@ -41,20 +41,41 @@ class TestHSContainsPt:
         (Pt(6, 1), Pt(1, 5.5), Pt(-0.01, 0)),
     ]
 
-    @pytest.mark.parametrize("p1,p2,tested_point", HP_EXAMPLES)
+    @pytest.mark.parametrize("p1,p2,tested_point", HP_POINT_EXAMPLES)
     def test_hp_contains_point(self, p1, p2, tested_point):
         assert Hp(p1, p2).contains(tested_point)
 
-    @pytest.mark.parametrize("p1,p2,tested_point", HPC_EXAMPLES)
+    @pytest.mark.parametrize("p1,p2,tested_point", HPC_POINT_EXAMPLES)
     def test_hpc_contains_point(self, p1, p2, tested_point):
         assert Hpc(p1, p2).contains(tested_point)
 
-    @pytest.mark.parametrize("p1,p2,tested_point", [*HP_EXAMPLES, *HPC_EXAMPLES])
+    @pytest.mark.parametrize(
+        "p1,p2,tested_point", [*HP_POINT_EXAMPLES, *HPC_POINT_EXAMPLES]
+    )
     def test_point_is_either_in_hp_or_hpc(self, p1, p2, tested_point):
         hp = Hp(p1, p2)
         hpc = Hpc(p1, p2)
 
         assert hp.contains(tested_point) != hpc.contains(tested_point)
+
+    @pytest.mark.parametrize(
+        "p1,p2,tested_point", [*HP_POINT_EXAMPLES, *HPC_POINT_EXAMPLES]
+    )
+    def test_hp_conjugate_flips_content(self, p1, p2, tested_point):
+        hp = Hp(p1, p2)
+        assert hp.contains(tested_point) != hp.conjugate.contains(tested_point)
+
+    @pytest.mark.parametrize(
+        "p1,p2,tested_point", [*HP_POINT_EXAMPLES, *HPC_POINT_EXAMPLES]
+    )
+    def test_hpc_conjugate_flips_content(self, p1, p2, tested_point):
+        hpc = Hp(p1, p2)
+        assert hpc.contains(tested_point) != hpc.conjugate.contains(tested_point)
+
+
+class TestConjugate:
+    pass
+    # def test
 
 
 class TestMergingEsum:
