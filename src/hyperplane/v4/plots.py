@@ -1,8 +1,11 @@
 import functools
 import math
 import typing as t
+import pprint
+from pathlib import Path
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker
 import numpy as np
 
 from .flat import Hp, Hpc, Pt, Hs, Esum
@@ -97,7 +100,7 @@ def main():
         }
     )
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(ncols=1, figsize=(12, 12))
 
     mask = _pixel_mask(esum, range(20), range(20))
 
@@ -107,11 +110,20 @@ def main():
     ax.scatter(zeros_xs, zeros_ys, alpha=0.1)
     ax.scatter(ones_xs, ones_ys)
 
+    locator = matplotlib.ticker.MaxNLocator(integer=True)
+    ax.xaxis.set_major_locator(locator)
+    ax.yaxis.set_major_locator(locator)
+
+    ax.set_aspect("equal")
+
     for term in esum.terms:
         for hs in term:
             _plot_hs(hs, ax)
 
-    plt.show()
+    plot_path = Path("./plots/output.pdf")
+    plot_path.parent.mkdir(exist_ok=True)
+
+    fig.savefig(plot_path)
 
 
 if __name__ == "__main__":
