@@ -25,7 +25,7 @@ from hyperplane.core import Coord
 # - [ ] select intersecting segments
 
 # Plotting:
-# - [ ] point-by-point test
+# - [x] point-by-point test
 
 
 class Pt(t.NamedTuple):
@@ -139,6 +139,9 @@ class Esum(t.NamedTuple):
                 new_terms.append(self_term ^ other_term)
 
         return Esum(frozenset(new_terms))
+
+    def difference(self, other: "Esum") -> "Esum":
+        return self.intersection(other.conjugate)
 
     def contains(self, point: Pt) -> bool:
         return any(all(hs.contains(point) for hs in term) for term in self.terms)

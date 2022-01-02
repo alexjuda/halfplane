@@ -156,21 +156,27 @@ def main():
         }
     )
 
-    fig, axes = plt.subplots(2, 2, figsize=(24, 24))
+    fig, axes = plt.subplots(3, 2, figsize=(24, 36))
     xlim = [0, 20]
     ylim = [0, 20]
 
     _plot_esum(esum1, axes[0][0], xlim, ylim)
-    axes[0][0].set_title("esum 1")
+    axes[0][0].set_title("$ e_1 $")
 
     _plot_esum(esum2, axes[0][1], xlim, ylim)
-    axes[0][1].set_title("esum 2")
+    axes[0][1].set_title("$ e_2 $")
 
     _plot_esum(esum1.union(esum2), axes[1][0], xlim, ylim)
-    axes[1][0].set_title("union")
+    axes[1][0].set_title("$ e_1 \\cup e_2 $")
 
     _plot_esum(esum1.intersection(esum2), axes[1][1], xlim, ylim)
-    axes[1][1].set_title("intersection")
+    axes[1][1].set_title("$ e_1 \\cap e_2 $")
+
+    _plot_esum(esum2.conjugate, axes[2][0], xlim, ylim)
+    axes[2][0].set_title("$ \\overline{e_2} $")
+
+    _plot_esum(esum1.difference(esum2), axes[2][1], xlim, ylim)
+    axes[2][1].set_title("$ e_1 \\backslash e_2 $")
 
     plot_path = Path("./plots/output.pdf")
     plot_path.parent.mkdir(exist_ok=True)
