@@ -40,7 +40,7 @@ class Pt(t.NamedTuple):
 
 class Hp(t.NamedTuple):
     """Half plane, where the boundary is a line that crosses p1 & p1. Doesn't
-    include the boundary itself. Contains all points "on the right" of the
+    include the boundary itself. Contains all points "on the left" of the
     P1->P2 vector.
     """
 
@@ -48,11 +48,11 @@ class Hp(t.NamedTuple):
     p2: Pt
 
     def contains(self, point: Pt) -> bool:
-        return _z_factor(self, point) < 0
+        return _z_factor(self, point) > 0
 
     @property
     def conjugate(self) -> "Hpc":
-        return Hpc(*self)
+        return Hpc(*reversed(self))
 
     def y(self, x: Number) -> t.Optional[Number]:
         return _extrapolate_line(*self, x)
@@ -71,7 +71,7 @@ class Hpc(t.NamedTuple):
 
     @property
     def conjugate(self) -> Hp:
-        return Hp(*self)
+        return Hp(*reversed(self))
 
     def y(self, x: Number) -> t.Optional[Number]:
         return _extrapolate_line(*self, x)

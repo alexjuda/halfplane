@@ -39,13 +39,13 @@ def _rotate_vector(x: float, y: float, degrees) -> t.Tuple[float, float]:
 @_plot_hs.register
 def _plot_hp(hp: Hp, ax: plt.Axes, xlim, ylim):
     lines = _plot_hs_line(hp, ax, xlim, ylim)
-    _plot_hs_arrow(hp, ax, angle=-90, color=lines[0].get_color())
+    _plot_hs_arrow(hp, ax, color=lines[0].get_color())
 
 
 @_plot_hs.register
 def _plot_hpc(hpc: Hpc, ax: plt.Axes, xlim, ylim):
     lines = _plot_hs_line(hpc, ax, xlim, ylim)
-    _plot_hs_arrow(hpc, ax, angle=90, color=lines[0].get_color())
+    _plot_hs_arrow(hpc, ax, color=lines[0].get_color())
 
 
 def _plot_hs_line(hs: Hs, ax: plt.Axes, xlim, ylim):
@@ -65,12 +65,16 @@ def _plot_hs_line(hs: Hs, ax: plt.Axes, xlim, ylim):
     return ax.plot([x1, x2], [y1, y2], linestyle=":")
 
 
-def _plot_hs_arrow(hs: Hs, ax: plt.Axes, angle, color: str):
+def _plot_hs_arrow(hs: Hs, ax: plt.Axes, color: str):
     p1, p2 = [p.position for p in hs]
 
     delta = p2 - p1
     center = (p1 + p2) / 2
     delta_normalized = delta / np.linalg.norm(delta)
+
+    # We're assuming that both Hp & Hpc both represent the points "on the left"
+    # of the line.
+    angle = 90
 
     ax.arrow(
         *center[:2],
@@ -114,8 +118,8 @@ def main():
                 [
                     # vertical line (|)
                     Hp(
-                        Pt(1, 1),
                         Pt(1, 6),
+                        Pt(1, 1),
                     ),
                     # horizontal line (-)
                     Hpc(
@@ -124,13 +128,13 @@ def main():
                     ),
                     # diagonal line (\)
                     Hp(
-                        Pt(0, 16),
                         Pt(15, 1),
+                        Pt(0, 16),
                     ),
                     # horizontal line (-)
                     Hp(
-                        Pt(4, 10),
                         Pt(11, 10),
+                        Pt(4, 10),
                     ),
                 ]
             )
@@ -142,14 +146,14 @@ def main():
             frozenset(
                 [
                     # diagonal line (/)
-                    Hp(
-                        Pt(4, 2),
+                    Hpc(
                         Pt(8, 10),
+                        Pt(4, 2),
                     ),
                     # diagonal line (\)
                     Hp(
-                        Pt(10, 10),
                         Pt(12, 2),
+                        Pt(10, 10),
                     ),
                 ]
             )

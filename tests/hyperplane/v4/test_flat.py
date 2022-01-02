@@ -9,19 +9,19 @@ def _translate_point(pt: Pt, dx, dy):
 class TestHSContainsPt:
     HP_POINT_EXAMPLES = [
         # --- vertical line ---
-        (Pt(0, 1), Pt(0, 4), Pt(1, 2)),
+        (Pt(0, 4), Pt(0, 1), Pt(1, 2)),
         # point outside the segment boundary
-        (Pt(0, 1), Pt(0, 4), Pt(1, 6)),
-        (Pt(0, 1), Pt(0, 4), Pt(1, -1)),
+        (Pt(0, 4), Pt(0, 1), Pt(1, 6)),
+        (Pt(0, 4), Pt(0, 1), Pt(1, -1)),
         # --- horizontal line ---
-        (Pt(1, 1), Pt(4, 1), Pt(2, -2)),
+        (Pt(4, 1), Pt(1, 1), Pt(2, -2)),
         # point on segment
         # (Pt(1, 1), Pt(4, 1), Pt(2, 1)),
         # --- problematic samples ---
         #     B
         #  A     C
         # hp(AB) -> y <= x -> -x + y <= 0
-        (Pt(0, 0), Pt(5, 5), Pt(10, 0)),
+        (Pt(5, 5), Pt(0, 0), Pt(10, 0)),
     ]
 
     HPC_POINT_EXAMPLES = [
@@ -58,7 +58,7 @@ class TestHSContainsPt:
     )
     def test_point_is_either_in_hp_or_hpc(self, p1, p2, tested_point):
         hp = Hp(p1, p2)
-        hpc = Hpc(p1, p2)
+        hpc = Hpc(p2, p1)
 
         assert hp.contains(tested_point) != hpc.contains(tested_point)
 
@@ -99,12 +99,12 @@ class TestMergingEsum:
             (set(), set(), set()),
             (
                 # vertical line
-                {frozenset([Hp(Pt(0, 1), Pt(0, 4))])},
+                {frozenset([Hp(Pt(0, 4), Pt(0, 1))])},
                 # horizontal line
-                {frozenset([Hp(Pt(2, 2), Pt(2, 7))])},
+                {frozenset([Hp(Pt(2, 7), Pt(2, 2))])},
                 {
-                    frozenset([Hp(Pt(0, 1), Pt(0, 4))]),
-                    frozenset([Hp(Pt(2, 2), Pt(2, 7))]),
+                    frozenset([Hp(Pt(0, 4), Pt(0, 1))]),
+                    frozenset([Hp(Pt(2, 7), Pt(2, 2))]),
                 },
             ),
         ],
@@ -120,9 +120,9 @@ class TestMergingEsum:
             (set(), set()),
             (
                 # vertical line
-                {frozenset([Hp(Pt(0, 1), Pt(0, 4))])},
+                {frozenset([Hp(Pt(0, 4), Pt(0, 1))])},
                 # horizontal line
-                {frozenset([Hp(Pt(2, 2), Pt(2, 7))])},
+                {frozenset([Hp(Pt(2, 7), Pt(2, 2))])},
             ),
         ],
     )
@@ -140,10 +140,10 @@ class TestMergingEsum:
             (set(), set(), set()),
             (
                 # vertical line
-                {frozenset([Hp(Pt(0, 1), Pt(0, 4))])},
+                {frozenset([Hp(Pt(0, 4), Pt(0, 1))])},
                 # horizontal line
-                {frozenset([Hp(Pt(2, 2), Pt(2, 7))])},
-                {frozenset([Hp(Pt(0, 1), Pt(0, 4)), Hp(Pt(2, 2), Pt(2, 7))])},
+                {frozenset([Hp(Pt(2, 7), Pt(2, 2))])},
+                {frozenset([Hp(Pt(0, 4), Pt(0, 1)), Hp(Pt(2, 7), Pt(2, 2))])},
             ),
         ],
     )
@@ -159,18 +159,18 @@ class TestEsumConjugate:
         (
             # single vertical halfplane
             {frozenset([Hp(Pt(0, 1), Pt(0, 4))])},
-            {frozenset([Hpc(Pt(0, 1), Pt(0, 4))])},
+            {frozenset([Hpc(Pt(0, 4), Pt(0, 1))])},
         ),
         (
             # single vertical halfplane
             {frozenset([Hpc(Pt(0, 1), Pt(0, 4))])},
-            {frozenset([Hp(Pt(0, 1), Pt(0, 4))])},
+            {frozenset([Hp(Pt(0, 4), Pt(0, 1))])},
         ),
         (
             # vertical halfplane + horizontal halfplane
             {
-                frozenset([Hp(Pt(0, 1), Pt(0, 4))]),
-                frozenset([Hp(Pt(-2, 1), Pt(6, 1))]),
+                frozenset([Hp(Pt(0, 4), Pt(0, 1))]),
+                frozenset([Hp(Pt(6, 1), Pt(-2, 1))]),
             },
             {
                 frozenset([Hpc(Pt(0, 1), Pt(0, 4)), Hp(Pt(-2, 1), Pt(6, 1))]),
