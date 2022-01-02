@@ -10,12 +10,13 @@ import numpy as np
 from .flat import Hp, Hpc, Pt, Hs, Esum
 
 
-def _hs_pixel_mask(hs: Hs, x_iter, y_iter) -> np.ndarray:
-    return np.array([[hs.contains(Pt(x, y)) for x in x_iter] for y in y_iter])
-
-
-def _pixel_mask(esum: Esum, x_iter, y_iter) -> np.ndarray:
-    return np.array([[esum.contains(Pt(x, y)) for x in x_iter] for y in y_iter])
+def _datapoints(esum: Esum, x_iter, y_iter) -> np.ndarray:
+    """Returns [X*Y x 3] array of data point rows, where:
+    - col 0: x coordinate
+    - col 1: y coordinate
+    - col 2: inside esum or not (bool)
+    """
+    return np.array([[x, y, esum.contains(Pt(x, y))] for x in x_iter for y in y_iter])
 
 
 @functools.singledispatch
@@ -97,7 +98,7 @@ def main():
                     # diagonal line (\)
                     Hp(
                         Pt(0, 16),
-                        Pt(14, 1),
+                        Pt(15, 1),
                     ),
                     # horizontal line (-)
                     Hp(
@@ -113,17 +114,18 @@ def main():
 
     fig, ax = plt.subplots(ncols=1, figsize=(12, 12))
 
-    mask = _pixel_mask(
+    datapoints = _datapoints(
         esum,
-        range(plot_lims["x"][0], plot_lims["x"][1]),
-        range(plot_lims["y"][0], plot_lims["y"][1]),
+        np.arange(plot_lims["x"][0], plot_lims["x"][1], 0.5),
+        np.arange(plot_lims["y"][0], plot_lims["y"][1], 0.5),
     )
 
-    ones_ys, ones_xs = np.where(mask)
-    zeros_ys, zeros_xs = np.where(~mask)
+    contains_col = datapoints[:, 2] > 0.5
+    ones_ind, = np.where(contains_col)
+    zeroes_ind, = np.where(~contains_col)
 
-    ax.scatter(zeros_xs, zeros_ys, alpha=0.1)
-    ax.scatter(ones_xs, ones_ys)
+    ax.scatter(datapoints[:, 0][zeroes_ind], datapoints[:, 1][zeroes_ind], alpha=0.1)
+    ax.scatter(datapoints[:, 0][ones_ind], datapoints[:, 1][ones_ind])
 
     locator = matplotlib.ticker.MaxNLocator(integer=True)
     ax.xaxis.set_major_locator(locator)
