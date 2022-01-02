@@ -194,7 +194,7 @@ class Esum(t.NamedTuple):
         # 2. Generate Carthesian product of items in terms. Each generated
         #     tuple will be a term in the output Esum.
         # 3. Negate each item in each term.
-        conjugate_terms = []
+        conjugate_terms = set()
         for product_term in itertools.product(*self.terms):
             conjugate_term = []
             for hs in product_term:
@@ -202,6 +202,10 @@ class Esum(t.NamedTuple):
 
             # Avoid empty inner sets
             if len(conjugate_term) > 0:
-                conjugate_terms.append(frozenset(conjugate_term))
+                conjugate_terms.add(frozenset(conjugate_term))
 
-        return Esum(frozenset(conjugate_terms))
+        return Esum(conjugate_terms)
+
+    @property
+    def with_boundaries(self) -> "Esum":
+        return Esum({frozenset(Hpc(*hs) for hs in term) for term in self.terms})

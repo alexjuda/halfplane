@@ -164,12 +164,31 @@ def _plot_vertices(esum):
             if (cross_point := hs1.intersects_at(hs2)) is not None:
                 crosses.add(cross_point)
 
+    # We will look for line intersections on the shape's boundary. Shape can
+    # consist of Hp's - it would cause false negatives during the vertex test.
+    fat_esum = esum.with_boundaries
+
+    vertices = set()
+    for cross_point in crosses:
+        if fat_esum.contains(cross_point):
+            vertices.add(cross_point)
+
+    crosses_outside = crosses.difference(vertices)
+
     ax.scatter(
-        [pt.x for pt in crosses],
-        [pt.y for pt in crosses],
+        [pt.x for pt in crosses_outside],
+        [pt.y for pt in crosses_outside],
         s=100,
         facecolors="none",
         edgecolors="C0",
+    )
+
+    ax.scatter(
+        [pt.x for pt in vertices],
+        [pt.y for pt in vertices],
+        s=100,
+        facecolors="C1",
+        edgecolors="C1",
     )
 
     plot_path = Path("./plots/vertices.pdf")
