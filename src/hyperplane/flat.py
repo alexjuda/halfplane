@@ -1,216 +1,211 @@
 import typing as t
-import abc
-from dataclasses import dataclass
+import itertools
+from numbers import Number
 
 import numpy as np
 
-
-Value = float
-model = dataclass(frozen=True)
+from .core import Coord
 
 
-@model
-class AffineTransform:
+# Data structures needed:
+# - [x] pt
+# - [x] hP
+# - [x] hPC
+# - [x] Esum
+# - [ ] segment
+
+# Operations needed:
+# - [x] hP contains pt?
+# - [x] hPC contains pt?
+# - [x] merge two Esum with union
+# - [x] merge two Esum with intersection
+# - [x] hP conjugate
+# - [x] hPC conjugate
+# - [x] Esum conjugate
+# - [ ] select intersecting segments
+
+# Plotting:
+# - [x] point-by-point test
+
+
+class Pt(t.NamedTuple):
+    x: Coord
+    y: Coord
+
+    @property
+    def position(self) -> np.ndarray:
+        """3d position vector."""
+        return np.array([*self, 0])
+
+
+class Hp(t.NamedTuple):
+    """Half plane, where the boundary is a line that crosses p1 & p1. Doesn't
+    include the boundary itself. Contains all points "on the left" of the
+    P1->P2 vector.
     """
-    Source: https://en.wikipedia.org/wiki/Affine_transformation
 
-    y = Ax + b
+    p1: Pt
+    p2: Pt
+
+    def contains(self, point: Pt) -> bool:
+        return _z_factor(self, point) > 0
+
+    @property
+    def conjugate(self) -> "Hpc":
+        return Hpc(*reversed(self))
+
+    def y(self, x: Number) -> t.Optional[Number]:
+        return _extrapolate_line(*self, x)
+
+    def intersects_at(self, other: "Hs") -> t.Optional[Pt]:
+        return _intersection_point(self, other)
+
+
+class Hpc(t.NamedTuple):
+    """Half plane, where the boundary is a line that crosses p1 & p1. Includes
+    the boundary. Contains all points "on the left" of the P1->P2 vector.
     """
 
-    # Shape: [2 x 2]
-    A: np.ndarray
-    # Shape: [2]
-    b: np.ndarray
+    p1: Pt
+    p2: Pt
 
-    def compose(self, inner: "AffineTransform") -> "AffineTransform":
-        """Compose with another transform and return the merged one.
-        The result is the same as first applying `inner` and then `self` to the vector.
-        ```
-        y(x) = Ax + b  -- inner
-        z(x) = Cx + d  -- outer
+    def contains(self, point: Pt) -> bool:
+        return _z_factor(self, point) >= 0
 
-        z . y (x) = z(y(x))
+    @property
+    def conjugate(self) -> Hp:
+        return Hp(*reversed(self))
 
-        z(y(x)) = Cy(x) + d = C(Ax + b) + d = CAx + Cb + d = (CA)x + (Cb + d)
-        ```
-        """
-        A = inner.A
-        b = inner.b
-        C = self.A
-        d = self.b
+    def y(self, x: Number) -> t.Optional[Number]:
+        return _extrapolate_line(*self, x)
 
-        return AffineTransform(
-            A=C @ A,
-            b=(C @ b + d)
-        )
-
-    def apply(self, v: np.ndarray) -> np.ndarray:
-        """Apply the transformation to a vector.
-
-        u = Av + b
-
-        Args:
-            v: array of shape [2 x batch_size]
-
-        Returns:
-            array of shape [2 x batch_size]
-        """
-        return self.A @ v + self.b.reshape(-1, 1)
-
-    @classmethod
-    def identity(cls):
-        return AffineTransform(np.eye(2), np.zeros(2))
+    def intersects_at(self, other: "Hs") -> t.Optional[Pt]:
+        return _intersection_point(self, other)
 
 
-class Shape(abc.ABC):
-    @abc.abstractmethod
-    def points(self) -> np.ndarray:
-        """Array of shape [2 x n_points], where:
-        - the 0 row are X coords
-        - the 1 row are Y coords
-        """
-        pass
+Hs = t.Union[Hp, Hpc]
 
 
-class Node(abc.ABC):
-    @abc.abstractmethod
-    def iter_shapes(
-        self, transform: AffineTransform
-    ) -> t.Iterable[t.Tuple[AffineTransform, Shape]]:
-        pass
+def _z_factor(half_space: Hs, point: Pt) -> float:
+    """Z coordinate of the cross product between the halfspace's vector and the
+    position vector of the tested point.
+    """
+    p1, p2 = [p.position for p in half_space]
+    v_hs = p2 - p1
+    v_test = point.position - p1
+    v_cross = np.cross(v_hs, v_test)
+
+    return v_cross[-1]
 
 
-# ---- shapes ----
+def _line_params(point1: Pt, point2: Pt) -> t.Optional[t.Tuple[Number, Number]]:
+    p1, p2 = [p.position for p in [point1, point2]]
+    d = p2 - p1
+
+    try:
+        a = float(d[1]) / float(d[0])
+    except ZeroDivisionError:
+        return None
+
+    b = p1[1] - a * p1[0]
+
+    return a, b
 
 
-@model
-class Circle(Node, Shape):
-    radius: Value
+def _extrapolate_line(p1: Pt, p2: Pt, x: Number) -> t.Optional[Number]:
+    if (line_params := _line_params(p1, p2)) is None:
+        return None
 
-    def iter_shapes(self, transform):
-        yield transform, self
+    a, b = line_params
 
-    # def points(self):
-    #     pass
+    return a * x + b
 
 
-@model
-class Rectangle(Node, Shape):
-    width: Value
-    height: Value
+def _intersection_point(hs1: Hs, hs2: Hs) -> t.Optional[Pt]:
+    # y = ax + b
+    # a1 * x + b1 = a2 * x + b2
+    # a1 * x - a2 * x + b1 = b2
+    # a1 * x - a2 * x = b2 - b1
+    # (a1 - a2) * x = b2 - b1
+    # x = (b2 - b1) / (a1 - a2)
+    # y = a1 * x + b1
+    params1 = _line_params(*hs1)
+    params2 = _line_params(*hs2)
+    if params1 is None:
+        if params2 is None:
+            # Two vertical lines
+            return None
+        else:
+            x = hs1.p1.x
+            y = hs2.y(x)
 
-    def iter_shapes(self, transform):
-        yield transform, self
+            return Pt(x, y)
+    elif params2 is None:
+        return _intersection_point(hs2, hs1)
 
-    def points(self):
-        return np.array(
-            [
-                [0, self.width, self.width, 0],
-                [0, 0, self.height, self.height],
-            ]
-        )
+    a1, b1 = params1
+    a2, b2 = params2
 
+    if (delta_a := a1 - a2) == 0:
+        return None
 
-# ---- transformations ----
+    # denominator is not zero unless the lines are parallel
+    x = (b2 - b1) / delta_a
+    y = a1 * x + b1
 
-
-@model
-class Translation(Node):
-    x: Value
-    y: Value
-    child: Node
-
-    def iter_shapes(self, transform: AffineTransform):
-        new_transform = transform.compose(
-            AffineTransform(np.eye(2), np.array([self.x, self.y]))
-        )
-        yield from self.child.iter_shapes(new_transform)
-
-
-@model
-class Rotation(Node):
-    radians: Value
-    child: Node
-
-    def iter_shapes(self, transform):
-        new_transform = AffineTransform(
-            np.array(
-                [
-                    [np.cos(self.radians), -np.sin(self.radians)],
-                    [np.sin(self.radians), np.cos(self.radians)],
-                ]
-            ),
-            np.zeros(2),
-        ).compose(transform)
-        yield from self.child.iter_shapes(new_transform)
+    return Pt(x, y)
 
 
-@model
-class Scaling(Node):
-    ratio_x: Value
-    ratio_y: Value
-    child: Node
-
-    def iter_shapes(self, transform):
-        new_transform = transform.compose(
-            AffineTransform(
-                np.array(
-                    [
-                        [self.ratio_x, 0],
-                        [0, self.ratio_y],
-                    ]
-                ),
-                np.zeros(2),
-            )
-        )
-
-        yield from self.child.iter_shapes(new_transform)
+# A group of intersecting halfspaces.
+Term = t.Set[Hs]
 
 
-# ---- grouping ----
+class Esum(t.NamedTuple):
+    """Expression sum. Basic shape representation.
 
+    Uses two-level sets of halfspaces. The outer set is considered a union of
+    terms. The inner set (AKA a term) is considered an intersection of
+    halfspaces.
+    """
 
-@model
-class Group(Node):
-    children: t.List[Node]
+    terms: t.Set[Term]
 
-    def iter_shapes(self, transform):
-        for child in self.children:
-            yield from child.iter_shapes(transform)
+    def union(self, other: "Esum") -> "Esum":
+        return Esum(self.terms | other.terms)
 
+    def intersection(self, other: "Esum") -> "Esum":
+        new_terms = []
+        for self_term in self.terms:
+            for other_term in other.terms:
+                new_terms.append(self_term ^ other_term)
 
-# ---- operators ----
+        return Esum(frozenset(new_terms))
 
+    def difference(self, other: "Esum") -> "Esum":
+        return self.intersection(other.conjugate)
 
-@model
-class Union(Node):
-    operands: t.Tuple[Node, ...]
+    def contains(self, point: Pt) -> bool:
+        return any(all(hs.contains(point) for hs in term) for term in self.terms)
 
-    def iter_shapes(self, transform):
-        for operand in self.operands:
-            yield from self.child.iter_shapes(transform)
+    @property
+    def conjugate(self) -> "Esum":
+        # I think the general pattern is like this:
+        # 1. Start with Esum
+        # 2. Generate Carthesian product of items in terms. Each generated
+        #     tuple will be a term in the output Esum.
+        # 3. Negate each item in each term.
+        conjugate_terms = set()
+        for product_term in itertools.product(*self.terms):
+            conjugate_term = []
+            for hs in product_term:
+                conjugate_term.append(hs.conjugate)
 
+            # Avoid empty inner sets
+            if len(conjugate_term) > 0:
+                conjugate_terms.add(frozenset(conjugate_term))
 
-@model
-class Product(Node):
-    operands: t.Tuple[Node, ...]
+        return Esum(conjugate_terms)
 
-    def iter_shapes(self, transform):
-        for operand in self.operands:
-            yield from self.child.iter_shapes(transform)
-
-
-@model
-class Difference(Node):
-    operands: t.Tuple[Node, ...]
-
-    def iter_shapes(self, transform):
-        for operand in self.operands:
-            yield from self.child.iter_shapes(transform)
-
-
-# ---- functions ----
-
-
-def iter_shapes(root: Node):
-    yield from root.iter_shapes(AffineTransform.identity())
+    @property
+    def with_boundaries(self) -> "Esum":
+        return Esum({frozenset(Hpc(*hs) for hs in term) for term in self.terms})
