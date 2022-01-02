@@ -187,3 +187,64 @@ class TestEsumConjugate:
     def test_double_conjugate_is_nop(self, terms):
         esum = Esum(terms)
         assert esum.conjugate.conjugate == esum
+
+
+class TestHsIntersection:
+    HS_POINT_EXAMPLES = [
+        (
+            # horizontal line (-)
+            Hp(Pt(0, 1), Pt(4, 1)),
+            # diagonal line (/)
+            Hp(Pt(2, 0), Pt(4, 4)),
+            Pt(2.5, 1),
+        ),
+        (
+            # diagonal line (\)
+            Hp(Pt(1, 8), Pt(5, 0)),
+            # diagonal line (/)
+            Hp(Pt(2, 0), Pt(4, 4)),
+            Pt(3.5, 3),
+        ),
+        (
+            # horizontal line (-)
+            Hp(Pt(0, 1), Pt(4, 1)),
+            # vertical line (|)
+            Hp(Pt(2, 0), Pt(2, 10)),
+            Pt(2, 1),
+        ),
+        (
+            # horizontal line (-)
+            Hp(Pt(0, 1), Pt(4, 1)),
+            # horizontal line (-)
+            Hp(Pt(10, -1), Pt(14, -1)),
+            None,
+        ),
+        (
+            # vertical line (|)
+            Hp(Pt(-1, 0), Pt(-1, -10)),
+            # vertical line (|)
+            Hp(Pt(10, 0), Pt(10, 10)),
+            None,
+        ),
+    ]
+
+    HS_HS_EXAMPLES = [(hs1, hs2) for hs1, hs2, _ in HS_POINT_EXAMPLES]
+
+    @pytest.mark.parametrize("hs1,hs2,expected_point", HS_POINT_EXAMPLES)
+    def test_examples(self, hs1, hs2, expected_point):
+        assert hs1.intersects_at(hs2) == expected_point
+
+    @pytest.mark.parametrize("hs1,hs2", HS_HS_EXAMPLES)
+    def test_order_invariance(self, hs1, hs2):
+        assert hs1.intersects_at(hs2) == hs2.intersects_at(hs1)
+
+    @pytest.mark.parametrize("hs1,hs2", HS_HS_EXAMPLES)
+    def test_conjugate_invariance(self, hs1, hs2):
+        assert hs1.intersects_at(hs2) == hs1.conjugate.intersects_at(hs2)
+        assert hs1.intersects_at(hs2) == hs1.intersects_at(hs2.conjugate)
+        assert hs1.intersects_at(hs2) == hs1.conjugate.intersects_at(hs2.conjugate)
+
+    @pytest.mark.parametrize("hs1,hs2", HS_HS_EXAMPLES)
+    def test_self(self, hs1, hs2):
+        assert hs1.intersects_at(hs1) is None
+        assert hs2.intersects_at(hs2) is None

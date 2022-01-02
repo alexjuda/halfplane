@@ -57,6 +57,9 @@ class Hp(t.NamedTuple):
     def y(self, x: Number) -> t.Optional[Number]:
         return _extrapolate_line(*self, x)
 
+    def intersects_at(self, other: "Hs") -> t.Optional[Pt]:
+        return _intersection_point(self, other)
+
 
 class Hpc(t.NamedTuple):
     """Half plane, where the boundary is a line that crosses p1 & p1. Includes
@@ -75,6 +78,9 @@ class Hpc(t.NamedTuple):
 
     def y(self, x: Number) -> t.Optional[Number]:
         return _extrapolate_line(*self, x)
+
+    def intersects_at(self, other: "Hs") -> t.Optional[Pt]:
+        return _intersection_point(self, other)
 
 
 Hs = t.Union[Hp, Hpc]
@@ -113,6 +119,41 @@ def _extrapolate_line(p1: Pt, p2: Pt, x: Number) -> t.Optional[Number]:
     a, b = line_params
 
     return a * x + b
+
+
+def _intersection_point(hs1: Hs, hs2: Hs) -> t.Optional[Pt]:
+    # y = ax + b
+    # a1 * x + b1 = a2 * x + b2
+    # a1 * x - a2 * x + b1 = b2
+    # a1 * x - a2 * x = b2 - b1
+    # (a1 - a2) * x = b2 - b1
+    # x = (b2 - b1) / (a1 - a2)
+    # y = a1 * x + b1
+    params1 = _line_params(*hs1)
+    params2 = _line_params(*hs2)
+    if params1 is None:
+        if params2 is None:
+            # Two vertical lines
+            return None
+        else:
+            x = hs1.p1.x
+            y = hs2.y(x)
+
+            return Pt(x, y)
+    elif params2 is None:
+        return _intersection_point(hs2, hs1)
+
+    a1, b1 = params1
+    a2, b2 = params2
+
+    if (delta_a := a1 - a2) == 0:
+        return None
+
+    # denominator is not zero unless the lines are parallel
+    x = (b2 - b1) / delta_a
+    y = a1 * x + b1
+
+    return Pt(x, y)
 
 
 # A group of intersecting halfspaces.
