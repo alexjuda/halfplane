@@ -1,7 +1,6 @@
 import functools
 import math
 import typing as t
-import pprint
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -20,7 +19,7 @@ def _pixel_mask(esum: Esum, x_iter, y_iter) -> np.ndarray:
 
 
 @functools.singledispatch
-def _plot_hs(hs, ax: plt.Axes):
+def _plot_hs(hs, ax: plt.Axes, xlim, ylim):
     raise NotImplementedError()
 
 
@@ -37,22 +36,32 @@ def _rotate_vector(x: float, y: float, degrees) -> t.Tuple[float, float]:
 
 
 @_plot_hs.register
-def _plot_hp(hp: Hp, ax: plt.Axes):
-    lines = ax.plot(
-        [hp[0][0], hp[1][0]],
-        [hp[0][1], hp[1][1]],
-        linestyle=":",
-    )
+def _plot_hp(hp: Hp, ax: plt.Axes, xlim, ylim):
+    lines = _plot_hs_line(hp, ax, xlim, ylim)
     _plot_hs_arrow(hp, ax, angle=-90, color=lines[0].get_color())
 
 
 @_plot_hs.register
-def _plot_hpc(hpc: Hpc, ax: plt.Axes):
-    lines = ax.plot(
-        [hpc[0][0], hpc[1][0]],
-        [hpc[0][1], hpc[1][1]],
-    )
+def _plot_hpc(hpc: Hpc, ax: plt.Axes, xlim, ylim):
+    lines = _plot_hs_line(hpc, ax, xlim, ylim)
     _plot_hs_arrow(hpc, ax, angle=90, color=lines[0].get_color())
+
+
+def _plot_hs_line(hs: Hs, ax: plt.Axes, xlim, ylim):
+    x1 = xlim[0] - 1
+    x2 = xlim[1] + 1
+
+    y1 = hs.y(x1)
+    y2 = hs.y(x2)
+
+    if y1 is None or y2 is None:
+        # This means we have a vertical line.
+        x = hs[0][0]
+        y1 = ylim[0] - 1
+        y2 = ylim[1] + 1
+        return ax.plot([x, x], [y1, y2], linestyle=":")
+
+    return ax.plot([x1, x2], [y1, y2], linestyle=":")
 
 
 def _plot_hs_arrow(hs: Hs, ax: plt.Axes, angle, color: str):
@@ -100,9 +109,15 @@ def main():
         }
     )
 
+    plot_lims = {"x": [0, 20], "y": [0, 20]}
+
     fig, ax = plt.subplots(ncols=1, figsize=(12, 12))
 
-    mask = _pixel_mask(esum, range(20), range(20))
+    mask = _pixel_mask(
+        esum,
+        range(plot_lims["x"][0], plot_lims["x"][1]),
+        range(plot_lims["y"][0], plot_lims["y"][1]),
+    )
 
     ones_ys, ones_xs = np.where(mask)
     zeros_ys, zeros_xs = np.where(~mask)
@@ -114,11 +129,13 @@ def main():
     ax.xaxis.set_major_locator(locator)
     ax.yaxis.set_major_locator(locator)
 
+    ax.set_xlim(plot_lims["x"])
+    ax.set_ylim(plot_lims["y"])
     ax.set_aspect("equal")
 
     for term in esum.terms:
         for hs in term:
-            _plot_hs(hs, ax)
+            _plot_hs(hs, ax, plot_lims["x"], plot_lims["y"])
 
     plot_path = Path("./plots/output.pdf")
     plot_path.parent.mkdir(exist_ok=True)

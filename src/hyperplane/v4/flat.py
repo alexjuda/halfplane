@@ -1,5 +1,6 @@
 import typing as t
 import itertools
+from numbers import Number
 
 import numpy as np
 
@@ -53,6 +54,12 @@ class Hp(t.NamedTuple):
     def conjugate(self) -> "Hpc":
         return Hpc(*self)
 
+    def y(self, x: Number) -> t.Optional[Number]:
+        return _extrapolate_line_y(*self, x)
+
+    def x(self, y: Number) -> t.Optional[Number]:
+        return _extrapolate_line_x(*self, y)
+
 
 class Hpc(t.NamedTuple):
     """Half plane, where the boundary is a line that crosses p1 & p1. Includes
@@ -69,6 +76,12 @@ class Hpc(t.NamedTuple):
     def conjugate(self) -> Hp:
         return Hp(*self)
 
+    def y(self, x: Number) -> t.Optional[Number]:
+        return _extrapolate_line_y(*self, x)
+
+    def x(self, y: Number) -> t.Optional[Number]:
+        return _extrapolate_line_x(*self, y)
+
 
 Hs = t.Union[Hp, Hpc]
 
@@ -83,6 +96,42 @@ def _z_factor(half_space: Hs, point: Pt) -> float:
     v_cross = np.cross(v_hs, v_test)
 
     return v_cross[-1]
+
+
+def _line_params(point1: Pt, point2: Pt) -> t.Optional[t.Tuple[Number, Number]]:
+    p1, p2 = [p.position for p in [point1, point2]]
+    d = p2 - p1
+
+    try:
+        a = float(d[1]) / float(d[0])
+    except ZeroDivisionError:
+        return None
+
+    b = p1[1] - a * p1[0]
+
+    return a, b
+
+
+def _extrapolate_line_y(p1: Pt, p2: Pt, x: Number) -> t.Optional[Number]:
+    if (line_params := _line_params(p1, p2)) is None:
+        return None
+
+    a, b = line_params
+
+    return a * x + b
+
+
+def _extrapolate_line_x(p1: Pt, p2: Pt, y: Number) -> t.Optional[Number]:
+    # y(x) = a * x + b
+    # y = ax + b
+    # y - b = ax
+    # x(y) = (y - b) / a
+    if (line_params := _line_params(p1, p2)) is None:
+        return None
+
+    a, b = line_params
+
+    return (y - b) / a
 
 
 # A group of intersecting halfspaces.
