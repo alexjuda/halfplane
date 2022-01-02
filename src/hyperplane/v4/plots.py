@@ -84,7 +84,7 @@ def _plot_hs_arrow(hs: Hs, ax: plt.Axes, color: str):
     )
 
 
-def _plot_esum(esum: Esum, ax, xlim, ylim):
+def _plot_esum_with_content_check(esum: Esum, ax, xlim, ylim):
     datapoints = _datapoints(
         esum,
         np.arange(xlim[0], xlim[1], 0.5),
@@ -106,9 +106,76 @@ def _plot_esum(esum: Esum, ax, xlim, ylim):
     ax.set_ylim(ylim)
     ax.set_aspect("equal")
 
+    _plot_esum_boundaries(esum, ax, xlim, ylim)
+
+
+def _plot_esum_boundaries(esum: Esum, ax, xlim, ylim):
     for term in esum.terms:
         for hs in term:
             _plot_hs(hs, ax, xlim, ylim)
+
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    ax.set_aspect("equal")
+
+
+def _plot_point_by_point_check(esum1, esum2):
+    fig, axes = plt.subplots(3, 2, figsize=(24, 36))
+    xlim = [0, 20]
+    ylim = [0, 20]
+
+    _plot_esum_with_content_check(esum1, axes[0][0], xlim, ylim)
+    axes[0][0].set_title("$ e_1 $")
+
+    _plot_esum_with_content_check(esum2, axes[0][1], xlim, ylim)
+    axes[0][1].set_title("$ e_2 $")
+
+    _plot_esum_with_content_check(esum1.union(esum2), axes[1][0], xlim, ylim)
+    axes[1][0].set_title("$ e_1 \\cup e_2 $")
+
+    _plot_esum_with_content_check(esum1.intersection(esum2), axes[1][1], xlim, ylim)
+    axes[1][1].set_title("$ e_1 \\cap e_2 $")
+
+    _plot_esum_with_content_check(esum2.conjugate, axes[2][0], xlim, ylim)
+    axes[2][0].set_title("$ \\overline{e_2} $")
+
+    _plot_esum_with_content_check(esum1.difference(esum2), axes[2][1], xlim, ylim)
+    axes[2][1].set_title("$ e_1 \\backslash e_2 $")
+
+    plot_path = Path("./plots/point_by_point_check.pdf")
+    plot_path.parent.mkdir(exist_ok=True)
+
+    fig.savefig(plot_path)
+
+
+def _plot_vertices(esum):
+    fig, ax = plt.subplots(figsize=(12, 12))
+    xlim = [0, 20]
+    ylim = [0, 20]
+
+    _plot_esum_boundaries(esum, ax, xlim, ylim)
+
+    hses = [hs for term in esum.terms for hs in term]
+    crosses = set()
+    for hs1_i in range(len(hses)):
+        for hs2_i in range(hs1_i + 1, len(hses)):
+            hs1 = hses[hs1_i]
+            hs2 = hses[hs2_i]
+            if (cross_point := hs1.intersects_at(hs2)) is not None:
+                crosses.add(cross_point)
+
+    ax.scatter(
+        [pt.x for pt in crosses],
+        [pt.y for pt in crosses],
+        s=100,
+        facecolors="none",
+        edgecolors="C0",
+    )
+
+    plot_path = Path("./plots/vertices.pdf")
+    plot_path.parent.mkdir(exist_ok=True)
+
+    fig.savefig(plot_path)
 
 
 def main():
@@ -160,32 +227,8 @@ def main():
         }
     )
 
-    fig, axes = plt.subplots(3, 2, figsize=(24, 36))
-    xlim = [0, 20]
-    ylim = [0, 20]
-
-    _plot_esum(esum1, axes[0][0], xlim, ylim)
-    axes[0][0].set_title("$ e_1 $")
-
-    _plot_esum(esum2, axes[0][1], xlim, ylim)
-    axes[0][1].set_title("$ e_2 $")
-
-    _plot_esum(esum1.union(esum2), axes[1][0], xlim, ylim)
-    axes[1][0].set_title("$ e_1 \\cup e_2 $")
-
-    _plot_esum(esum1.intersection(esum2), axes[1][1], xlim, ylim)
-    axes[1][1].set_title("$ e_1 \\cap e_2 $")
-
-    _plot_esum(esum2.conjugate, axes[2][0], xlim, ylim)
-    axes[2][0].set_title("$ \\overline{e_2} $")
-
-    _plot_esum(esum1.difference(esum2), axes[2][1], xlim, ylim)
-    axes[2][1].set_title("$ e_1 \\backslash e_2 $")
-
-    plot_path = Path("./plots/output.pdf")
-    plot_path.parent.mkdir(exist_ok=True)
-
-    fig.savefig(plot_path)
+    # _plot_point_by_point_check(esum1, esum2)
+    _plot_vertices(esum1.union(esum2))
 
 
 if __name__ == "__main__":
