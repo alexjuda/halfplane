@@ -80,6 +80,33 @@ def _plot_hs_arrow(hs: Hs, ax: plt.Axes, angle, color: str):
     )
 
 
+def _plot_esum(esum: Esum, ax, xlim, ylim):
+    datapoints = _datapoints(
+        esum,
+        np.arange(xlim[0], xlim[1], 0.5),
+        np.arange(ylim[0], ylim[1], 0.5),
+    )
+
+    contains_col = datapoints[:, 2] > 0.5
+    (ones_ind,) = np.where(contains_col)
+    (zeroes_ind,) = np.where(~contains_col)
+
+    ax.scatter(datapoints[:, 0][zeroes_ind], datapoints[:, 1][zeroes_ind], alpha=0.1)
+    ax.scatter(datapoints[:, 0][ones_ind], datapoints[:, 1][ones_ind])
+
+    locator = matplotlib.ticker.MaxNLocator(integer=True)
+    ax.xaxis.set_major_locator(locator)
+    ax.yaxis.set_major_locator(locator)
+
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    ax.set_aspect("equal")
+
+    for term in esum.terms:
+        for hs in term:
+            _plot_hs(hs, ax, xlim, ylim)
+
+
 def main():
     esum = Esum(
         {
@@ -110,34 +137,11 @@ def main():
         }
     )
 
-    plot_lims = {"x": [0, 20], "y": [0, 20]}
-
     fig, ax = plt.subplots(ncols=1, figsize=(12, 12))
+    xlim = [0, 20]
+    ylim = [0, 20]
 
-    datapoints = _datapoints(
-        esum,
-        np.arange(plot_lims["x"][0], plot_lims["x"][1], 0.5),
-        np.arange(plot_lims["y"][0], plot_lims["y"][1], 0.5),
-    )
-
-    contains_col = datapoints[:, 2] > 0.5
-    ones_ind, = np.where(contains_col)
-    zeroes_ind, = np.where(~contains_col)
-
-    ax.scatter(datapoints[:, 0][zeroes_ind], datapoints[:, 1][zeroes_ind], alpha=0.1)
-    ax.scatter(datapoints[:, 0][ones_ind], datapoints[:, 1][ones_ind])
-
-    locator = matplotlib.ticker.MaxNLocator(integer=True)
-    ax.xaxis.set_major_locator(locator)
-    ax.yaxis.set_major_locator(locator)
-
-    ax.set_xlim(plot_lims["x"])
-    ax.set_ylim(plot_lims["y"])
-    ax.set_aspect("equal")
-
-    for term in esum.terms:
-        for hs in term:
-            _plot_hs(hs, ax, plot_lims["x"], plot_lims["y"])
+    _plot_esum(esum, ax, xlim, ylim)
 
     plot_path = Path("./plots/output.pdf")
     plot_path.parent.mkdir(exist_ok=True)
