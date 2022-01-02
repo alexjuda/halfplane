@@ -108,7 +108,7 @@ def _plot_esum(esum: Esum, ax, xlim, ylim):
 
 
 def main():
-    esum = Esum(
+    esum1 = Esum(
         {
             frozenset(
                 [
@@ -137,11 +137,40 @@ def main():
         }
     )
 
-    fig, ax = plt.subplots(ncols=1, figsize=(12, 12))
+    esum2 = Esum(
+        {
+            frozenset(
+                [
+                    # diagonal line (/)
+                    Hp(
+                        Pt(4, 2),
+                        Pt(8, 10),
+                    ),
+                    # diagonal line (\)
+                    Hp(
+                        Pt(10, 10),
+                        Pt(12, 2),
+                    ),
+                ]
+            )
+        }
+    )
+
+    fig, axes = plt.subplots(2, 2, figsize=(24, 24))
     xlim = [0, 20]
     ylim = [0, 20]
 
-    _plot_esum(esum, ax, xlim, ylim)
+    _plot_esum(esum1, axes[0][0], xlim, ylim)
+    axes[0][0].set_title("esum 1")
+
+    _plot_esum(esum2, axes[0][1], xlim, ylim)
+    axes[0][1].set_title("esum 2")
+
+    _plot_esum(esum1.union(esum2), axes[1][0], xlim, ylim)
+    axes[1][0].set_title("union")
+
+    _plot_esum(esum1.intersection(esum2), axes[1][1], xlim, ylim)
+    axes[1][1].set_title("intersection")
 
     plot_path = Path("./plots/output.pdf")
     plot_path.parent.mkdir(exist_ok=True)
