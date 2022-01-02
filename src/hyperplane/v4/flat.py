@@ -55,10 +55,7 @@ class Hp(t.NamedTuple):
         return Hpc(*self)
 
     def y(self, x: Number) -> t.Optional[Number]:
-        return _extrapolate_line_y(*self, x)
-
-    def x(self, y: Number) -> t.Optional[Number]:
-        return _extrapolate_line_x(*self, y)
+        return _extrapolate_line(*self, x)
 
 
 class Hpc(t.NamedTuple):
@@ -77,10 +74,7 @@ class Hpc(t.NamedTuple):
         return Hp(*self)
 
     def y(self, x: Number) -> t.Optional[Number]:
-        return _extrapolate_line_y(*self, x)
-
-    def x(self, y: Number) -> t.Optional[Number]:
-        return _extrapolate_line_x(*self, y)
+        return _extrapolate_line(*self, x)
 
 
 Hs = t.Union[Hp, Hpc]
@@ -112,26 +106,13 @@ def _line_params(point1: Pt, point2: Pt) -> t.Optional[t.Tuple[Number, Number]]:
     return a, b
 
 
-def _extrapolate_line_y(p1: Pt, p2: Pt, x: Number) -> t.Optional[Number]:
+def _extrapolate_line(p1: Pt, p2: Pt, x: Number) -> t.Optional[Number]:
     if (line_params := _line_params(p1, p2)) is None:
         return None
 
     a, b = line_params
 
     return a * x + b
-
-
-def _extrapolate_line_x(p1: Pt, p2: Pt, y: Number) -> t.Optional[Number]:
-    # y(x) = a * x + b
-    # y = ax + b
-    # y - b = ax
-    # x(y) = (y - b) / a
-    if (line_params := _line_params(p1, p2)) is None:
-        return None
-
-    a, b = line_params
-
-    return (y - b) / a
 
 
 # A group of intersecting halfspaces.
