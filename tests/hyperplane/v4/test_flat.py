@@ -43,6 +43,10 @@ class TestHSContainsPt:
         (Pt(1, 1), Pt(4, 5), Pt(0, 0)),
         # --- top-left line ---
         (Pt(6, 1), Pt(1, 5.5), Pt(-0.01, 0)),
+        # --- numerical errors ---
+        # FIXME: this point is not considered a part of the halfspace that
+        # produced it when intersected with another halfspace.
+        # (Pt(8, 10), Pt(4, 2), Pt(9.333333333333334, 12.666666666666668)),
     ]
 
     @pytest.mark.parametrize("p1,p2,tested_point", HP_POINT_EXAMPLES)
