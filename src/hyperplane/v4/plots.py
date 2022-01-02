@@ -38,17 +38,17 @@ def _rotate_vector(x: float, y: float, degrees) -> t.Tuple[float, float]:
 
 @_plot_hs.register
 def _plot_hp(hp: Hp, ax: plt.Axes, xlim, ylim):
-    lines = _plot_hs_line(hp, ax, xlim, ylim)
+    lines = _plot_hs_line(hp, ax, xlim, ylim, linestyle=":")
     _plot_hs_arrow(hp, ax, color=lines[0].get_color())
 
 
 @_plot_hs.register
 def _plot_hpc(hpc: Hpc, ax: plt.Axes, xlim, ylim):
-    lines = _plot_hs_line(hpc, ax, xlim, ylim)
+    lines = _plot_hs_line(hpc, ax, xlim, ylim, linestyle="-")
     _plot_hs_arrow(hpc, ax, color=lines[0].get_color())
 
 
-def _plot_hs_line(hs: Hs, ax: plt.Axes, xlim, ylim):
+def _plot_hs_line(hs: Hs, ax: plt.Axes, xlim, ylim, linestyle: str):
     x1 = xlim[0] - 1
     x2 = xlim[1] + 1
 
@@ -60,9 +60,9 @@ def _plot_hs_line(hs: Hs, ax: plt.Axes, xlim, ylim):
         x = hs[0][0]
         y1 = ylim[0] - 1
         y2 = ylim[1] + 1
-        return ax.plot([x, x], [y1, y2], linestyle=":")
+        return ax.plot([x, x], [y1, y2], linestyle=linestyle)
 
-    return ax.plot([x1, x2], [y1, y2], linestyle=":")
+    return ax.plot([x1, x2], [y1, y2], linestyle=linestyle)
 
 
 def _plot_hs_arrow(hs: Hs, ax: plt.Axes, color: str):
