@@ -152,7 +152,7 @@ def _plot_point_by_point_check(esum1, esum2):
     _plot_esum_with_content_check(esum1.difference(esum2), axes[2][1], xlim, ylim)
     axes[2][1].set_title("$ e_1 \\backslash e_2 $")
 
-    plot_path = Path("./plots/point_by_point_check.pdf")
+    plot_path = Path("./plots/point_by_point_check.png")
     plot_path.parent.mkdir(exist_ok=True)
 
     fig.savefig(plot_path)
@@ -201,7 +201,7 @@ def _plot_vertices(esum):
         edgecolors="C1",
     )
 
-    plot_path = Path("./plots/vertices.pdf")
+    plot_path = Path("./plots/vertices.png")
     plot_path.parent.mkdir(exist_ok=True)
 
     fig.savefig(plot_path)
