@@ -95,8 +95,13 @@ def _plot_esum_with_content_check(esum: Esum, ax, xlim, ylim):
     (ones_ind,) = np.where(contains_col)
     (zeroes_ind,) = np.where(~contains_col)
 
-    ax.scatter(datapoints[:, 0][zeroes_ind], datapoints[:, 1][zeroes_ind], alpha=0.1)
-    ax.scatter(datapoints[:, 0][ones_ind], datapoints[:, 1][ones_ind])
+    ax.scatter(
+        datapoints[:, 0][zeroes_ind],
+        datapoints[:, 1][zeroes_ind],
+        alpha=0.1,
+        label="miss",
+    )
+    ax.scatter(datapoints[:, 0][ones_ind], datapoints[:, 1][ones_ind], label="hit")
 
     locator = matplotlib.ticker.MaxNLocator(integer=True)
     ax.xaxis.set_major_locator(locator)
@@ -107,6 +112,8 @@ def _plot_esum_with_content_check(esum: Esum, ax, xlim, ylim):
     ax.set_aspect("equal")
 
     _plot_esum_boundaries(esum, ax, xlim, ylim)
+
+    ax.legend(loc="upper right")
 
 
 def _plot_esum_boundaries(esum: Esum, ax, xlim, ylim):
@@ -159,11 +166,14 @@ def _plot_point_by_point_check(esum1, esum2):
 
 
 def _plot_vertices(esum):
-    fig, ax = _subplots(1, 1)
+    fig, axes = _subplots(1, 2)
     xlim = [0, 20]
     ylim = [0, 20]
 
-    _plot_esum_boundaries(esum, ax, xlim, ylim)
+    _plot_esum_with_content_check(esum, axes[0], xlim, ylim)
+    axes[0].set_title("Point by point check")
+
+    _plot_esum_boundaries(esum, axes[1], xlim, ylim)
 
     hses = [hs for term in esum.terms for hs in term]
     crosses = set()
@@ -185,21 +195,26 @@ def _plot_vertices(esum):
 
     crosses_outside = crosses.difference(vertices)
 
-    ax.scatter(
+    axes[1].scatter(
         [pt.x for pt in crosses_outside],
         [pt.y for pt in crosses_outside],
         s=100,
         facecolors="none",
         edgecolors="C0",
+        label="intersection point outside Esum",
     )
 
-    ax.scatter(
+    axes[1].scatter(
         [pt.x for pt in vertices],
         [pt.y for pt in vertices],
         s=100,
         facecolors="C1",
         edgecolors="C1",
+        label="intersection point inside Esum",
     )
+    axes[1].set_title("Vertex detection")
+
+    axes[1].legend()
 
     plot_path = Path("./plots/vertices.png")
     plot_path.parent.mkdir(exist_ok=True)
@@ -256,8 +271,31 @@ def main():
         }
     )
 
-    # _plot_point_by_point_check(esum1, esum2)
-    _plot_vertices(esum1.union(esum2))
+    esum3 = Esum(
+        {
+            frozenset(
+                [
+                    # diagonal line (/)
+                    Hpc(
+                        Pt(8, 10),
+                        Pt(4, 2),
+                    ),
+                    # diagonal line (\)
+                    Hpc(
+                        Pt(12, 2),
+                        Pt(10, 10),
+                    ),
+                    # horizontal line (-)
+                    Hpc(
+                        Pt(2, 2),
+                        Pt(8, 2),
+                    ),
+                ]
+            )
+        }
+    )
+    _plot_point_by_point_check(esum1, esum2)
+    _plot_vertices(esum3)
 
 
 if __name__ == "__main__":
