@@ -119,8 +119,18 @@ def _plot_esum_boundaries(esum: Esum, ax, xlim, ylim):
     ax.set_aspect("equal")
 
 
+def _subplots(n_rows, n_cols, **kwargs):
+    return plt.subplots(
+        n_rows,
+        n_cols,
+        figsize=(12 * n_cols, 12 * n_rows),
+        dpi=200,
+        **kwargs,
+    )
+
+
 def _plot_point_by_point_check(esum1, esum2):
-    fig, axes = plt.subplots(3, 2, figsize=(24, 36))
+    fig, axes = _subplots(3, 2)
     xlim = [0, 20]
     ylim = [0, 20]
 
@@ -149,7 +159,7 @@ def _plot_point_by_point_check(esum1, esum2):
 
 
 def _plot_vertices(esum):
-    fig, ax = plt.subplots(figsize=(12, 12))
+    fig, ax = _subplots(1, 1)
     xlim = [0, 20]
     ylim = [0, 20]
 
