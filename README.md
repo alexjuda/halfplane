@@ -6,7 +6,19 @@
 pip install halfplane
 ```
 
-TBD
+## Plot examples
+
+```
+python -m hyperplane.plots
+```
+
+The results are dumped to `./plots/`.
+
+## Test
+
+```
+pytest
+```
 
 # Dev set up
 
