@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker
 import numpy as np
 
+from . import flat
 from .flat import Hp, Hpc, Pt, Hs, Esum
 
 
@@ -175,14 +176,8 @@ def _plot_vertices(esum):
 
     _plot_esum_boundaries(esum, axes[1], xlim, ylim)
 
-    hses = [hs for term in esum.terms for hs in term]
-    crosses = set()
-    for hs1_i in range(len(hses)):
-        for hs2_i in range(hs1_i + 1, len(hses)):
-            hs1 = hses[hs1_i]
-            hs2 = hses[hs2_i]
-            if (cross_point := hs1.intersects_at(hs2)) is not None:
-                crosses.add(cross_point)
+    halfspaces = [hs for term in esum.terms for hs in term]
+    crosses = flat.find_bounds_crosses(halfspaces)
 
     # We will look for line intersections on the shape's boundary. Shape can
     # consist of Hp's - it would cause false negatives during the vertex test.
