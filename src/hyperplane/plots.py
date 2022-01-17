@@ -179,20 +179,16 @@ def _plot_vertices(esum):
     halfspaces = [hs for term in esum.terms for hs in term]
     crosses = flat.find_bounds_crosses(halfspaces)
 
-    # We will look for line intersections on the shape's boundary. Shape can
-    # consist of Hp's - it would cause false negatives during the vertex test.
-    fat_esum = esum.with_boundaries
+    crosses_inside = set()
+    for cross in crosses:
+        if esum.contains_cross(cross):
+            crosses_inside.add(cross)
 
-    vertices = set()
-    for cross_point in crosses:
-        if fat_esum.contains(cross_point):
-            vertices.add(cross_point)
-
-    crosses_outside = crosses.difference(vertices)
+    crosses_outside = crosses.difference(crosses_inside)
 
     axes[1].scatter(
-        [pt.x for pt in crosses_outside],
-        [pt.y for pt in crosses_outside],
+        [cross.point.x for cross in crosses_outside],
+        [cross.point.y for cross in crosses_outside],
         s=100,
         facecolors="none",
         edgecolors="C0",
@@ -200,8 +196,8 @@ def _plot_vertices(esum):
     )
 
     axes[1].scatter(
-        [pt.x for pt in vertices],
-        [pt.y for pt in vertices],
+        [cross.point.x for cross in crosses_inside],
+        [cross.point.y for cross in crosses_inside],
         s=100,
         facecolors="C1",
         edgecolors="C1",

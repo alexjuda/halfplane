@@ -204,6 +204,15 @@ class Esum(t.NamedTuple):
     def with_boundaries(self) -> "Esum":
         return Esum({frozenset(Hpc(*hs) for hs in term) for term in self.terms})
 
+    def contains_cross(self, cross: "BoundsCross") -> bool:
+        """Checks if `cross` point is a member of this Esum. This includes
+        crosspoints lying on the boundary, regardless of Hp/Hpc strictness.
+        """
+        # TODO: should the inner `all` be switched to an any?
+        return any(
+            all(_hs_contains_cross(hs, cross) for hs in term) for term in self.terms
+        )
+
 
 class BoundsCross(t.NamedTuple):
     hs1: Hs
@@ -222,25 +231,15 @@ def find_bounds_crosses(halfspaces: t.Iterable[Hs]) -> t.Set[BoundsCross]:
     }
 
 
-# def _hp_contains_cross(hp: Hp, cross: BoundsCross):
-#     if hp == cross.hs1
 
 
 def _hs_contains_cross(hs: Hs, cross: BoundsCross):
-    # BoundsCross comes from halfspace bounaries. If one of intersecting
-    # halfspaces is the one that we're checking, we can be sure
-    # that it contains the crossing point. This approach allows us to avoid
-    # numerical errors.
-    #
-    # In such scenario, we consider that an intersecting point is always
-    # included in the halfspace, even if the halfspace was an Hp. This is why
-    # we cast hs1 & hs2 to Hpc.
-    # if hpc == Hpc(*cross.hs1) or hpc == Hpc(*cross.hs2):
-    if (hs.p1, hs.p2) == cross.hs1
+    # Check 1: see if `hs` was used to create this `cross`. This should
+    # alleviate numerical errors.
+    if hs in {cross.hs1, cross.hs2}:
         return True
 
-    return hpc.contains(cross.point)
+    # Check 2: see if a `hs` contains the cross point. Allow points on
+    # boundaries, even for `Hp`.
+    return Hpc(*hs).contains(cross.point)
 
-
-def bounds_cross_inside_esum(cross: BoundsCross, esum: Esum):
-    pass
