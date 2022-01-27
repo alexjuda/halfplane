@@ -231,8 +231,6 @@ def find_bounds_crosses(halfspaces: t.Iterable[Hs]) -> t.Set[BoundsCross]:
     }
 
 
-
-
 def _hs_contains_cross(hs: Hs, cross: BoundsCross):
     # Check 1: see if `hs` was used to create this `cross`. This should
     # alleviate numerical errors.
@@ -242,4 +240,3 @@ def _hs_contains_cross(hs: Hs, cross: BoundsCross):
     # Check 2: see if a `hs` contains the cross point. Allow points on
     # boundaries, even for `Hp`.
     return Hpc(*hs).contains(cross.point)
-

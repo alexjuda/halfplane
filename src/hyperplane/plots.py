@@ -8,7 +8,7 @@ import matplotlib.ticker
 import numpy as np
 
 from . import flat
-from .flat import Hp, Hpc, Pt, Hs, Esum
+from .flat import Hp, Hpc, Pt, Hs, Esum, BoundsCross
 
 
 def _datapoints(esum: Esum, x_iter, y_iter) -> np.ndarray:
@@ -127,12 +127,12 @@ def _plot_esum_boundaries(esum: Esum, ax, xlim, ylim):
     ax.set_aspect("equal")
 
 
-def _subplots(n_rows, n_cols, **kwargs):
+def _subplots(n_rows, n_cols, size=12, **kwargs):
     return plt.subplots(
         n_rows,
         n_cols,
-        figsize=(12 * n_cols, 12 * n_rows),
-        dpi=200,
+        figsize=(size * n_cols, size * n_rows),
+        dpi=400,
         **kwargs,
     )
 
@@ -166,7 +166,41 @@ def _plot_point_by_point_check(esum1, esum2):
     fig.savefig(plot_path)
 
 
-def _plot_vertices(esum):
+def _plot_crosses(esum: Esum, ax, xlim, ylim, draw_crosses_outside=True):
+    halfspaces = [hs for term in esum.terms for hs in term]
+    crosses = flat.find_bounds_crosses(halfspaces)
+
+    crosses_inside = set()
+    for cross in crosses:
+        if esum.contains_cross(cross):
+            crosses_inside.add(cross)
+
+    if draw_crosses_outside:
+        crosses_outside = crosses.difference(crosses_inside)
+
+        ax.scatter(
+            [cross.point.x for cross in crosses_outside],
+            [cross.point.y for cross in crosses_outside],
+            s=200,
+            facecolors="none",
+            edgecolors="C0",
+            label="intersection point outside Esum",
+        )
+
+    ax.scatter(
+        [cross.point.x for cross in crosses_inside],
+        [cross.point.y for cross in crosses_inside],
+        s=200,
+        facecolors="C1",
+        edgecolors="C1",
+        label="intersection point inside Esum",
+    )
+    ax.set_title("Vertex detection")
+
+    ax.legend()
+
+
+def _plot_point_check_and_crosses(esum, esum_name=None):
     fig, axes = _subplots(1, 2)
     xlim = [0, 20]
     ylim = [0, 20]
@@ -176,41 +210,43 @@ def _plot_vertices(esum):
 
     _plot_esum_boundaries(esum, axes[1], xlim, ylim)
 
-    halfspaces = [hs for term in esum.terms for hs in term]
-    crosses = flat.find_bounds_crosses(halfspaces)
+    _plot_crosses(esum, axes[1], xlim, ylim)
 
-    crosses_inside = set()
-    for cross in crosses:
-        if esum.contains_cross(cross):
-            crosses_inside.add(cross)
-
-    crosses_outside = crosses.difference(crosses_inside)
-
-    axes[1].scatter(
-        [cross.point.x for cross in crosses_outside],
-        [cross.point.y for cross in crosses_outside],
-        s=100,
-        facecolors="none",
-        edgecolors="C0",
-        label="intersection point outside Esum",
-    )
-
-    axes[1].scatter(
-        [cross.point.x for cross in crosses_inside],
-        [cross.point.y for cross in crosses_inside],
-        s=100,
-        facecolors="C1",
-        edgecolors="C1",
-        label="intersection point inside Esum",
-    )
-    axes[1].set_title("Vertex detection")
-
-    axes[1].legend()
-
-    plot_path = Path("./plots/vertices.png")
+    plot_path = Path(f"./plots/vertices_{esum_name or ''}.png")
     plot_path.parent.mkdir(exist_ok=True)
 
     fig.savefig(plot_path)
+
+
+def _plot_halfspaces_clean(esum: Esum, esum_name: str):
+    fig, axes = _subplots(1, 1, size=8)
+    xlim = [0, 20]
+    ylim = [0, 20]
+    _plot_esum_boundaries(esum, axes, xlim, ylim)
+    axes.xaxis.set_major_locator(plt.NullLocator())
+    axes.yaxis.set_major_locator(plt.NullLocator())
+
+    plot_path = Path(f"./plots/hs_clean_{esum_name}.png")
+    plot_path.parent.mkdir(exist_ok=True)
+    fig.savefig(plot_path)
+
+
+def _plot_crosses_clean(esum: Esum, esum_name: str):
+    fig, axes = _subplots(1, 1, size=8)
+    xlim = [0, 20]
+    ylim = [0, 20]
+    _plot_esum_boundaries(esum, axes, xlim, ylim)
+    _plot_crosses(esum, axes, xlim, ylim, draw_crosses_outside=False)
+
+    axes.set_title(None)
+    axes.xaxis.set_major_locator(plt.NullLocator())
+    axes.yaxis.set_major_locator(plt.NullLocator())
+    axes.get_legend().remove()
+
+    plot_path = Path(f"./plots/crosses_clean_{esum_name}.png")
+    plot_path.parent.mkdir(exist_ok=True)
+    fig.savefig(plot_path)
+
 
 
 def main():
@@ -285,8 +321,13 @@ def main():
             )
         }
     )
-    _plot_point_by_point_check(esum1, esum2)
-    _plot_vertices(esum3)
+    # _plot_point_by_point_check(esum1, esum2)
+    # _plot_vertices(esum1.intersection(esum2))
+
+    # _plot_halfspaces_clean(esum1, "e1")
+    # _plot_halfspaces_clean(esum2, "e2")
+    # _plot_halfspaces_clean(esum1.intersection(esum2), "e3")
+    _plot_crosses_clean(esum1.intersection(esum2), "e3")
 
 
 if __name__ == "__main__":
