@@ -166,7 +166,7 @@ def _plot_point_by_point_check(esum1, esum2):
     fig.savefig(plot_path)
 
 
-def _plot_crosses(esum: Esum, ax, xlim, ylim, draw_crosses_outside=True):
+def _plot_vertices(esum: Esum, ax, xlim, ylim, draw_crosses_outside=True):
     halfspaces = [hs for term in esum.terms for hs in term]
     crosses = flat.find_bounds_crosses(halfspaces)
 
@@ -200,6 +200,19 @@ def _plot_crosses(esum: Esum, ax, xlim, ylim, draw_crosses_outside=True):
     ax.legend()
 
 
+def _plot_all_crosses(esum: Esum, ax, xlim, ylim):
+    halfspaces = [hs for term in esum.terms for hs in term]
+    crosses = flat.find_bounds_crosses(halfspaces)
+
+    ax.scatter(
+        [cross.point.x for cross in crosses],
+        [cross.point.y for cross in crosses],
+        s=200,
+        facecolors="none",
+        edgecolors="C0",
+    )
+
+
 def _plot_point_check_and_crosses(esum, esum_name=None):
     fig, axes = _subplots(1, 2)
     xlim = [0, 20]
@@ -210,7 +223,7 @@ def _plot_point_check_and_crosses(esum, esum_name=None):
 
     _plot_esum_boundaries(esum, axes[1], xlim, ylim)
 
-    _plot_crosses(esum, axes[1], xlim, ylim)
+    _plot_vertices(esum, axes[1], xlim, ylim)
 
     plot_path = Path(f"./plots/vertices_{esum_name or ''}.png")
     plot_path.parent.mkdir(exist_ok=True)
@@ -231,12 +244,12 @@ def _plot_halfspaces_clean(esum: Esum, esum_name: str):
     fig.savefig(plot_path)
 
 
-def _plot_crosses_clean(esum: Esum, esum_name: str):
+def _plot_vertices_clean(esum: Esum, esum_name: str):
     fig, axes = _subplots(1, 1, size=8)
     xlim = [0, 20]
     ylim = [0, 20]
     _plot_esum_boundaries(esum, axes, xlim, ylim)
-    _plot_crosses(esum, axes, xlim, ylim, draw_crosses_outside=False)
+    _plot_vertices(esum, axes, xlim, ylim, draw_crosses_outside=False)
 
     axes.set_title(None)
     axes.xaxis.set_major_locator(plt.NullLocator())
@@ -247,6 +260,20 @@ def _plot_crosses_clean(esum: Esum, esum_name: str):
     plot_path.parent.mkdir(exist_ok=True)
     fig.savefig(plot_path)
 
+
+def _plot_all_crosses_clean(esum: Esum, esum_name: str):
+    fig, axes = _subplots(1, 1, size=8)
+    xlim = [0, 20]
+    ylim = [0, 20]
+    _plot_esum_boundaries(esum, axes, xlim, ylim)
+    _plot_all_crosses(esum, axes, xlim, ylim)
+
+    axes.xaxis.set_major_locator(plt.NullLocator())
+    axes.yaxis.set_major_locator(plt.NullLocator())
+
+    plot_path = Path(f"./plots/all_crosses_clean_{esum_name}.png")
+    plot_path.parent.mkdir(exist_ok=True)
+    fig.savefig(plot_path)
 
 
 def main():
@@ -327,7 +354,8 @@ def main():
     # _plot_halfspaces_clean(esum1, "e1")
     # _plot_halfspaces_clean(esum2, "e2")
     # _plot_halfspaces_clean(esum1.intersection(esum2), "e3")
-    _plot_crosses_clean(esum1.intersection(esum2), "e3")
+    # _plot_vertices_clean(esum1.intersection(esum2), "e3")
+    _plot_all_crosses_clean(esum1.intersection(esum2), "e3")
 
 
 if __name__ == "__main__":
