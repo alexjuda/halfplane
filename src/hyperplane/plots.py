@@ -208,8 +208,8 @@ def _plot_all_crosses(esum: Esum, ax, xlim, ylim):
         [cross.point.x for cross in crosses],
         [cross.point.y for cross in crosses],
         s=200,
-        facecolors="none",
-        edgecolors="C0",
+        facecolors="C1",
+        edgecolors="C1",
     )
 
 
@@ -256,7 +256,7 @@ def _plot_vertices_clean(esum: Esum, esum_name: str):
     axes.yaxis.set_major_locator(plt.NullLocator())
     axes.get_legend().remove()
 
-    plot_path = Path(f"./plots/crosses_clean_{esum_name}.png")
+    plot_path = Path(f"./plots/vertices_clean_{esum_name}.png")
     plot_path.parent.mkdir(exist_ok=True)
     fig.savefig(plot_path)
 
@@ -354,8 +354,8 @@ def main():
     # _plot_halfspaces_clean(esum1, "e1")
     # _plot_halfspaces_clean(esum2, "e2")
     # _plot_halfspaces_clean(esum1.intersection(esum2), "e3")
-    # _plot_vertices_clean(esum1.intersection(esum2), "e3")
-    _plot_all_crosses_clean(esum1.intersection(esum2), "e3")
+    _plot_vertices_clean(esum1.intersection(esum2), "e3")
+    # _plot_all_crosses_clean(esum1.intersection(esum2), "e3")
 
 
 if __name__ == "__main__":
