@@ -9,30 +9,63 @@ from .. import plots
 
 
 def _make_shapes():
+    triangle = Esum(
+        {
+            frozenset(
+                [
+                    # diagonal line (/)
+                    Hpc(
+                        Pt(8, 10),
+                        Pt(4, 2),
+                    ),
+                    # diagonal line (\)
+                    Hp(
+                        Pt(12, 2),
+                        Pt(10, 10),
+                    ),
+                    # horizontal line (-)
+                    Hpc(
+                        Pt(2, 2),
+                        Pt(8, 2),
+                    ),
+                ]
+            )
+        }
+    )
+
+    square = Esum(
+        {
+            frozenset(
+                [
+                    # vertical line (|)
+                    Hpc(
+                        Pt(3, 5),
+                        Pt(3, -1),
+                    ),
+                    # vertical line (|)
+                    Hpc(
+                        Pt(15, 1),
+                        Pt(15, 6),
+                    ),
+                    # horizontal line (-)
+                    Hpc(
+                        Pt(1, 10),
+                        Pt(10, 10),
+                    ),
+                    # horizontal line (-)
+                    Hpc(
+                        Pt(11, 17),
+                        Pt(1, 17),
+                    ),
+                ]
+            )
+        }
+    )
+
     return [
-        Esum(
-            {
-                frozenset(
-                    [
-                        # diagonal line (/)
-                        Hpc(
-                            Pt(8, 10),
-                            Pt(4, 2),
-                        ),
-                        # diagonal line (\)
-                        Hpc(
-                            Pt(12, 2),
-                            Pt(10, 10),
-                        ),
-                        # horizontal line (-)
-                        Hpc(
-                            Pt(2, 2),
-                            Pt(8, 2),
-                        ),
-                    ]
-                )
-            }
-        )
+        triangle,
+        square,
+        square.difference(triangle),
     ]
 
 
