@@ -223,7 +223,7 @@ class BoundsCross(t.NamedTuple):
         return _intersection_point(self.hs1, self.hs2)
 
 
-def find_bounds_crosses(halfspaces: t.Iterable[Hs]) -> t.Set[BoundsCross]:
+def find_all_crosses(halfspaces: t.Iterable[Hs]) -> t.Set[BoundsCross]:
     return {
         cross
         for hs1, hs2 in itertools.combinations(halfspaces, 2)
@@ -240,3 +240,9 @@ def _hs_contains_cross(hs: Hs, cross: BoundsCross):
     # Check 2: see if a `hs` contains the cross point. Allow points on
     # boundaries, even for `Hp`.
     return Hpc(*hs).contains(cross.point)
+
+
+def find_vertices(esum: Esum) -> t.Set[BoundsCross]:
+    crosses = find_all_crosses([hs for term in esum.terms for hs in term])
+    crosses_inside = {cross for cross in crosses if esum.contains_cross(cross)}
+    return crosses_inside

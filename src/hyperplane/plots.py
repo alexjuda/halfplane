@@ -112,12 +112,12 @@ def _plot_esum_with_content_check(esum: Esum, ax, xlim, ylim):
     ax.set_ylim(ylim)
     ax.set_aspect("equal")
 
-    _plot_esum_boundaries(esum, ax, xlim, ylim)
+    plot_esum_boundaries(esum, ax, xlim, ylim)
 
     ax.legend(loc="upper right")
 
 
-def _plot_esum_boundaries(esum: Esum, ax, xlim, ylim):
+def plot_esum_boundaries(esum: Esum, ax, xlim, ylim):
     for term in esum.terms:
         for hs in term:
             _plot_hs(hs, ax, xlim, ylim)
@@ -127,7 +127,7 @@ def _plot_esum_boundaries(esum: Esum, ax, xlim, ylim):
     ax.set_aspect("equal")
 
 
-def _subplots(n_rows, n_cols, size=12, **kwargs):
+def subplots(n_rows, n_cols, size=12, **kwargs):
     return plt.subplots(
         n_rows,
         n_cols,
@@ -138,7 +138,7 @@ def _subplots(n_rows, n_cols, size=12, **kwargs):
 
 
 def _plot_point_by_point_check(esum1, esum2):
-    fig, axes = _subplots(3, 2)
+    fig, axes = subplots(3, 2)
     xlim = [0, 20]
     ylim = [0, 20]
 
@@ -166,18 +166,35 @@ def _plot_point_by_point_check(esum1, esum2):
     fig.savefig(plot_path)
 
 
-def _plot_vertices(esum: Esum, ax, xlim, ylim, draw_crosses_outside=True):
+def _find_and_plot_vertices(esum: Esum, ax, xlim, ylim, draw_crosses_outside=True):
     halfspaces = [hs for term in esum.terms for hs in term]
-    crosses = flat.find_bounds_crosses(halfspaces)
+    crosses = flat.find_all_crosses(halfspaces)
 
-    crosses_inside = set()
+    vertices = set()
     for cross in crosses:
         if esum.contains_cross(cross):
-            crosses_inside.add(cross)
+            vertices.add(cross)
 
     if draw_crosses_outside:
-        crosses_outside = crosses.difference(crosses_inside)
+        crosses_outside = crosses.difference(vertices)
+    else:
+        crosses_outside = None
 
+    draw_vertices(
+        vertices=vertices,
+        ax=ax,
+        xlim=xlim,
+        ylim=ylim,
+        crosses_outside=crosses_outside,
+    )
+
+    ax.legend()
+
+
+def draw_vertices(
+    vertices: t.Sequence[BoundsCross], ax, xlim, ylim, crosses_outside=None
+):
+    if crosses_outside is not None:
         ax.scatter(
             [cross.point.x for cross in crosses_outside],
             [cross.point.y for cross in crosses_outside],
@@ -188,8 +205,8 @@ def _plot_vertices(esum: Esum, ax, xlim, ylim, draw_crosses_outside=True):
         )
 
     ax.scatter(
-        [cross.point.x for cross in crosses_inside],
-        [cross.point.y for cross in crosses_inside],
+        [cross.point.x for cross in vertices],
+        [cross.point.y for cross in vertices],
         s=200,
         facecolors="C1",
         edgecolors="C1",
@@ -197,12 +214,10 @@ def _plot_vertices(esum: Esum, ax, xlim, ylim, draw_crosses_outside=True):
     )
     ax.set_title("Vertex detection")
 
-    ax.legend()
-
 
 def _plot_all_crosses(esum: Esum, ax, xlim, ylim):
     halfspaces = [hs for term in esum.terms for hs in term]
-    crosses = flat.find_bounds_crosses(halfspaces)
+    crosses = flat.find_all_crosses(halfspaces)
 
     ax.scatter(
         [cross.point.x for cross in crosses],
@@ -214,16 +229,16 @@ def _plot_all_crosses(esum: Esum, ax, xlim, ylim):
 
 
 def _plot_point_check_and_crosses(esum, esum_name=None):
-    fig, axes = _subplots(1, 2)
+    fig, axes = subplots(1, 2)
     xlim = [0, 20]
     ylim = [0, 20]
 
     _plot_esum_with_content_check(esum, axes[0], xlim, ylim)
     axes[0].set_title("Point by point check")
 
-    _plot_esum_boundaries(esum, axes[1], xlim, ylim)
+    plot_esum_boundaries(esum, axes[1], xlim, ylim)
 
-    _plot_vertices(esum, axes[1], xlim, ylim)
+    _find_and_plot_vertices(esum, axes[1], xlim, ylim)
 
     plot_path = Path(f"./plots/vertices_{esum_name or ''}.png")
     plot_path.parent.mkdir(exist_ok=True)
@@ -232,10 +247,10 @@ def _plot_point_check_and_crosses(esum, esum_name=None):
 
 
 def _plot_halfspaces_clean(esum: Esum, esum_name: str):
-    fig, axes = _subplots(1, 1, size=8)
+    fig, axes = subplots(1, 1, size=8)
     xlim = [0, 20]
     ylim = [0, 20]
-    _plot_esum_boundaries(esum, axes, xlim, ylim)
+    plot_esum_boundaries(esum, axes, xlim, ylim)
     axes.xaxis.set_major_locator(plt.NullLocator())
     axes.yaxis.set_major_locator(plt.NullLocator())
 
@@ -245,11 +260,11 @@ def _plot_halfspaces_clean(esum: Esum, esum_name: str):
 
 
 def _plot_vertices_clean(esum: Esum, esum_name: str):
-    fig, axes = _subplots(1, 1, size=8)
+    fig, axes = subplots(1, 1, size=8)
     xlim = [0, 20]
     ylim = [0, 20]
-    _plot_esum_boundaries(esum, axes, xlim, ylim)
-    _plot_vertices(esum, axes, xlim, ylim, draw_crosses_outside=False)
+    plot_esum_boundaries(esum, axes, xlim, ylim)
+    _find_and_plot_vertices(esum, axes, xlim, ylim, draw_crosses_outside=False)
 
     axes.set_title(None)
     axes.xaxis.set_major_locator(plt.NullLocator())
@@ -262,10 +277,10 @@ def _plot_vertices_clean(esum: Esum, esum_name: str):
 
 
 def _plot_all_crosses_clean(esum: Esum, esum_name: str):
-    fig, axes = _subplots(1, 1, size=8)
+    fig, axes = subplots(1, 1, size=8)
     xlim = [0, 20]
     ylim = [0, 20]
-    _plot_esum_boundaries(esum, axes, xlim, ylim)
+    plot_esum_boundaries(esum, axes, xlim, ylim)
     _plot_all_crosses(esum, axes, xlim, ylim)
 
     axes.xaxis.set_major_locator(plt.NullLocator())
@@ -349,13 +364,14 @@ def main():
         }
     )
     # _plot_point_by_point_check(esum1, esum2)
-    # _plot_vertices(esum1.intersection(esum2))
+    _find_and_plot_vertices(esum1.intersection(esum2))
 
     # _plot_halfspaces_clean(esum1, "e1")
     # _plot_halfspaces_clean(esum2, "e2")
     # _plot_halfspaces_clean(esum1.intersection(esum2), "e3")
-    _plot_vertices_clean(esum1.intersection(esum2), "e3")
+    # _plot_vertices_clean(esum1.intersection(esum2), "e3")
     # _plot_all_crosses_clean(esum1.intersection(esum2), "e3")
+    breakpoint()
 
 
 if __name__ == "__main__":
