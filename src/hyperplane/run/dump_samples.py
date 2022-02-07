@@ -93,7 +93,7 @@ def _make_c():
         }
     )
 
-    return external.difference(internal)
+    return external.difference(internal), "letter C"
 
 
 def _make_basic_shapes():
@@ -150,25 +150,26 @@ def _make_basic_shapes():
         }
     )
     return [
-        triangle,
-        rect,
-        rect.difference(triangle),
-        triangle.difference(rect),
-        rect.union(triangle),
-        rect.intersection(triangle),
+        (triangle, "triangle"),
+        (rect, "rect"),
+        (rect.difference(triangle), "rect \\ triangle"),
+        (triangle.difference(rect), "triagle \\ rect"),
+        (rect.union(triangle), "rect | triangle"),
+        (rect.intersection(triangle), "rect ^ triangle"),
     ]
 
 
 RESULTS_PATH = Path("./data")
 
 
-def _plot(esum, vertices, path):
+def _plot(esum, vertices, path, name):
     fig, ax = plots.subplots(1, 1)
 
     xlim = [0, 20]
     ylim = [0, 20]
     plots.plot_esum_boundaries(esum, ax=ax, xlim=xlim, ylim=ylim)
     plots.draw_vertices(vertices, ax=ax, xlim=xlim, ylim=ylim)
+    ax.set_title(name)
 
     fig.savefig(path)
 
@@ -176,13 +177,13 @@ def _plot(esum, vertices, path):
 def main():
     RESULTS_PATH.mkdir(exist_ok=True)
 
-    for shape_i, shape in enumerate([*_make_basic_shapes(), _make_c()]):
-        vertices = flat.find_vertices(esum=shape)
+    for shape_i, (esum, name) in enumerate([*_make_basic_shapes(), _make_c()]):
+        vertices = flat.find_vertices(esum=esum)
 
         with open(RESULTS_PATH / f"shape_{shape_i}.json", "w") as f:
-            io.dump_shape(esum=shape, vertices=vertices, f=f)
+            io.dump_shape(esum=esum, vertices=vertices, f=f)
 
-        _plot(shape, vertices, RESULTS_PATH / f"shape_{shape_i}.png")
+        _plot(esum, vertices, RESULTS_PATH / f"shape_{shape_i}.png", name)
 
 
 if __name__ == "__main__":
