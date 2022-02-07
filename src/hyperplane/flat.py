@@ -57,9 +57,6 @@ class Hp(t.NamedTuple):
     def y(self, x: Number) -> t.Optional[Number]:
         return _extrapolate_line(*self, x)
 
-    def intersects_at(self, other: "Hs") -> t.Optional[Pt]:
-        return _intersection_point(self, other)
-
 
 class Hpc(t.NamedTuple):
     """Half plane, where the boundary is a line that crosses p1 & p1. Includes
@@ -78,9 +75,6 @@ class Hpc(t.NamedTuple):
 
     def y(self, x: Number) -> t.Optional[Number]:
         return _extrapolate_line(*self, x)
-
-    def intersects_at(self, other: "Hs") -> t.Optional[Pt]:
-        return _intersection_point(self, other)
 
 
 Hs = t.Union[Hp, Hpc]
@@ -209,3 +203,46 @@ class Esum(t.NamedTuple):
     @property
     def with_boundaries(self) -> "Esum":
         return Esum({frozenset(Hpc(*hs) for hs in term) for term in self.terms})
+
+    def contains_cross(self, cross: "BoundsCross") -> bool:
+        """Checks if `cross` point is a member of this Esum. This includes
+        crosspoints lying on the boundary, regardless of Hp/Hpc strictness.
+        """
+        # TODO: should the inner `all` be switched to an any?
+        return any(
+            all(_hs_contains_cross(hs, cross) for hs in term) for term in self.terms
+        )
+
+
+class BoundsCross(t.NamedTuple):
+    hs1: Hs
+    hs2: Hs
+
+    @property
+    def point(self) -> Pt:
+        return _intersection_point(self.hs1, self.hs2)
+
+
+def find_all_crosses(halfspaces: t.Iterable[Hs]) -> t.Set[BoundsCross]:
+    return {
+        cross
+        for hs1, hs2 in itertools.combinations(halfspaces, 2)
+        if (cross := BoundsCross(hs1, hs2)).point is not None
+    }
+
+
+def _hs_contains_cross(hs: Hs, cross: BoundsCross):
+    # Check 1: see if `hs` was used to create this `cross`. This should
+    # alleviate numerical errors.
+    if hs in {cross.hs1, cross.hs2}:
+        return True
+
+    # Check 2: see if a `hs` contains the cross point. Allow points on
+    # boundaries, even for `Hp`.
+    return Hpc(*hs).contains(cross.point)
+
+
+def find_vertices(esum: Esum) -> t.Set[BoundsCross]:
+    crosses = find_all_crosses([hs for term in esum.terms for hs in term])
+    crosses_inside = {cross for cross in crosses if esum.contains_cross(cross)}
+    return crosses_inside
