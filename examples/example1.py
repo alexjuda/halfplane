@@ -1,6 +1,7 @@
 import hyperplane.flat as hp
 from hyperplane.flat import Esum, Hp, Hpc, Pt
 
+# define a shape
 esum1 = Esum(
     {
         frozenset(
@@ -30,6 +31,8 @@ esum1 = Esum(
     }
 )
 
+
+# define another one
 esum2 = Esum(
     {
         frozenset(
@@ -49,9 +52,12 @@ esum2 = Esum(
     }
 )
 
+# combine shapes
 esum3 = esum1.intersection(esum2)
 
+# do the hard work
 vertices = hp.find_vertices(esum3)
 
+# export
 with open("exported.stl", "w") as f:
     hp.dump_to_stl(vertices, f)
