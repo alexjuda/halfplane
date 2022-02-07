@@ -14,6 +14,7 @@ def dump_shape(esum: flat.Esum, vertices: t.Sequence[flat.BoundsCross], f):
                     {
                         "p1": hs.p1._asdict(),
                         "p2": hs.p2._asdict(),
+                        "type": type(hs).__name__,
                     }
                     for hs in term
                 ]
