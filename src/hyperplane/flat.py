@@ -246,3 +246,62 @@ def find_vertices(esum: Esum) -> t.Set[BoundsCross]:
     crosses = find_all_crosses([hs for term in esum.terms for hs in term])
     crosses_inside = {cross for cross in crosses if esum.contains_cross(cross)}
     return crosses_inside
+
+
+class CrossSegment(t.NamedTuple):
+    x1: BoundsCross
+    x2: BoundsCross
+
+
+def _hs_crosses_index(
+    crosses: t.Iterable[BoundsCross],
+) -> t.Dict[Hs, t.Set[BoundsCross]]:
+    """Cross maps from points to HSes. This maps from HSes to crosses."""
+    index = {}
+    for cross in crosses:
+        for hs in cross:
+            index.setdefault(hs, set()).add(cross)
+    return index
+
+
+class GraphEdge(t.NamedTuple):
+    node1: t.Any
+    node2: t.Any
+    meta: t.Any
+
+
+class Graph:
+    def __init__(self, edges: t.Sequence[GraphEdge]):
+        self.edges = set(edges)
+        self._index = {
+            node: edge for edge in edges for node in [edge.node1, edge.node2]
+        }
+
+    def edge_meta(self, node):
+        return self._index[node].meta
+
+
+def segments(crosses: t.Iterable[BoundsCross]) -> t.Sequence[CrossSegment]:
+    # - pick a vertex
+    # - find both/all hses it crossed. Note: there might be duplicates if three
+    #   lines intersect at the same point. Should we ignore this for now?
+    # - for each hs, get all cross points. Note: we have a bipartite graph! Do
+    #   we wanna go BFS or DFS? Is this a topological sort? It doesn't matter
+    #   because we only care about the segments (graph edges), not about the
+    #   segment order.
+    # - make a new graph where edges are the segments. Traverse it. There might
+    #   be cycles. Hopefully, yields a hull.
+    cross_index = _hs_crosses_index(crosses)
+
+    edges = []
+    for cross in crosses:
+        for hs in cross:
+            for antipodal_cross in cross_index[hs]:
+                # node 1 - cross
+                # edge - hs
+                # node 2 - intipodal cross
+                edges.append(GraphEdge(node1=cross, node2=antipodal_cross, meta=hs))
+
+    segment_graph = Graph(edges)
+
+    return [CrossSegment(edge.node1, edge.node2) for edge in segment_graph.edges]
