@@ -163,6 +163,7 @@ class Esum(t.NamedTuple):
     """
 
     terms: t.Set[Term]
+    name: t.Optional[str] = None
 
     def union(self, other: "Esum") -> "Esum":
         return Esum(self.terms | other.terms)
