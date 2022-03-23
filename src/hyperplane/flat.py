@@ -1,3 +1,4 @@
+import dataclasses
 import typing as t
 import itertools
 from numbers import Number
@@ -28,7 +29,19 @@ from .core import Coord
 # - [x] point-by-point test
 
 
-class Pt(t.NamedTuple):
+frozen_model = dataclasses.dataclass(frozen=True)
+
+
+class IterableMixin:
+    def __iter__(self):
+        return iter(dataclasses.astuple(self))
+
+    def __len__(self):
+        return len(dataclasses.astuple(self))
+
+
+@frozen_model
+class Pt(IterableMixin):
     x: Coord
     y: Coord
 
@@ -38,7 +51,8 @@ class Pt(t.NamedTuple):
         return np.array([*self, 0])
 
 
-class Hp(t.NamedTuple):
+@frozen_model
+class Hp(IterableMixin):
     """Half plane, where the boundary is a line that crosses p1 & p1. Doesn't
     include the boundary itself. Contains all points "on the left" of the
     P1->P2 vector.
@@ -58,7 +72,8 @@ class Hp(t.NamedTuple):
         return _extrapolate_line(*self, x)
 
 
-class Hpc(t.NamedTuple):
+@frozen_model
+class Hpc(IterableMixin):
     """Half plane, where the boundary is a line that crosses p1 & p1. Includes
     the boundary. Contains all points "on the left" of the P1->P2 vector.
     """
@@ -154,7 +169,8 @@ def _intersection_point(hs1: Hs, hs2: Hs) -> t.Optional[Pt]:
 Term = t.Set[Hs]
 
 
-class Esum(t.NamedTuple):
+@frozen_model
+class Esum(IterableMixin):
     """Expression sum. Basic shape representation.
 
     Uses two-level sets of halfspaces. The outer set is considered a union of
@@ -215,7 +231,8 @@ class Esum(t.NamedTuple):
         )
 
 
-class BoundsCross(t.NamedTuple):
+@frozen_model
+class BoundsCross(IterableMixin):
     hs1: Hs
     hs2: Hs
 
@@ -249,7 +266,8 @@ def find_vertices(esum: Esum) -> t.Set[BoundsCross]:
     return crosses_inside
 
 
-class CrossSegment(t.NamedTuple):
+@frozen_model
+class CrossSegment(IterableMixin):
     x1: BoundsCross
     x2: BoundsCross
 
@@ -265,12 +283,14 @@ def _hs_crosses_index(
     return index
 
 
-class GraphEdge(t.NamedTuple):
+@frozen_model
+class GraphEdge(IterableMixin):
     node1: t.Any
     node2: t.Any
     meta: t.Any
 
 
+@frozen_model
 class Graph:
     def __init__(self, edges: t.Sequence[GraphEdge]):
         self.edges = set(edges)
