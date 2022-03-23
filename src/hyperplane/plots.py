@@ -291,6 +291,22 @@ def _plot_all_crosses_clean(esum: Esum, esum_name: str):
     fig.savefig(plot_path)
 
 
+def draw_segments(ax, segments: t.Sequence[flat.CrossSegment], xlim, ylim):
+    for segment_i, segment in enumerate(segments):
+        x1, y1, _ = segment.x1.point.position
+        x2, y2, _ = segment.x2.point.position
+        text = str(segment_i)
+
+        ax.plot([x1, x2], [y1, y2], c="C1")
+        ax.text(
+            x=(x1 + x2) / 2,
+            y=(y1 + y2) / 2,
+            s=text,
+        )
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+
+
 def main():
     esum1 = Esum(
         {

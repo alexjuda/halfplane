@@ -11,18 +11,21 @@ RESULTS_PATH = Path("./data/groups")
 
 def _plot(esum, path, name):
     n_groups = len(esum.terms)
-    fig, axes = plots.subplots(n_groups, 1)
+    fig, axes = plots.subplots(n_groups, 2)
 
     xlim = [0, 20]
     ylim = [0, 20]
 
-    for group_i, (group, ax) in enumerate(zip(esum.terms, axes)):
+    for group_i, (group, ax_row) in enumerate(zip(esum.terms, axes)):
         group_esum = dataclasses.replace(esum, terms={group})
-        plots.plot_esum_boundaries(group_esum, ax=ax, xlim=xlim, ylim=ylim)
+        plots.plot_esum_boundaries(group_esum, ax=ax_row[0], xlim=xlim, ylim=ylim)
 
         vertices = flat.find_vertices(group_esum)
-        plots.draw_vertices(vertices, ax=ax, xlim=xlim, ylim=ylim)
-        ax.set_title(f"group {group_i}")
+        plots.draw_vertices(vertices, ax=ax_row[0], xlim=xlim, ylim=ylim)
+        ax_row[0].set_title(f"group {group_i}")
+
+        segments = flat.segments(vertices)
+        plots.draw_segments(ax_row[1], segments, xlim, ylim)
 
     fig.savefig(path)
 
