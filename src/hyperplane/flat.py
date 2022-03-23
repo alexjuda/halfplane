@@ -265,8 +265,9 @@ def _hs_contains_cross(hs: Hs, cross: BoundsCross):
 
 def find_vertices(esum: Esum) -> t.Set[BoundsCross]:
     crosses = find_all_crosses([hs for term in esum.terms for hs in term])
-    crosses_inside = {cross for cross in crosses if esum.contains_cross(cross)}
-    return crosses_inside
+    inside = {cross for cross in crosses if esum.contains_cross(cross)}
+    collapsed = collapse_crosses(inside)
+    return collapsed
 
 
 @frozen_model
@@ -334,7 +335,7 @@ def segments(crosses: t.Iterable[BoundsCross]) -> t.Sequence[CrossSegment]:
 
     edges = []
     for cross in crosses:
-        for hs in cross:
+        for hs in [cross.hs1, cross.hs2]:
             for antipodal_cross in cross_index[hs]:
                 # node 1 - cross
                 # edge - hs
@@ -347,8 +348,7 @@ def segments(crosses: t.Iterable[BoundsCross]) -> t.Sequence[CrossSegment]:
 
 
 def collapse_crosses(crosses: t.Iterable[BoundsCross]) -> t.Sequence[BoundsCross]:
-    """Filters out bound crosses that correspond to the same halfspace pairs.
-    """
+    """Filters out bound crosses that correspond to the same halfspace pairs."""
     seen_set = set()
     seen_inverted_set = set()
     filtered = []

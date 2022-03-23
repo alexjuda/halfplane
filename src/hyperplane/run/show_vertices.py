@@ -56,7 +56,6 @@ def main():
         )
 
         vertex_names = [vertex_gls.name(v) for v in vertices]
-        import ipdb; ipdb.set_trace()
         print()
 
 

@@ -11,8 +11,8 @@ RESULTS_PATH = Path("./data/segments")
 
 def _draw_segments(ax, segments: t.Sequence[flat.CrossSegment]):
     for segment_i, segment in enumerate(segments):
-        x1, y1 = segment.x1.point
-        x2, y2 = segment.x2.point
+        x1, y1, _ = segment.x1.point.position
+        x2, y2, _ = segment.x2.point.position
         text = str(segment_i)
 
         ax.plot([x1, x2], [y1, y2], c="C1")
