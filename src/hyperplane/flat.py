@@ -220,7 +220,9 @@ class Esum(IterableMixin):
 
     @property
     def with_boundaries(self) -> "Esum":
-        return Esum({frozenset(Hpc(hs.p1, hs.p2) for hs in term) for term in self.terms})
+        return Esum(
+            {frozenset(Hpc(hs.p1, hs.p2) for hs in term) for term in self.terms}
+        )
 
     def contains_cross(self, cross: "BoundsCross") -> bool:
         """Checks if `cross` point is a member of this Esum. This includes
@@ -236,7 +238,6 @@ class Esum(IterableMixin):
 class BoundsCross(IterableMixin):
     hs1: Hs
     hs2: Hs
-    name: t.Optional[str] = None
 
     @property
     def point(self) -> Pt:
@@ -292,7 +293,6 @@ class GraphEdge(IterableMixin):
     meta: t.Any
 
 
-@frozen_model
 class Graph:
     def __init__(self, edges: t.Sequence[GraphEdge]):
         self.edges = set(edges)
@@ -302,6 +302,22 @@ class Graph:
 
     def edge_meta(self, node):
         return self._index[node].meta
+
+
+class Glossary:
+    def __init__(self, objs: t.Sequence, prefix: str):
+        self._obj_name = {obj: f"{prefix}{obj_i}" for obj_i, obj in enumerate(objs)}
+        self._name_obj = {name: obj for obj, name in self._obj_name.items()}
+
+    def obj(self, name: str):
+        return self._name_obj[name]
+
+    def name(self, obj):
+        return self._obj_name[obj]
+
+    @property
+    def dict(self):
+        return self._name_obj
 
 
 def segments(crosses: t.Iterable[BoundsCross]) -> t.Sequence[CrossSegment]:

@@ -58,7 +58,7 @@ def _plot_hs_line(hs: Hs, ax: plt.Axes, xlim, ylim, linestyle: str):
 
     if y1 is None or y2 is None:
         # This means we have a vertical line.
-        x = hs[0][0]
+        x = hs.p1.x
         y1 = ylim[0] - 1
         y2 = ylim[1] + 1
         return ax.plot([x, x], [y1, y2], linestyle=linestyle)
@@ -67,7 +67,7 @@ def _plot_hs_line(hs: Hs, ax: plt.Axes, xlim, ylim, linestyle: str):
 
 
 def _plot_hs_arrow(hs: Hs, ax: plt.Axes, color: str):
-    p1, p2 = [p.position for p in hs]
+    p1, p2 = [p.position for p in [hs.p1, hs.p2]]
 
     delta = p2 - p1
     center = (p1 + p2) / 2
