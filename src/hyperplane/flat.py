@@ -33,11 +33,12 @@ frozen_model = dataclasses.dataclass(frozen=True)
 
 
 class IterableMixin:
-    def __iter__(self):
-        return iter(dataclasses.astuple(self))
+    pass
+    # def __iter__(self):
+    #     return iter(dataclasses.astuple(self))
 
-    def __len__(self):
-        return len(dataclasses.astuple(self))
+    # def __len__(self):
+    #     return len(dataclasses.astuple(self))
 
 
 @frozen_model
@@ -48,7 +49,7 @@ class Pt(IterableMixin):
     @property
     def position(self) -> np.ndarray:
         """3d position vector."""
-        return np.array([*self, 0])
+        return np.array([self.x, self.y, 0])
 
 
 @frozen_model
@@ -66,10 +67,10 @@ class Hp(IterableMixin):
 
     @property
     def conjugate(self) -> "Hpc":
-        return Hpc(*reversed(self))
+        return Hpc(self.p2, self.p1)
 
     def y(self, x: Number) -> t.Optional[Number]:
-        return _extrapolate_line(*self, x)
+        return _extrapolate_line(self.p1, self.p2, x)
 
 
 @frozen_model
@@ -86,10 +87,10 @@ class Hpc(IterableMixin):
 
     @property
     def conjugate(self) -> Hp:
-        return Hp(*reversed(self))
+        return Hp(self.p2, self.p1)
 
     def y(self, x: Number) -> t.Optional[Number]:
-        return _extrapolate_line(*self, x)
+        return _extrapolate_line(self.p1, self.p2, x)
 
 
 Hs = t.Union[Hp, Hpc]
@@ -99,7 +100,7 @@ def _z_factor(half_space: Hs, point: Pt) -> float:
     """Z coordinate of the cross product between the halfspace's vector and the
     position vector of the tested point.
     """
-    p1, p2 = [p.position for p in half_space]
+    p1, p2 = [p.position for p in [half_space.p1, half_space.p2]]
     v_hs = p2 - p1
     v_test = point.position - p1
     v_cross = np.cross(v_hs, v_test)
@@ -138,8 +139,8 @@ def _intersection_point(hs1: Hs, hs2: Hs) -> t.Optional[Pt]:
     # (a1 - a2) * x = b2 - b1
     # x = (b2 - b1) / (a1 - a2)
     # y = a1 * x + b1
-    params1 = _line_params(*hs1)
-    params2 = _line_params(*hs2)
+    params1 = _line_params(hs1.p1, hs1.p2)
+    params2 = _line_params(hs2.p1, hs2.p2)
     if params1 is None:
         if params2 is None:
             # Two vertical lines
@@ -219,7 +220,7 @@ class Esum(IterableMixin):
 
     @property
     def with_boundaries(self) -> "Esum":
-        return Esum({frozenset(Hpc(*hs) for hs in term) for term in self.terms})
+        return Esum({frozenset(Hpc(hs.p1, hs.p2) for hs in term) for term in self.terms})
 
     def contains_cross(self, cross: "BoundsCross") -> bool:
         """Checks if `cross` point is a member of this Esum. This includes
@@ -235,6 +236,7 @@ class Esum(IterableMixin):
 class BoundsCross(IterableMixin):
     hs1: Hs
     hs2: Hs
+    name: t.Optional[str] = None
 
     @property
     def point(self) -> Pt:
@@ -257,7 +259,7 @@ def _hs_contains_cross(hs: Hs, cross: BoundsCross):
 
     # Check 2: see if a `hs` contains the cross point. Allow points on
     # boundaries, even for `Hp`.
-    return Hpc(*hs).contains(cross.point)
+    return Hpc(hs.p1, hs.p2).contains(cross.point)
 
 
 def find_vertices(esum: Esum) -> t.Set[BoundsCross]:
@@ -278,7 +280,7 @@ def _hs_crosses_index(
     """Cross maps from points to HSes. This maps from HSes to crosses."""
     index = {}
     for cross in crosses:
-        for hs in cross:
+        for hs in [cross.hs1, cross.hs2]:
             index.setdefault(hs, set()).add(cross)
     return index
 

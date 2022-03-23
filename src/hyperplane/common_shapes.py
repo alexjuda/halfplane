@@ -1,3 +1,5 @@
+import dataclasses
+
 from .flat import Esum, Pt, Hp, Hpc
 
 
@@ -88,7 +90,7 @@ def letter_c():
         }
     )
 
-    return external.difference(internal)._replace(name="letter C")
+    return dataclasses.replace(external.difference(internal), name="letter C")
 
 
 def triangle():
