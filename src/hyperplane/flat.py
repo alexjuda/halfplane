@@ -344,3 +344,20 @@ def segments(crosses: t.Iterable[BoundsCross]) -> t.Sequence[CrossSegment]:
     segment_graph = Graph(edges)
 
     return [CrossSegment(edge.node1, edge.node2) for edge in segment_graph.edges]
+
+
+def collapse_crosses(crosses: t.Iterable[BoundsCross]) -> t.Sequence[BoundsCross]:
+    """Filters out bound crosses that correspond to the same halfspace pairs.
+    """
+    seen_set = set()
+    seen_inverted_set = set()
+    filtered = []
+    for cross in crosses:
+        if cross in seen_set or cross in seen_inverted_set:
+            continue
+
+        seen_set.add(cross)
+        seen_inverted_set.add(BoundsCross(cross.hs2, cross.hs1))
+        filtered.append(cross)
+
+    return filtered

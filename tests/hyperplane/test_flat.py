@@ -1,4 +1,5 @@
-from hyperplane.flat import Pt, Hp, Hpc, Esum, BoundsCross
+import dataclasses
+from hyperplane.flat import Pt, Hp, Hpc, Esum, BoundsCross, collapse_crosses
 
 import pytest
 
@@ -257,3 +258,28 @@ class TestHsIntersection:
     def test_self(self, hs1, hs2):
         assert BoundsCross(hs1, hs1).point is None
         assert BoundsCross(hs2, hs2).point is None
+
+
+@pytest.mark.parametrize(
+    "bx",
+    [
+        BoundsCross(
+            Hp(Pt(-1, 0), Pt(-1, -10)),
+            Hp(Pt(10, 0), Pt(10, 10)),
+        )
+    ],
+)
+class TestCollapsingBoundCrosses:
+    def test_is_equal_to_itself(self, bx):
+        assert collapse_crosses([bx, bx]) == [bx]
+
+    def test_not_equal_when_moving_points(self, bx):
+        p1 = bx.hs2.p1
+        new_p1 = Pt(p1.x + 1, p1.y + 2)
+        bx2 = BoundsCross(bx.hs1, dataclasses.replace(bx.hs2, p1=new_p1))
+
+        assert collapse_crosses([bx, bx2]) == [bx, bx2]
+
+    def test_is_equal_to_reversed_hses(self, bx):
+        bx2 = BoundsCross(bx.hs2, bx.hs1)
+        assert collapse_crosses([bx, bx2]) == [bx]
