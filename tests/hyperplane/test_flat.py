@@ -1,10 +1,10 @@
-from hyperplane.flat import Pt, Hp, Hpc, Esum
+from hyperplane.flat import Pt, Hp, Hpc, Esum, BoundsCross
 
 import pytest
 
 
 def _translate_point(pt: Pt, dx, dy):
-    return Pt(pt[0] + dx, pt[1] + dy)
+    return Pt(pt.x + dx, pt.y + dy)
 
 
 class TestHSContainsPt:
@@ -179,7 +179,7 @@ class TestEsumConjugate:
                 frozenset([Hp(Pt(6, 1), Pt(-2, 1))]),
             },
             {
-                frozenset([Hpc(Pt(0, 1), Pt(0, 4)), Hp(Pt(-2, 1), Pt(6, 1))]),
+                frozenset([Hpc(Pt(0, 1), Pt(0, 4)), Hpc(Pt(-2, 1), Pt(6, 1))]),
             },
         ),
     ]
@@ -238,19 +238,22 @@ class TestHsIntersection:
 
     @pytest.mark.parametrize("hs1,hs2,expected_point", HS_POINT_EXAMPLES)
     def test_examples(self, hs1, hs2, expected_point):
-        assert hs1.intersects_at(hs2) == expected_point
+        assert BoundsCross(hs1, hs2).point == expected_point
 
     @pytest.mark.parametrize("hs1,hs2", HS_HS_EXAMPLES)
     def test_order_invariance(self, hs1, hs2):
-        assert hs1.intersects_at(hs2) == hs2.intersects_at(hs1)
+        assert BoundsCross(hs1, hs2).point == BoundsCross(hs2, hs1).point
 
     @pytest.mark.parametrize("hs1,hs2", HS_HS_EXAMPLES)
     def test_conjugate_invariance(self, hs1, hs2):
-        assert hs1.intersects_at(hs2) == hs1.conjugate.intersects_at(hs2)
-        assert hs1.intersects_at(hs2) == hs1.intersects_at(hs2.conjugate)
-        assert hs1.intersects_at(hs2) == hs1.conjugate.intersects_at(hs2.conjugate)
+        assert BoundsCross(hs1, hs2).point == BoundsCross(hs1.conjugate, hs2).point
+        assert BoundsCross(hs1, hs2).point == BoundsCross(hs1, hs2.conjugate).point
+        assert (
+            BoundsCross(hs1, hs2).point
+            == BoundsCross(hs1.conjugate, hs2.conjugate).point
+        )
 
     @pytest.mark.parametrize("hs1,hs2", HS_HS_EXAMPLES)
     def test_self(self, hs1, hs2):
-        assert hs1.intersects_at(hs1) is None
-        assert hs2.intersects_at(hs2) is None
+        assert BoundsCross(hs1, hs1).point is None
+        assert BoundsCross(hs2, hs2).point is None
