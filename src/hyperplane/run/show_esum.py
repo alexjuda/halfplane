@@ -12,8 +12,7 @@ RESULTS_PATH = Path("./data/esums")
 def _plot(esum, path, name):
     fig, axes = plots.subplots(1, 1)
 
-    xlim = [0, 20]
-    ylim = [0, 20]
+    xlim = ylim = [-2, 14]
 
     plots.plot_esum_boundaries(esum, ax=axes, xlim=xlim, ylim=ylim)
 

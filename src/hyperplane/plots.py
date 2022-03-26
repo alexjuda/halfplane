@@ -145,6 +145,10 @@ def plot_esum_boundaries(esum: Esum, ax, xlim, ylim):
             label = f"h_{term_i}_{hs_i}"
             _plot_hs(hs, hs_label=label, ax=ax, xlim=xlim, ylim=ylim)
 
+    locator = matplotlib.ticker.MaxNLocator(integer=True)
+    ax.xaxis.set_major_locator(locator)
+    ax.yaxis.set_major_locator(locator)
+
     ax.legend()
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
