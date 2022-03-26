@@ -150,3 +150,61 @@ def rect():
         },
         name="rect",
     )
+
+
+def crude_c():
+    # The C-like shape in-between:
+    #
+    # ─┼─┼───────────┼
+    # ─┼─┼───────────┼
+    #  │ │           │
+    #  │ │           │
+    #  │ │           │
+    # ─┼─┼───────────┼
+    # ─┼─┼───────────┼
+    return Esum(
+        {
+            frozenset(
+                [
+                    # ---- vertical lines ----
+                    # 1st, left-most vertical line (|)
+                    Hpc(
+                        Pt(1, 0),
+                        Pt(1, 10),
+                    ),
+                    # 2nd vertical line (|)
+                    Hpc(
+                        Pt(2, 0),
+                        Pt(2, 10),
+                    ),
+                    # 3rd vertical line (|)
+                    Hpc(
+                        Pt(10, 0),
+                        Pt(10, 10),
+                    ),
+                    # ---- horizontal lines ----
+                    # 1st, bottom-most horizontal line (-)
+                    Hpc(
+                        Pt(1, 1),
+                        Pt(10, 1),
+                    ),
+                    # 2nd horizontal line (-)
+                    Hpc(
+                        Pt(1, 2),
+                        Pt(10, 2),
+                    ),
+                    # 3rd horizontal line (-)
+                    Hpc(
+                        Pt(1, 9),
+                        Pt(10, 9),
+                    ),
+                    # 4th horizontal line (-)
+                    Hpc(
+                        Pt(1, 10),
+                        Pt(10, 10),
+                    ),
+                ]
+            )
+        },
+        name="crude c",
+    )
