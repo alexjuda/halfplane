@@ -40,13 +40,13 @@ def _rotate_vector(x: float, y: float, degrees) -> t.Tuple[float, float]:
 @_plot_hs.register
 def _plot_hp(hp: Hp, ax: plt.Axes, xlim, ylim):
     lines = _plot_hs_line(hp, ax, xlim, ylim, linestyle=":")
-    _plot_hs_arrow(hp, ax, color=lines[0].get_color())
+    _plot_hs_arrows(hp, ax, color=lines[0].get_color())
 
 
 @_plot_hs.register
 def _plot_hpc(hpc: Hpc, ax: plt.Axes, xlim, ylim):
     lines = _plot_hs_line(hpc, ax, xlim, ylim, linestyle="-")
-    _plot_hs_arrow(hpc, ax, color=lines[0].get_color())
+    _plot_hs_arrows(hpc, ax, color=lines[0].get_color())
 
 
 def _plot_hs_line(hs: Hs, ax: plt.Axes, xlim, ylim, linestyle: str):
@@ -66,19 +66,26 @@ def _plot_hs_line(hs: Hs, ax: plt.Axes, xlim, ylim, linestyle: str):
     return ax.plot([x1, x2], [y1, y2], linestyle=linestyle)
 
 
-def _plot_hs_arrow(hs: Hs, ax: plt.Axes, color: str):
+def _plot_hs_arrows(hs: Hs, ax: plt.Axes, color: str):
     p1, p2 = [p.position for p in [hs.p1, hs.p2]]
 
     delta = p2 - p1
-    center = (p1 + p2) / 2
     delta_normalized = delta / np.linalg.norm(delta)
 
     # We're assuming that both Hp & Hpc both represent the points "on the left"
     # of the line.
     angle = 90
 
+    # Plot arrow at each control point. The arrows could be anywhere, but this
+    # allows easier identification.
     ax.arrow(
-        *center[:2],
+        *p1[:2],
+        *_rotate_vector(*delta_normalized[:2], angle),
+        width=0.1,
+        color=color,
+    )
+    ax.arrow(
+        *p2[:2],
         *_rotate_vector(*delta_normalized[:2], angle),
         width=0.1,
         color=color,
