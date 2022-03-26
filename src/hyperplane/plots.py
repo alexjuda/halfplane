@@ -85,6 +85,7 @@ def _plot_hs_arrows(hs: Hs, ax: plt.Axes, color: str):
 
     delta = p2 - p1
     delta_normalized = delta / np.linalg.norm(delta)
+    arrow_vector = delta_normalized[:2] * 0.4
 
     # We're assuming that both Hp & Hpc both represent the points "on the left"
     # of the line.
@@ -94,13 +95,13 @@ def _plot_hs_arrows(hs: Hs, ax: plt.Axes, color: str):
     # allows easier identification.
     ax.arrow(
         *p1[:2],
-        *_rotate_vector(*delta_normalized[:2], angle),
+        *_rotate_vector(*arrow_vector, angle),
         width=0.1,
         color=color,
     )
     ax.arrow(
         *p2[:2],
-        *_rotate_vector(*delta_normalized[:2], angle),
+        *_rotate_vector(*arrow_vector, angle),
         width=0.1,
         color=color,
     )
