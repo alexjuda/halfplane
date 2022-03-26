@@ -21,7 +21,7 @@ def _datapoints(esum: Esum, x_iter, y_iter) -> np.ndarray:
 
 
 @functools.singledispatch
-def _plot_hs(hs, ax: plt.Axes, xlim, ylim):
+def _plot_hs(hs, hs_label, ax: plt.Axes, xlim, ylim):
     raise NotImplementedError()
 
 
@@ -38,18 +38,32 @@ def _rotate_vector(x: float, y: float, degrees) -> t.Tuple[float, float]:
 
 
 @_plot_hs.register
-def _plot_hp(hp: Hp, ax: plt.Axes, xlim, ylim):
-    lines = _plot_hs_line(hp, ax, xlim, ylim, linestyle=":")
+def _plot_hp(hp: Hp, hs_label, ax: plt.Axes, xlim, ylim):
+    lines = _plot_hs_line(
+        hs=hp,
+        hs_label=hs_label,
+        ax=ax,
+        xlim=xlim,
+        ylim=ylim,
+        linestyle=":",
+    )
     _plot_hs_arrows(hp, ax, color=lines[0].get_color())
 
 
 @_plot_hs.register
-def _plot_hpc(hpc: Hpc, ax: plt.Axes, xlim, ylim):
-    lines = _plot_hs_line(hpc, ax, xlim, ylim, linestyle="-")
+def _plot_hpc(hpc: Hpc, hs_label, ax: plt.Axes, xlim, ylim):
+    lines = _plot_hs_line(
+        hs=hpc,
+        hs_label=hs_label,
+        ax=ax,
+        xlim=xlim,
+        ylim=ylim,
+        linestyle="-",
+    )
     _plot_hs_arrows(hpc, ax, color=lines[0].get_color())
 
 
-def _plot_hs_line(hs: Hs, ax: plt.Axes, xlim, ylim, linestyle: str):
+def _plot_hs_line(hs: Hs, hs_label: str, ax: plt.Axes, xlim, ylim, linestyle: str):
     x1 = xlim[0] - 1
     x2 = xlim[1] + 1
 
@@ -61,9 +75,9 @@ def _plot_hs_line(hs: Hs, ax: plt.Axes, xlim, ylim, linestyle: str):
         x = hs.p1.x
         y1 = ylim[0] - 1
         y2 = ylim[1] + 1
-        return ax.plot([x, x], [y1, y2], linestyle=linestyle)
+        return ax.plot([x, x], [y1, y2], linestyle=linestyle, label=hs_label)
 
-    return ax.plot([x1, x2], [y1, y2], linestyle=linestyle)
+    return ax.plot([x1, x2], [y1, y2], linestyle=linestyle, label=hs_label)
 
 
 def _plot_hs_arrows(hs: Hs, ax: plt.Axes, color: str):
@@ -125,10 +139,13 @@ def _plot_esum_with_content_check(esum: Esum, ax, xlim, ylim):
 
 
 def plot_esum_boundaries(esum: Esum, ax, xlim, ylim):
-    for term in esum.terms:
-        for hs in term:
-            _plot_hs(hs, ax, xlim, ylim)
+    # TODO: somehow ensure reproducibility of set order
+    for term_i, term in enumerate(esum.terms):
+        for hs_i, hs in enumerate(term):
+            label = f"h_{term_i}_{hs_i}"
+            _plot_hs(hs, hs_label=label, ax=ax, xlim=xlim, ylim=ylim)
 
+    ax.legend()
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
     ax.set_aspect("equal")
