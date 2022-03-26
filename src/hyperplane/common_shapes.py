@@ -169,8 +169,8 @@ def crude_c():
                     # ---- vertical lines ----
                     # 1st, left-most vertical line (|)
                     Hpc(
-                        Pt(1, 0),
                         Pt(1, 10),
+                        Pt(1, 0),
                     ),
                     # 2nd vertical line (|)
                     Hpc(
@@ -190,8 +190,8 @@ def crude_c():
                     ),
                     # 2nd horizontal line (-)
                     Hpc(
-                        Pt(1, 2),
                         Pt(10, 2),
+                        Pt(1, 2),
                     ),
                     # 3rd horizontal line (-)
                     Hpc(
@@ -200,8 +200,8 @@ def crude_c():
                     ),
                     # 4th horizontal line (-)
                     Hpc(
-                        Pt(1, 10),
                         Pt(10, 10),
+                        Pt(1, 10),
                     ),
                 ]
             )
