@@ -242,6 +242,8 @@ def draw_vertices(
         label="intersection point inside Esum",
     )
     ax.set_title("Vertex detection")
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
 
 
 def _plot_all_crosses(esum: Esum, ax, xlim, ylim):
