@@ -162,7 +162,53 @@ def crude_c():
     #  │ │           │
     # ─┼─┼───────────┼
     # ─┼─┼───────────┼
-    return Esum(
+    #
+    # It's a union of three parts.
+    #
+    # part 1:
+    # ───────────────┼
+    # ───────────────┼
+    #
+    # part 2:
+    #  │ │
+    #  │ │
+    #  │ │
+    #  │ │
+    #  │ │
+    #  │ │
+    #  │ │
+    #
+    # part 3:
+    # ───────────────┼
+    # ───────────────┼
+
+    part1 = Esum(
+        {
+            frozenset(
+                [
+                    # ---- vertical lines ----
+                    # right-most vertical line (|)
+                    Hpc(
+                        Pt(10, 0),
+                        Pt(10, 11),
+                    ),
+                    # ---- horizontal lines ----
+                    # top-most horizontal line (-)
+                    Hpc(
+                        Pt(0, 9),
+                        Pt(11, 9),
+                    ),
+                    # horizontal line (-)
+                    Hpc(
+                        Pt(12, 10),
+                        Pt(-1, 10),
+                    ),
+                ]
+            )
+        },
+    )
+
+    part2 = Esum(
         {
             frozenset(
                 [
@@ -177,34 +223,35 @@ def crude_c():
                         Pt(2, -1),
                         Pt(2, 12),
                     ),
-                    # 3rd vertical line (|)
+                ]
+            )
+        },
+    )
+
+    part3 = Esum(
+        {
+            frozenset(
+                [
+                    # ---- vertical lines ----
+                    # right-most vertical line (|)
                     Hpc(
                         Pt(10, 0),
                         Pt(10, 11),
                     ),
                     # ---- horizontal lines ----
-                    # 1st, bottom-most horizontal line (-)
+                    # bottom-most horizontal line (-)
                     Hpc(
                         Pt(0, 1),
                         Pt(11, 1),
                     ),
-                    # 2nd horizontal line (-)
+                    # horizontal line (-)
                     Hpc(
                         Pt(12, 2),
                         Pt(-1, 2),
                     ),
-                    # 3rd horizontal line (-)
-                    Hpc(
-                        Pt(0, 9),
-                        Pt(11, 9),
-                    ),
-                    # 4th horizontal line (-)
-                    Hpc(
-                        Pt(12, 10),
-                        Pt(-1, 10),
-                    ),
                 ]
             )
         },
-        name="crude c",
     )
+
+    return part1.union(part2).union(part3)
