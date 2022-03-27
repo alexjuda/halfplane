@@ -3,6 +3,7 @@ import typing as t
 import itertools
 import more_itertools
 from numbers import Number
+import math
 
 import numpy as np
 
@@ -51,6 +52,11 @@ class Pt(IterableMixin):
     def position(self) -> np.ndarray:
         """3d position vector."""
         return np.array([self.x, self.y, 0])
+
+    def distance(self, other: "Pt") -> float:
+        dx = other.x - self.x
+        dy = other.y - self.y
+        return math.hypot(dx, dy)
 
 
 @frozen_model
@@ -276,13 +282,28 @@ def find_vertices(esum: Esum) -> t.Set[BoundsCross]:
     return collapsed
 
 
+def query_crosses(
+    crosses: t.Iterable[BoundsCross], poi: Pt, eps: float = 0.1
+) -> t.Iterable[BoundsCross]:
+    return [x for x in crosses if x.point.distance(poi) < eps]
+
+
+def query_cross(
+    crosses: t.Iterable[BoundsCross], poi: Pt, eps: float = 0.1
+) -> t.Iterable[BoundsCross]:
+    results = query_crosses(crosses, poi, eps)
+    assert len(results) == 1
+    return results[0]
+
+
+
 @frozen_model
 class CrossSegment(IterableMixin):
     x1: BoundsCross
     x2: BoundsCross
 
 
-def _hs_crosses_index(
+def hs_crosses_index(
     crosses: t.Iterable[BoundsCross],
 ) -> t.Dict[Hs, t.Set[BoundsCross]]:
     """Cross maps from points to HSes. This maps from HSes to crosses."""
@@ -337,7 +358,7 @@ def segments(crosses: t.Iterable[BoundsCross]) -> t.Sequence[CrossSegment]:
     #   segment order.
     # - make a new graph where edges are the segments. Traverse it. There might
     #   be cycles. Hopefully, yields a hull.
-    cross_index = _hs_crosses_index(crosses)
+    cross_index = hs_crosses_index(crosses)
 
     edges = []
     for cross in crosses:

@@ -19,7 +19,13 @@ def _plot(esum, path, name):
     plots.plot_esum_boundaries(esum, ax=axes[0], xlim=xlim, ylim=ylim)
 
     vertices = flat.find_vertices(esum)
-    # breakpoint()
+    index = flat.hs_crosses_index(vertices)
+    p1 = flat.query_cross(vertices, flat.Pt(10, 9))
+    # TODO: get neighbors for p1.hs1, p1.hs2
+    # TODO: order by HS direction
+    # TODO: connect subsequent pairs to get the smallest segments
+    # TODO: classify segments
+    breakpoint()
     plots.draw_vertices(vertices, ax=axes[1], xlim=xlim, ylim=ylim)
 
     fig.savefig(path)
