@@ -250,6 +250,10 @@ class BoundsCross(IterableMixin):
     def point(self) -> Pt:
         return _intersection_point(self.hs1, self.hs2)
 
+    @property
+    def halfspaces(self) -> t.Sequence[Hs]:
+        return [self.hs1, self.hs2]
+
 
 def find_all_crosses(halfspaces: t.Iterable[Hs]) -> t.Set[BoundsCross]:
     return {
@@ -290,11 +294,10 @@ def query_crosses(
 
 def query_cross(
     crosses: t.Iterable[BoundsCross], poi: Pt, eps: float = 0.1
-) -> t.Iterable[BoundsCross]:
+) -> BoundsCross:
     results = query_crosses(crosses, poi, eps)
     assert len(results) == 1
     return results[0]
-
 
 
 @frozen_model

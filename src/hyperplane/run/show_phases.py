@@ -1,3 +1,5 @@
+import itertools as itt
+import more_itertools as mitt
 import typing as t
 from pathlib import Path
 
@@ -12,21 +14,34 @@ RESULTS_PATH = Path("./data/phases")
 
 
 def _plot(esum, path, name):
-    fig, axes = plots.subplots(1, 2)
+    fig, axes = plots.subplots(2, 2)
 
     xlim = ylim = [-2, 14]
 
-    plots.plot_esum_boundaries(esum, ax=axes[0], xlim=xlim, ylim=ylim)
+    plots.plot_esum_boundaries(esum, ax=axes[0][0], xlim=xlim, ylim=ylim)
 
     vertices = flat.find_vertices(esum)
     index = flat.hs_crosses_index(vertices)
-    p1 = flat.query_cross(vertices, flat.Pt(10, 9))
-    # TODO: get neighbors for p1.hs1, p1.hs2
-    # TODO: order by HS direction
-    # TODO: connect subsequent pairs to get the smallest segments
-    # TODO: classify segments
-    breakpoint()
-    plots.draw_vertices(vertices, ax=axes[1], xlim=xlim, ylim=ylim)
+    x_of_interest = flat.query_cross(vertices, flat.Pt(10, 9))
+    hs_segments = []
+    for hs in x_of_interest.halfspaces:
+        # 1. get neighbors for p1.hs1, p1.hs2
+        # neighbor_xs = index[hs] - {x1}
+        xs_on_this_hs = index[hs]
+
+        # 2. order by HS direction
+        # Solution: pick any x and sort all points on this HS by euclidean distance from it.
+        ref_x, *_ = xs_on_this_hs
+        xs_seq = sorted(xs_on_this_hs, key=lambda x: x.point.distance(ref_x.point))
+
+        # 3. Connect subsequent pairs to get the smallest segments
+        segments = [flat.CrossSegment(x1, x2) for x1, x2 in mitt.windowed(xs_seq, n=2)]
+        hs_segments.append(segments)
+
+        # TODO: classify segments
+    plots.draw_vertices(vertices, ax=axes[0][1], xlim=xlim, ylim=ylim)
+    plots.draw_segments(ax=axes[1][0], segments=hs_segments[0], xlim=xlim, ylim=ylim)
+    plots.draw_segments(ax=axes[1][1], segments=hs_segments[1], xlim=xlim, ylim=ylim)
 
     fig.savefig(path)
 
