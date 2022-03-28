@@ -1,5 +1,6 @@
 import more_itertools as mitt
 from pathlib import Path
+import numpy as np
 
 from .. import flat
 from .. import plots
@@ -22,17 +23,30 @@ def _plot(esum, path, name):
     hs_segments = []
     for hs in x_of_interest.halfspaces:
         # 1. get neighbors for p1.hs1, p1.hs2
-        # neighbor_xs = index[hs] - {x1}
-        xs_on_this_hs = index[hs]
+        # We need to retain order.
+        xs_on_this_hs = list(index[hs])
+        if len(xs_on_this_hs) <= 1:
+            continue
 
         # 2. order by HS direction
-        # Solution: pick any x and sort all points on this HS by euclidean
-        # distance from it.
-        ref_x, *_ = xs_on_this_hs
-        xs_seq = sorted(xs_on_this_hs, key=lambda x: x.point.distance(ref_x.point))
+        # Solution:
+        # - pick any x1 and x2
+        # - treat x1 as the coordinate origin
+        # - treat <x1 x2> vector as the reference vector
+        # - for all xs make vectors anchored at x1
+        # - for all vectors compute the length of their projection on <x1 x2>
+        # - sort points by the corresponding vector's projection lenth
+
+        ref_x, *rest_xs = xs_on_this_hs
+        ref_v = rest_xs[0].point.position - ref_x.point.position
+
+        xs_sorted = sorted(
+            xs_on_this_hs,
+            key=lambda x: np.dot(x.point.position - ref_x.point.position, ref_v),
+        )
 
         # 3. Connect subsequent pairs to get the smallest segments
-        segments = [flat.CrossSegment(x1, x2) for x1, x2 in mitt.windowed(xs_seq, n=2)]
+        segments = [flat.CrossSegment(x1, x2) for x1, x2 in mitt.windowed(xs_sorted, n=2)]
         hs_segments.append(segments)
 
         # TODO: classify segments
