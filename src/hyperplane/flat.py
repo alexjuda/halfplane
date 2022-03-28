@@ -276,7 +276,6 @@ def _hs_contains_cross(hs: Hs, cross: BoundsCross):
 
 def find_vertices(esum: Esum) -> t.Set[BoundsCross]:
     crosses = find_all_crosses([hs for term in esum.terms for hs in term])
-    # crosses = [cross for hs_group in esum.terms for cross in find_all_crosses(hs_group)]
     inside = list(
         more_itertools.unique_everseen(
             cross for cross in crosses if esum.contains_cross(cross)

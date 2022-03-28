@@ -337,12 +337,14 @@ def draw_segments(ax, segments: t.Sequence[flat.CrossSegment], xlim, ylim):
             y=y1,
             s=text,
             alpha=0.3,
+            verticalalignment="bottom",
         )
         ax.text(
             x=x2,
             y=y2,
             s=text,
             alpha=0.3,
+            verticalalignment="top",
         )
         ax.set_xlim(xlim)
         ax.set_ylim(ylim)
