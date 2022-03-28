@@ -333,9 +333,16 @@ def draw_segments(ax, segments: t.Sequence[flat.CrossSegment], xlim, ylim):
 
         ax.plot([x1, x2], [y1, y2], c="C1")
         ax.text(
-            x=(x1 + x2) / 2,
-            y=(y1 + y2) / 2,
+            x=x1,
+            y=y1,
             s=text,
+            alpha=0.3,
+        )
+        ax.text(
+            x=x2,
+            y=y2,
+            s=text,
+            alpha=0.3,
         )
         ax.set_xlim(xlim)
         ax.set_ylim(ylim)

@@ -1,9 +1,5 @@
-import itertools as itt
 import more_itertools as mitt
-import typing as t
 from pathlib import Path
-
-import matplotlib.patches
 
 from .. import flat
 from .. import plots
@@ -30,7 +26,8 @@ def _plot(esum, path, name):
         xs_on_this_hs = index[hs]
 
         # 2. order by HS direction
-        # Solution: pick any x and sort all points on this HS by euclidean distance from it.
+        # Solution: pick any x and sort all points on this HS by euclidean
+        # distance from it.
         ref_x, *_ = xs_on_this_hs
         xs_seq = sorted(xs_on_this_hs, key=lambda x: x.point.distance(ref_x.point))
 
