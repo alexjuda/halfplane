@@ -223,7 +223,8 @@ def _find_and_plot_vertices(esum: Esum, ax, xlim, ylim, draw_crosses_outside=Tru
 def draw_vertices(
     vertices: t.Sequence[BoundsCross], ax, xlim, ylim, crosses_outside=None
 ):
-    if crosses_outside is not None:
+    plot_outside = crosses_outside is not None
+    if plot_outside:
         ax.scatter(
             [cross.point.x for cross in crosses_outside],
             [cross.point.y for cross in crosses_outside],
@@ -233,12 +234,14 @@ def draw_vertices(
             label="intersection point outside Esum",
         )
 
+    color = "C1" if plot_outside else "C0"
     ax.scatter(
         [cross.point.x for cross in vertices],
         [cross.point.y for cross in vertices],
         s=200,
-        facecolors="C1",
-        edgecolors="C1",
+        facecolors=color,
+        edgecolors=color,
+        alpha=0.6,
         label="intersection point inside Esum",
     )
     ax.set_title("Vertex detection")
