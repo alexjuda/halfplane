@@ -48,11 +48,6 @@ def _plot(esum, vertices, segments, path, name):
                 },
             ]
         )
-        # text = str(segment_i)
-
-        # ax.plot([x1, x2], [y1, y2], [segment_i, segment_i], c="C1", alpha=0.3)
-        # ax.set_xlim(xlim)
-        # ax.set_ylim(ylim)
 
     df = pd.DataFrame.from_records(rows)
 

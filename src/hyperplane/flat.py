@@ -1,7 +1,7 @@
 import dataclasses
 import typing as t
 import itertools
-import more_itertools
+import more_itertools as mitt
 from numbers import Number
 import math
 
@@ -277,7 +277,7 @@ def _hs_contains_cross(hs: Hs, cross: BoundsCross):
 def find_vertices(esum: Esum) -> t.Set[BoundsCross]:
     crosses = find_all_crosses([hs for term in esum.terms for hs in term])
     inside = list(
-        more_itertools.unique_everseen(
+        mitt.unique_everseen(
             cross for cross in crosses if esum.contains_cross(cross)
         )
     )
@@ -351,29 +351,42 @@ class Glossary:
 
 
 def segments(crosses: t.Iterable[BoundsCross]) -> t.Sequence[CrossSegment]:
-    # - pick a vertex
-    # - find both/all hses it crossed. Note: there might be duplicates if three
-    #   lines intersect at the same point. Should we ignore this for now?
-    # - for each hs, get all cross points. Note: we have a bipartite graph! Do
-    #   we wanna go BFS or DFS? Is this a topological sort? It doesn't matter
-    #   because we only care about the segments (graph edges), not about the
-    #   segment order.
-    # - make a new graph where edges are the segments. Traverse it. There might
-    #   be cycles. Hopefully, yields a hull.
     cross_index = hs_crosses_index(crosses)
 
-    edges = []
-    for cross in crosses:
-        for hs in [cross.hs1, cross.hs2]:
-            for antipodal_cross in cross_index[hs]:
-                # node 1 - cross
-                # edge - hs
-                # node 2 - intipodal cross
-                edges.append(GraphEdge(node1=cross, node2=antipodal_cross, meta=hs))
+    all_segments = []
+    for x_i, x_of_interest in enumerate(crosses):
+        for hs in x_of_interest.halfspaces:
+            # 1. get neighbors for p1.hs1, p1.hs2
+            # We need to retain order.
+            xs_on_this_hs = list(cross_index[hs])
+            if len(xs_on_this_hs) <= 1:
+                continue
 
-    segment_graph = Graph(edges)
+            # 2. order by HS direction
+            # Solution:
+            # - pick any x1 and x2
+            # - treat x1 as the coordinate origin
+            # - treat <x1 x2> vector as the reference vector
+            # - for all xs make vectors anchored at x1
+            # - for all vectors compute the length of their projection on <x1 x2>
+            # - sort points by the corresponding vector's projection lenth
 
-    return [CrossSegment(edge.node1, edge.node2) for edge in segment_graph.edges]
+            ref_x, *rest_xs = xs_on_this_hs
+            ref_v = rest_xs[0].point.position - ref_x.point.position
+
+            xs_sorted = sorted(
+                xs_on_this_hs,
+                key=lambda x: np.dot(x.point.position - ref_x.point.position, ref_v),
+            )
+
+            # 3. Connect subsequent pairs to get the smallest segments
+            segments = [
+                CrossSegment(x1, x2) for x1, x2 in mitt.windowed(xs_sorted, n=2)
+            ]
+            all_segments.extend(segments)
+
+    # TODO: classify segments
+    return list(mitt.unique_everseen(all_segments))
 
 
 def collapse_crosses(crosses: t.Iterable[BoundsCross]) -> t.Sequence[BoundsCross]:
