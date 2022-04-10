@@ -21,7 +21,7 @@ def _datapoints(esum: Esum, x_iter, y_iter) -> np.ndarray:
 
 
 @functools.singledispatch
-def _plot_hs(hs, ax: plt.Axes, xlim, ylim):
+def _plot_hs(hs, hs_label, ax: plt.Axes, xlim, ylim):
     raise NotImplementedError()
 
 
@@ -38,18 +38,32 @@ def _rotate_vector(x: float, y: float, degrees) -> t.Tuple[float, float]:
 
 
 @_plot_hs.register
-def _plot_hp(hp: Hp, ax: plt.Axes, xlim, ylim):
-    lines = _plot_hs_line(hp, ax, xlim, ylim, linestyle=":")
-    _plot_hs_arrow(hp, ax, color=lines[0].get_color())
+def _plot_hp(hp: Hp, hs_label, ax: plt.Axes, xlim, ylim):
+    lines = _plot_hs_line(
+        hs=hp,
+        hs_label=hs_label,
+        ax=ax,
+        xlim=xlim,
+        ylim=ylim,
+        linestyle=":",
+    )
+    _plot_hs_arrows(hp, ax, color=lines[0].get_color())
 
 
 @_plot_hs.register
-def _plot_hpc(hpc: Hpc, ax: plt.Axes, xlim, ylim):
-    lines = _plot_hs_line(hpc, ax, xlim, ylim, linestyle="-")
-    _plot_hs_arrow(hpc, ax, color=lines[0].get_color())
+def _plot_hpc(hpc: Hpc, hs_label, ax: plt.Axes, xlim, ylim):
+    lines = _plot_hs_line(
+        hs=hpc,
+        hs_label=hs_label,
+        ax=ax,
+        xlim=xlim,
+        ylim=ylim,
+        linestyle="-",
+    )
+    _plot_hs_arrows(hpc, ax, color=lines[0].get_color())
 
 
-def _plot_hs_line(hs: Hs, ax: plt.Axes, xlim, ylim, linestyle: str):
+def _plot_hs_line(hs: Hs, hs_label: str, ax: plt.Axes, xlim, ylim, linestyle: str):
     x1 = xlim[0] - 1
     x2 = xlim[1] + 1
 
@@ -58,28 +72,36 @@ def _plot_hs_line(hs: Hs, ax: plt.Axes, xlim, ylim, linestyle: str):
 
     if y1 is None or y2 is None:
         # This means we have a vertical line.
-        x = hs[0][0]
+        x = hs.p1.x
         y1 = ylim[0] - 1
         y2 = ylim[1] + 1
-        return ax.plot([x, x], [y1, y2], linestyle=linestyle)
+        return ax.plot([x, x], [y1, y2], linestyle=linestyle, label=hs_label)
 
-    return ax.plot([x1, x2], [y1, y2], linestyle=linestyle)
+    return ax.plot([x1, x2], [y1, y2], linestyle=linestyle, label=hs_label)
 
 
-def _plot_hs_arrow(hs: Hs, ax: plt.Axes, color: str):
-    p1, p2 = [p.position for p in hs]
+def _plot_hs_arrows(hs: Hs, ax: plt.Axes, color: str):
+    p1, p2 = [p.position for p in [hs.p1, hs.p2]]
 
     delta = p2 - p1
-    center = (p1 + p2) / 2
     delta_normalized = delta / np.linalg.norm(delta)
+    arrow_vector = delta_normalized[:2] * 0.4
 
     # We're assuming that both Hp & Hpc both represent the points "on the left"
     # of the line.
     angle = 90
 
+    # Plot arrow at each control point. The arrows could be anywhere, but this
+    # allows easier identification.
     ax.arrow(
-        *center[:2],
-        *_rotate_vector(*delta_normalized[:2], angle),
+        *p1[:2],
+        *_rotate_vector(*arrow_vector, angle),
+        width=0.1,
+        color=color,
+    )
+    ax.arrow(
+        *p2[:2],
+        *_rotate_vector(*arrow_vector, angle),
         width=0.1,
         color=color,
     )
@@ -118,10 +140,17 @@ def _plot_esum_with_content_check(esum: Esum, ax, xlim, ylim):
 
 
 def plot_esum_boundaries(esum: Esum, ax, xlim, ylim):
-    for term in esum.terms:
-        for hs in term:
-            _plot_hs(hs, ax, xlim, ylim)
+    # TODO: somehow ensure reproducibility of set order
+    for term_i, term in enumerate(esum.terms):
+        for hs_i, hs in enumerate(term):
+            label = f"h_{term_i}_{hs_i}"
+            _plot_hs(hs, hs_label=label, ax=ax, xlim=xlim, ylim=ylim)
 
+    locator = matplotlib.ticker.MaxNLocator(integer=True)
+    ax.xaxis.set_major_locator(locator)
+    ax.yaxis.set_major_locator(locator)
+
+    ax.legend()
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
     ax.set_aspect("equal")
@@ -132,7 +161,7 @@ def subplots(n_rows, n_cols, size=12, **kwargs):
         n_rows,
         n_cols,
         figsize=(size * n_cols, size * n_rows),
-        dpi=400,
+        dpi=200,
         **kwargs,
     )
 
@@ -194,7 +223,8 @@ def _find_and_plot_vertices(esum: Esum, ax, xlim, ylim, draw_crosses_outside=Tru
 def draw_vertices(
     vertices: t.Sequence[BoundsCross], ax, xlim, ylim, crosses_outside=None
 ):
-    if crosses_outside is not None:
+    plot_outside = crosses_outside is not None
+    if plot_outside:
         ax.scatter(
             [cross.point.x for cross in crosses_outside],
             [cross.point.y for cross in crosses_outside],
@@ -204,15 +234,19 @@ def draw_vertices(
             label="intersection point outside Esum",
         )
 
+    color = "C1" if plot_outside else "C0"
     ax.scatter(
         [cross.point.x for cross in vertices],
         [cross.point.y for cross in vertices],
         s=200,
-        facecolors="C1",
-        edgecolors="C1",
+        facecolors=color,
+        edgecolors=color,
+        alpha=0.6,
         label="intersection point inside Esum",
     )
     ax.set_title("Vertex detection")
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
 
 
 def _plot_all_crosses(esum: Esum, ax, xlim, ylim):
@@ -289,6 +323,31 @@ def _plot_all_crosses_clean(esum: Esum, esum_name: str):
     plot_path = Path(f"./plots/all_crosses_clean_{esum_name}.png")
     plot_path.parent.mkdir(exist_ok=True)
     fig.savefig(plot_path)
+
+
+def draw_segments(ax, segments: t.Sequence[flat.CrossSegment], xlim, ylim):
+    for segment_i, segment in enumerate(segments):
+        x1, y1, _ = segment.x1.point.position
+        x2, y2, _ = segment.x2.point.position
+        text = str(segment_i)
+
+        ax.plot([x1, x2], [y1, y2], c="C1")
+        ax.text(
+            x=x1,
+            y=y1,
+            s=text,
+            alpha=0.3,
+            verticalalignment="bottom",
+        )
+        ax.text(
+            x=x2,
+            y=y2,
+            s=text,
+            alpha=0.3,
+            verticalalignment="top",
+        )
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
 
 
 def main():
@@ -375,4 +434,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()

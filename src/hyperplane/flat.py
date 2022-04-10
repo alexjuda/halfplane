@@ -1,6 +1,9 @@
+import dataclasses
 import typing as t
 import itertools
+import more_itertools as mitt
 from numbers import Number
+import math
 
 import numpy as np
 
@@ -28,17 +31,36 @@ from .core import Coord
 # - [x] point-by-point test
 
 
-class Pt(t.NamedTuple):
+frozen_model = dataclasses.dataclass(frozen=True)
+
+
+class IterableMixin:
+    pass
+    # def __iter__(self):
+    #     return iter(dataclasses.astuple(self))
+
+    # def __len__(self):
+    #     return len(dataclasses.astuple(self))
+
+
+@frozen_model
+class Pt(IterableMixin):
     x: Coord
     y: Coord
 
     @property
     def position(self) -> np.ndarray:
         """3d position vector."""
-        return np.array([*self, 0])
+        return np.array([self.x, self.y, 0])
+
+    def distance(self, other: "Pt") -> float:
+        dx = other.x - self.x
+        dy = other.y - self.y
+        return math.hypot(dx, dy)
 
 
-class Hp(t.NamedTuple):
+@frozen_model
+class Hp(IterableMixin):
     """Half plane, where the boundary is a line that crosses p1 & p1. Doesn't
     include the boundary itself. Contains all points "on the left" of the
     P1->P2 vector.
@@ -52,13 +74,14 @@ class Hp(t.NamedTuple):
 
     @property
     def conjugate(self) -> "Hpc":
-        return Hpc(*reversed(self))
+        return Hpc(self.p2, self.p1)
 
     def y(self, x: Number) -> t.Optional[Number]:
-        return _extrapolate_line(*self, x)
+        return _extrapolate_line(self.p1, self.p2, x)
 
 
-class Hpc(t.NamedTuple):
+@frozen_model
+class Hpc(IterableMixin):
     """Half plane, where the boundary is a line that crosses p1 & p1. Includes
     the boundary. Contains all points "on the left" of the P1->P2 vector.
     """
@@ -71,10 +94,10 @@ class Hpc(t.NamedTuple):
 
     @property
     def conjugate(self) -> Hp:
-        return Hp(*reversed(self))
+        return Hp(self.p2, self.p1)
 
     def y(self, x: Number) -> t.Optional[Number]:
-        return _extrapolate_line(*self, x)
+        return _extrapolate_line(self.p1, self.p2, x)
 
 
 Hs = t.Union[Hp, Hpc]
@@ -84,7 +107,7 @@ def _z_factor(half_space: Hs, point: Pt) -> float:
     """Z coordinate of the cross product between the halfspace's vector and the
     position vector of the tested point.
     """
-    p1, p2 = [p.position for p in half_space]
+    p1, p2 = [p.position for p in [half_space.p1, half_space.p2]]
     v_hs = p2 - p1
     v_test = point.position - p1
     v_cross = np.cross(v_hs, v_test)
@@ -123,8 +146,8 @@ def _intersection_point(hs1: Hs, hs2: Hs) -> t.Optional[Pt]:
     # (a1 - a2) * x = b2 - b1
     # x = (b2 - b1) / (a1 - a2)
     # y = a1 * x + b1
-    params1 = _line_params(*hs1)
-    params2 = _line_params(*hs2)
+    params1 = _line_params(hs1.p1, hs1.p2)
+    params2 = _line_params(hs2.p1, hs2.p2)
     if params1 is None:
         if params2 is None:
             # Two vertical lines
@@ -154,7 +177,8 @@ def _intersection_point(hs1: Hs, hs2: Hs) -> t.Optional[Pt]:
 Term = t.Set[Hs]
 
 
-class Esum(t.NamedTuple):
+@frozen_model
+class Esum(IterableMixin):
     """Expression sum. Basic shape representation.
 
     Uses two-level sets of halfspaces. The outer set is considered a union of
@@ -163,6 +187,7 @@ class Esum(t.NamedTuple):
     """
 
     terms: t.Set[Term]
+    name: t.Optional[str] = None
 
     def union(self, other: "Esum") -> "Esum":
         return Esum(self.terms | other.terms)
@@ -202,7 +227,9 @@ class Esum(t.NamedTuple):
 
     @property
     def with_boundaries(self) -> "Esum":
-        return Esum({frozenset(Hpc(*hs) for hs in term) for term in self.terms})
+        return Esum(
+            {frozenset(Hpc(hs.p1, hs.p2) for hs in term) for term in self.terms}
+        )
 
     def contains_cross(self, cross: "BoundsCross") -> bool:
         """Checks if `cross` point is a member of this Esum. This includes
@@ -214,13 +241,18 @@ class Esum(t.NamedTuple):
         )
 
 
-class BoundsCross(t.NamedTuple):
+@frozen_model
+class BoundsCross(IterableMixin):
     hs1: Hs
     hs2: Hs
 
     @property
     def point(self) -> Pt:
         return _intersection_point(self.hs1, self.hs2)
+
+    @property
+    def halfspaces(self) -> t.Sequence[Hs]:
+        return [self.hs1, self.hs2]
 
 
 def find_all_crosses(halfspaces: t.Iterable[Hs]) -> t.Set[BoundsCross]:
@@ -239,10 +271,135 @@ def _hs_contains_cross(hs: Hs, cross: BoundsCross):
 
     # Check 2: see if a `hs` contains the cross point. Allow points on
     # boundaries, even for `Hp`.
-    return Hpc(*hs).contains(cross.point)
+    return Hpc(hs.p1, hs.p2).contains(cross.point)
 
 
 def find_vertices(esum: Esum) -> t.Set[BoundsCross]:
     crosses = find_all_crosses([hs for term in esum.terms for hs in term])
-    crosses_inside = {cross for cross in crosses if esum.contains_cross(cross)}
-    return crosses_inside
+    inside = list(
+        mitt.unique_everseen(
+            cross for cross in crosses if esum.contains_cross(cross)
+        )
+    )
+    collapsed = collapse_crosses(inside)
+    return collapsed
+
+
+def query_crosses(
+    crosses: t.Iterable[BoundsCross], poi: Pt, eps: float = 0.1
+) -> t.Iterable[BoundsCross]:
+    return [x for x in crosses if x.point.distance(poi) < eps]
+
+
+def query_cross(
+    crosses: t.Iterable[BoundsCross], poi: Pt, eps: float = 0.1
+) -> BoundsCross:
+    results = query_crosses(crosses, poi, eps)
+    assert len(results) == 1
+    return results[0]
+
+
+@frozen_model
+class CrossSegment(IterableMixin):
+    x1: BoundsCross
+    x2: BoundsCross
+
+
+def hs_crosses_index(
+    crosses: t.Iterable[BoundsCross],
+) -> t.Dict[Hs, t.Set[BoundsCross]]:
+    """Cross maps from points to HSes. This maps from HSes to crosses."""
+    index = {}
+    for cross in crosses:
+        for hs in [cross.hs1, cross.hs2]:
+            index.setdefault(hs, set()).add(cross)
+    return index
+
+
+@frozen_model
+class GraphEdge(IterableMixin):
+    node1: t.Any
+    node2: t.Any
+    meta: t.Any
+
+
+class Graph:
+    def __init__(self, edges: t.Sequence[GraphEdge]):
+        self.edges = set(edges)
+        self._index = {
+            node: edge for edge in edges for node in [edge.node1, edge.node2]
+        }
+
+    def edge_meta(self, node):
+        return self._index[node].meta
+
+
+class Glossary:
+    def __init__(self, objs: t.Sequence, prefix: str):
+        self._obj_name = {obj: f"{prefix}{obj_i}" for obj_i, obj in enumerate(objs)}
+        self._name_obj = {name: obj for obj, name in self._obj_name.items()}
+
+    def obj(self, name: str):
+        return self._name_obj[name]
+
+    def name(self, obj):
+        return self._obj_name[obj]
+
+    @property
+    def dict(self):
+        return self._name_obj
+
+
+def segments(crosses: t.Iterable[BoundsCross]) -> t.Sequence[CrossSegment]:
+    cross_index = hs_crosses_index(crosses)
+
+    all_segments = []
+    for x_i, x_of_interest in enumerate(crosses):
+        for hs in x_of_interest.halfspaces:
+            # 1. get neighbors for p1.hs1, p1.hs2
+            # We need to retain order.
+            xs_on_this_hs = list(cross_index[hs])
+            if len(xs_on_this_hs) <= 1:
+                continue
+
+            # 2. order by HS direction
+            # Solution:
+            # - pick any x1 and x2
+            # - treat x1 as the coordinate origin
+            # - treat <x1 x2> vector as the reference vector
+            # - for all xs make vectors anchored at x1
+            # - for all vectors compute the length of their projection on <x1 x2>
+            # - sort points by the corresponding vector's projection lenth
+
+            ref_x, *rest_xs = xs_on_this_hs
+            ref_v = rest_xs[0].point.position - ref_x.point.position
+
+            xs_sorted = sorted(
+                xs_on_this_hs,
+                key=lambda x: np.dot(x.point.position - ref_x.point.position, ref_v),
+            )
+
+            # 3. Connect subsequent pairs to get the smallest segments
+            segments = [
+                CrossSegment(x1, x2) for x1, x2 in mitt.windowed(xs_sorted, n=2)
+            ]
+            all_segments.extend(segments)
+
+    # TODO: classify segments
+    return list(mitt.unique_everseen(all_segments))
+
+
+def collapse_crosses(crosses: t.Iterable[BoundsCross]) -> t.Sequence[BoundsCross]:
+    """Filters out bound crosses that correspond to the same halfspace pairs."""
+    seen_set = set()
+    seen_inverted_set = set()
+    filtered = []
+    for cross in crosses:
+        if cross in seen_set or cross in seen_inverted_set:
+            continue
+
+        seen_set.add(cross)
+        seen_inverted_set.add(BoundsCross(cross.hs2, cross.hs1))
+        filtered.append(cross)
+
+    return filtered

@@ -11,5 +11,6 @@
 # macOS
 .DS_Store
 
-# plots output
+# plots outputs
 /plots
+/data
