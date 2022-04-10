@@ -1,4 +1,5 @@
 import dataclasses
+import itertools as itt
 from pathlib import Path
 import typing as t
 
@@ -31,6 +32,7 @@ def _draw_segments_3d(ax, segments: t.Sequence[flat.CrossSegment], xlim, ylim):
 
 def _plot(esum, vertices, segments, path, name):
     rows = []
+    n_segments = len(segments)
     for segment_i, segment in enumerate(segments):
         x1, y1, _ = segment.x1.point.position
         x2, y2, _ = segment.x2.point.position
@@ -40,21 +42,31 @@ def _plot(esum, vertices, segments, path, name):
                 {
                     "x": x1,
                     "y": y1,
-                    "segment_i": segment_i,
+                    "z": segment_i / n_segments,
                     "segment_name": segment.debug_name,
+                    "point_name": segment.x1.debug_name,
                 },
                 {
                     "x": x2,
                     "y": y2,
-                    "segment_i": segment_i,
+                    "z": segment_i / n_segments,
                     "segment_name": segment.debug_name,
+                    "point_name": segment.x2.debug_name,
                 },
             ]
         )
 
     df = pd.DataFrame.from_records(rows)
 
-    fig = px.line_3d(df, x="x", y="y", z="segment_i", color="segment_name")
+    fig = px.line_3d(
+        df,
+        x="x",
+        y="y",
+        z="z",
+        color="segment_name",
+        hover_name="point_name",
+        hover_data=["point_name"],
+    )
     fig.write_html(path)
 
 
@@ -65,17 +77,35 @@ def _named(seq: t.Sequence, prefix: str) -> t.Sequence:
     ]
 
 
+def _with_name(obj, new_name):
+    return dataclasses.replace(obj, debug_name=new_name)
+
+
 def main():
     RESULTS_PATH.mkdir(exist_ok=True, parents=True)
+
+    x_counter = itt.count()
 
     for shape_i, esum in enumerate([common_shapes.letter_c()]):
         vertices = flat.find_vertices(esum=esum)
         segments = flat.segments(vertices)
 
+        named_segments = [
+            _with_name(
+                dataclasses.replace(
+                    seg,
+                    x1=_with_name(seg.x1, f"x_{next(x_counter)}"),
+                    x2=_with_name(seg.x2, f"x_{next(x_counter)}"),
+                ),
+                f"seg_{seg_i}",
+            )
+            for seg_i, seg in enumerate(segments)
+        ]
+
         _plot(
             esum=esum,
             vertices=vertices,
-            segments=_named(segments, "seg"),
+            segments=named_segments,
             path=RESULTS_PATH / f"shape_{shape_i}.html",
             name=esum.name,
         )
