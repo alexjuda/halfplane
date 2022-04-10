@@ -6,6 +6,7 @@ from numbers import Number
 import math
 
 import numpy as np
+from sortedcontainers import SortedDict, SortedSet
 
 from .core import Coord
 
@@ -38,10 +39,10 @@ from .core import Coord
 
 frozen_model = dataclasses.dataclass(frozen=True)
 debug_name_field = dataclasses.field(
-        default=None,
-        hash=False,
-        compare=False,
-    )
+    default=None,
+    hash=False,
+    compare=False,
+)
 
 
 class TodoMixin:
@@ -181,10 +182,6 @@ def _intersection_point(hs1: Hs, hs2: Hs) -> t.Optional[Pt]:
     return Pt(x, y)
 
 
-# A group of intersecting halfspaces.
-Term = t.Set[Hs]
-
-
 @frozen_model
 class Esum(TodoMixin):
     """Expression sum. Basic shape representation.
@@ -194,7 +191,8 @@ class Esum(TodoMixin):
     halfspaces.
     """
 
-    terms: t.Set[Term]
+    # Each term is a group of intersecting halfspaces.
+    terms: t.FrozenSet[t.FrozenSet[Hs]]
     name: t.Optional[str] = None
     debug_name: t.Optional[str] = debug_name_field
 
@@ -207,7 +205,7 @@ class Esum(TodoMixin):
             for other_term in other.terms:
                 new_terms.append(self_term ^ other_term)
 
-        return Esum(frozenset(new_terms))
+        return Esum(SortedSet(new_terms))
 
     def difference(self, other: "Esum") -> "Esum":
         return self.intersection(other.conjugate)
@@ -222,7 +220,7 @@ class Esum(TodoMixin):
         # 2. Generate Carthesian product of items in terms. Each generated
         #     tuple will be a term in the output Esum.
         # 3. Negate each item in each term.
-        conjugate_terms = set()
+        conjugate_terms = SortedSet()
         for product_term in itertools.product(*self.terms):
             conjugate_term = []
             for hs in product_term:
@@ -237,7 +235,9 @@ class Esum(TodoMixin):
     @property
     def with_boundaries(self) -> "Esum":
         return Esum(
-            {frozenset(Hpc(hs.p1, hs.p2) for hs in term) for term in self.terms}
+            SortedSet(
+                frozenset(Hpc(hs.p1, hs.p2) for hs in term) for term in self.terms
+            )
         )
 
     def contains_cross(self, cross: "BoundsCross") -> bool:
@@ -413,3 +413,36 @@ def collapse_crosses(crosses: t.Iterable[BoundsCross]) -> t.Sequence[BoundsCross
         filtered.append(cross)
 
     return filtered
+
+
+def _named_term(term: t.FrozenSet[Hs], hs_counter, pt_counter) -> t.FrozenSet[Hs]:
+    return frozenset(
+        dataclasses.replace(
+            hs,
+            debug_name=f"h_{next(hs_counter)}",
+            p1=dataclasses.replace(hs.p1, debug_name=f"p_{next(pt_counter)}"),
+            p2=dataclasses.replace(hs.p2, debug_name=f"p_{next(pt_counter)}"),
+        )
+        for hs in term
+    )
+
+
+def named_esum(esum: Esum) -> Esum:
+    """Traverse whole object graph and distribute unique debug names."""
+    hs_counter = itertools.count()
+    pt_counter = itertools.count()
+
+    # TODO: split the thing to two passes:
+    # 1. Make an index for Hs and Pt naming
+    # 2. Use the index to name the objects
+
+    return Esum(
+        SortedSet(
+            _named_term(
+                term,
+                hs_counter,
+                pt_counter,
+            )
+            for term in esum.terms
+        )
+    )

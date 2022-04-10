@@ -45,6 +45,8 @@ def _plot(esum, vertices, segments, path, name):
                     "z": segment_i / n_segments,
                     "segment_name": segment.debug_name,
                     "point_name": segment.x1.debug_name,
+                    "hs1_name": segment.x1.hs1.debug_name,
+                    "hs2_name": segment.x1.hs2.debug_name,
                 },
                 {
                     "x": x2,
@@ -52,6 +54,8 @@ def _plot(esum, vertices, segments, path, name):
                     "z": segment_i / n_segments,
                     "segment_name": segment.debug_name,
                     "point_name": segment.x2.debug_name,
+                    "hs1_name": segment.x2.hs1.debug_name,
+                    "hs2_name": segment.x2.hs2.debug_name,
                 },
             ]
         )
@@ -65,7 +69,7 @@ def _plot(esum, vertices, segments, path, name):
         z="z",
         color="segment_name",
         hover_name="point_name",
-        hover_data=["point_name"],
+        hover_data=["hs1_name", "hs2_name"],
     )
     fig.write_html(path)
 
@@ -86,7 +90,8 @@ def main():
 
     x_counter = itt.count()
 
-    for shape_i, esum in enumerate([common_shapes.letter_c()]):
+    for shape_i, esum_start in enumerate([common_shapes.letter_c()]):
+        esum = flat.named_esum(esum_start)
         vertices = flat.find_vertices(esum=esum)
         segments = flat.segments(vertices)
 
