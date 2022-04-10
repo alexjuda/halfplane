@@ -1,3 +1,4 @@
+import dataclasses
 from pathlib import Path
 import typing as t
 
@@ -40,19 +41,28 @@ def _plot(esum, vertices, segments, path, name):
                     "x": x1,
                     "y": y1,
                     "segment_i": segment_i,
+                    "segment_name": segment.debug_name,
                 },
                 {
                     "x": x2,
                     "y": y2,
                     "segment_i": segment_i,
+                    "segment_name": segment.debug_name,
                 },
             ]
         )
 
     df = pd.DataFrame.from_records(rows)
 
-    fig = px.line_3d(df, x="x", y="y", z="segment_i", color="segment_i")
+    fig = px.line_3d(df, x="x", y="y", z="segment_i", color="segment_name")
     fig.write_html(path)
+
+
+def _named(seq: t.Sequence, prefix: str) -> t.Sequence:
+    return [
+        dataclasses.replace(item, debug_name=f"{prefix}_{i}")
+        for i, item in enumerate(seq)
+    ]
 
 
 def main():
@@ -65,7 +75,7 @@ def main():
         _plot(
             esum=esum,
             vertices=vertices,
-            segments=segments,
+            segments=_named(segments, "seg"),
             path=RESULTS_PATH / f"shape_{shape_i}.html",
             name=esum.name,
         )

@@ -27,26 +27,32 @@ from .core import Coord
 # - [x] Esum conjugate
 # - [ ] select intersecting segments
 
+# Hi there. I am looking for a way, like an extension, to move any apps menu bar to the
+# panel. What I mean by menu bar is this:
+
+# Hi there. I am looking for a way like an extension to move any apps menu bar to the panel
+
 # Plotting:
 # - [x] point-by-point test
 
 
 frozen_model = dataclasses.dataclass(frozen=True)
+debug_name_field = dataclasses.field(
+        default=None,
+        hash=False,
+        compare=False,
+    )
 
 
-class IterableMixin:
+class TodoMixin:
     pass
-    # def __iter__(self):
-    #     return iter(dataclasses.astuple(self))
-
-    # def __len__(self):
-    #     return len(dataclasses.astuple(self))
 
 
 @frozen_model
-class Pt(IterableMixin):
+class Pt(TodoMixin):
     x: Coord
     y: Coord
+    debug_name: t.Optional[str] = debug_name_field
 
     @property
     def position(self) -> np.ndarray:
@@ -60,7 +66,7 @@ class Pt(IterableMixin):
 
 
 @frozen_model
-class Hp(IterableMixin):
+class Hp(TodoMixin):
     """Half plane, where the boundary is a line that crosses p1 & p1. Doesn't
     include the boundary itself. Contains all points "on the left" of the
     P1->P2 vector.
@@ -68,6 +74,7 @@ class Hp(IterableMixin):
 
     p1: Pt
     p2: Pt
+    debug_name: t.Optional[str] = debug_name_field
 
     def contains(self, point: Pt) -> bool:
         return _z_factor(self, point) > 0
@@ -81,13 +88,14 @@ class Hp(IterableMixin):
 
 
 @frozen_model
-class Hpc(IterableMixin):
+class Hpc(TodoMixin):
     """Half plane, where the boundary is a line that crosses p1 & p1. Includes
     the boundary. Contains all points "on the left" of the P1->P2 vector.
     """
 
     p1: Pt
     p2: Pt
+    debug_name: t.Optional[str] = debug_name_field
 
     def contains(self, point: Pt) -> bool:
         return _z_factor(self, point) >= 0
@@ -178,7 +186,7 @@ Term = t.Set[Hs]
 
 
 @frozen_model
-class Esum(IterableMixin):
+class Esum(TodoMixin):
     """Expression sum. Basic shape representation.
 
     Uses two-level sets of halfspaces. The outer set is considered a union of
@@ -188,6 +196,7 @@ class Esum(IterableMixin):
 
     terms: t.Set[Term]
     name: t.Optional[str] = None
+    debug_name: t.Optional[str] = debug_name_field
 
     def union(self, other: "Esum") -> "Esum":
         return Esum(self.terms | other.terms)
@@ -242,9 +251,10 @@ class Esum(IterableMixin):
 
 
 @frozen_model
-class BoundsCross(IterableMixin):
+class BoundsCross(TodoMixin):
     hs1: Hs
     hs2: Hs
+    debug_name: t.Optional[str] = debug_name_field
 
     @property
     def point(self) -> Pt:
@@ -277,9 +287,7 @@ def _hs_contains_cross(hs: Hs, cross: BoundsCross):
 def find_vertices(esum: Esum) -> t.Set[BoundsCross]:
     crosses = find_all_crosses([hs for term in esum.terms for hs in term])
     inside = list(
-        mitt.unique_everseen(
-            cross for cross in crosses if esum.contains_cross(cross)
-        )
+        mitt.unique_everseen(cross for cross in crosses if esum.contains_cross(cross))
     )
     collapsed = collapse_crosses(inside)
     return collapsed
@@ -300,9 +308,10 @@ def query_cross(
 
 
 @frozen_model
-class CrossSegment(IterableMixin):
+class CrossSegment(TodoMixin):
     x1: BoundsCross
     x2: BoundsCross
+    debug_name: t.Optional[str] = debug_name_field
 
 
 def hs_crosses_index(
@@ -317,10 +326,11 @@ def hs_crosses_index(
 
 
 @frozen_model
-class GraphEdge(IterableMixin):
+class GraphEdge(TodoMixin):
     node1: t.Any
     node2: t.Any
     meta: t.Any
+    debug_name: t.Optional[str] = debug_name_field
 
 
 class Graph:
