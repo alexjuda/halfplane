@@ -415,33 +415,33 @@ def collapse_crosses(crosses: t.Iterable[BoundsCross]) -> t.Sequence[BoundsCross
     return filtered
 
 
-def _named_term(term: t.FrozenSet[Hs], hs_counter, pt_counter) -> t.FrozenSet[Hs]:
-    return frozenset(
-        dataclasses.replace(
-            hs,
-            debug_name=f"h_{next(hs_counter)}",
-            p1=dataclasses.replace(hs.p1, debug_name=f"p_{next(pt_counter)}"),
-            p2=dataclasses.replace(hs.p2, debug_name=f"p_{next(pt_counter)}"),
-        )
-        for hs in term
-    )
-
-
 def named_esum(esum: Esum) -> Esum:
     """Traverse whole object graph and distribute unique debug names."""
+
+    hs_names = {}
+    pt_names = {}
     hs_counter = itertools.count()
     pt_counter = itertools.count()
 
-    # TODO: split the thing to two passes:
-    # 1. Make an index for Hs and Pt naming
-    # 2. Use the index to name the objects
+    for term in esum.terms:
+        for hs in term:
+            if hs not in hs_names:
+                hs_names[hs] = f"h_{next(hs_counter)}"
+
+            for pt in [hs.p1, hs.p2]:
+                if pt not in pt_names:
+                    pt_names[pt] = f"p_{next(pt_counter)}"
 
     return Esum(
         SortedSet(
-            _named_term(
-                term,
-                hs_counter,
-                pt_counter,
+            frozenset(
+                dataclasses.replace(
+                    hs,
+                    debug_name=hs_names[hs],
+                    p1=dataclasses.replace(hs.p1, debug_name=pt_names[pt]),
+                    p2=dataclasses.replace(hs.p2, debug_name=pt_names[pt]),
+                )
+                for hs in term
             )
             for term in esum.terms
         )
