@@ -28,11 +28,6 @@ from .core import Coord
 # - [x] Esum conjugate
 # - [ ] select intersecting segments
 
-# Hi there. I am looking for a way, like an extension, to move any apps menu bar to the
-# panel. What I mean by menu bar is this:
-
-# Hi there. I am looking for a way like an extension to move any apps menu bar to the panel
-
 # Plotting:
 # - [x] point-by-point test
 
@@ -282,6 +277,42 @@ def _hs_contains_cross(hs: Hs, cross: BoundsCross):
     # Check 2: see if a `hs` contains the cross point. Allow points on
     # boundaries, even for `Hp`.
     return Hpc(hs.p1, hs.p2).contains(cross.point)
+
+
+def _hs_contains_pt_strict(hs: Hs, pt: Pt) -> bool:
+    """Numerical check. The strict one."""
+    return Hp(hs.p1, hs.p2).contains(pt)
+
+
+def _hs_contains_pt_with_epsilon(hs: Hs, pt: Pt) -> bool:
+    """Numerical check. The loose one."""
+    return Hpc(hs.p1, hs.p2).contains(pt)
+
+
+def _esum_contains_pt_strict(esum: Esum, pt: Pt) -> bool:
+    """Numerical check."""
+    return any(
+        all(_hs_contains_pt_strict(hs, pt) for hs in group) for group in esum.terms
+    )
+
+
+def _esum_contains_pt_with_epsilon(esum: Esum, pt: Pt) -> bool:
+    """Numerical check."""
+    return any(
+        all(_hs_contains_pt_with_epsilon(hs, pt) for hs in group)
+        for group in esum.terms
+    )
+
+
+def segment_on_boundary(esum: Esum, segment: "CrossSegment") -> bool:
+    pt1 = segment.x1.point
+    pt2 = segment.x2.point
+    mid_pt = Pt((pt1.x + pt2.x) / 2, (pt1.y + pt2.y) / 2)
+
+    e = _esum_contains_pt_with_epsilon(esum, mid_pt)
+    s = _esum_contains_pt_strict(esum, mid_pt)
+
+    return e and not s
 
 
 def find_vertices(esum: Esum) -> t.Set[BoundsCross]:
