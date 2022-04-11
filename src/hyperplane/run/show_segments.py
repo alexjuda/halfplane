@@ -29,11 +29,12 @@ def main():
     for shape_i, esum in enumerate([common_shapes.letter_c()]):
         vertices = flat.find_vertices(esum=esum)
         segments = flat.segments(vertices)
+        boundary_segments = flat.filter_segments(esum, segments)
 
         _plot(
             esum=esum,
             vertices=vertices,
-            segments=segments,
+            segments=boundary_segments,
             path=RESULTS_PATH / f"shape_{shape_i}.png",
             name=esum.name,
         )

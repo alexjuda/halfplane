@@ -85,13 +85,6 @@ def _with_name(obj, new_name):
     return dataclasses.replace(obj, debug_name=new_name)
 
 
-def _filter_segments(
-    esum: flat.Esum,
-    segments: t.Sequence[flat.CrossSegment],
-) -> t.Sequence[flat.CrossSegment]:
-    return [s for s in segments if flat.segment_on_boundary(esum, s)]
-
-
 def main():
     RESULTS_PATH.mkdir(exist_ok=True, parents=True)
 
@@ -99,7 +92,7 @@ def main():
         esum = flat.named_esum(esum_start)
         vertices = _named(flat.find_vertices(esum=esum), "x")
         segments = _named(flat.segments(vertices), "seg")
-        boundary_segments = _filter_segments(esum, segments)
+        boundary_segments = flat.filter_segments(esum, segments)
 
         _plot(
             esum=esum,

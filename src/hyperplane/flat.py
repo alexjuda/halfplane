@@ -304,17 +304,6 @@ def _esum_contains_pt_with_epsilon(esum: Esum, pt: Pt) -> bool:
     )
 
 
-def segment_on_boundary(esum: Esum, segment: "CrossSegment") -> bool:
-    pt1 = segment.x1.point
-    pt2 = segment.x2.point
-    mid_pt = Pt((pt1.x + pt2.x) / 2, (pt1.y + pt2.y) / 2)
-
-    e = _esum_contains_pt_with_epsilon(esum, mid_pt)
-    s = _esum_contains_pt_strict(esum, mid_pt)
-
-    return e and not s
-
-
 def find_vertices(esum: Esum) -> t.Set[BoundsCross]:
     crosses = find_all_crosses([hs for term in esum.terms for hs in term])
     inside = list(
@@ -428,6 +417,21 @@ def segments(crosses: t.Iterable[BoundsCross]) -> t.Sequence[CrossSegment]:
 
     # TODO: classify segments
     return list(mitt.unique_everseen(all_segments))
+
+
+def segment_on_boundary(esum: Esum, segment: CrossSegment) -> bool:
+    pt1 = segment.x1.point
+    pt2 = segment.x2.point
+    mid_pt = Pt((pt1.x + pt2.x) / 2, (pt1.y + pt2.y) / 2)
+
+    e = _esum_contains_pt_with_epsilon(esum, mid_pt)
+    s = _esum_contains_pt_strict(esum, mid_pt)
+
+    return e and not s
+
+
+def filter_segments(esum, segments):
+    return [s for s in segments if segment_on_boundary(esum, s)]
 
 
 def collapse_crosses(crosses: t.Iterable[BoundsCross]) -> t.Sequence[BoundsCross]:
