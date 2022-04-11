@@ -88,29 +88,15 @@ def _with_name(obj, new_name):
 def main():
     RESULTS_PATH.mkdir(exist_ok=True, parents=True)
 
-    x_counter = itt.count()
-
     for shape_i, esum_start in enumerate([common_shapes.letter_c()]):
         esum = flat.named_esum(esum_start)
-        vertices = flat.find_vertices(esum=esum)
-        segments = flat.segments(vertices)
-
-        named_segments = [
-            _with_name(
-                dataclasses.replace(
-                    seg,
-                    x1=_with_name(seg.x1, f"x_{next(x_counter)}"),
-                    x2=_with_name(seg.x2, f"x_{next(x_counter)}"),
-                ),
-                f"seg_{seg_i}",
-            )
-            for seg_i, seg in enumerate(segments)
-        ]
+        vertices = _named(flat.find_vertices(esum=esum), "x")
+        segments = _named(flat.segments(vertices), "seg")
 
         _plot(
             esum=esum,
             vertices=vertices,
-            segments=named_segments,
+            segments=segments,
             path=RESULTS_PATH / f"shape_{shape_i}.html",
             name=esum.name,
         )
