@@ -1,16 +1,11 @@
 import dataclasses
-import itertools as itt
-from pathlib import Path
 import typing as t
+from pathlib import Path
 
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-import plotly.express as px
 import pandas as pd
+import plotly.express as px
 
-from .. import flat
-from .. import plots
-from .. import common_shapes
+from .. import flat, common_shapes
 
 
 RESULTS_PATH = Path("./data/segments_3d")
