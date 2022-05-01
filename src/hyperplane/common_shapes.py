@@ -93,6 +93,44 @@ def letter_c():
     return dataclasses.replace(external.difference(internal), name="letter C")
 
 
+def c_subset_for_segments():
+    """A subset of letter C that was problematic for segment detection."""
+
+    return Esum(
+        terms={
+            frozenset(
+                [
+                    # vertical line (|)
+                    Hpc(
+                        Pt(2, 10),
+                        Pt(2, 0),
+                    ),
+                    # diagonal line (\)
+                    Hpc(
+                        Pt(2, 6),
+                        Pt(6, 2),
+                    ),
+                    # horizontal line (-)
+                    Hpc(
+                        Pt(6, 2),
+                        Pt(10, 2),
+                    ),
+                ]
+            ),
+            frozenset(
+                [
+                    # vertical line (|)
+                    Hpc(
+                        Pt(4, 10),
+                        Pt(4, 0),
+                    ),
+                ]
+            ),
+        },
+        name="C subset",
+    )
+
+
 def triangle():
     return Esum(
         {

@@ -22,7 +22,9 @@ def _plot(esum, path, name):
 def main():
     RESULTS_PATH.mkdir(exist_ok=True, parents=True)
 
-    for shape_i, esum in enumerate([common_shapes.crude_c()]):
+    for shape_i, esum in enumerate(
+        [common_shapes.letter_c(), common_shapes.c_subset_for_segments()]
+    ):
         _plot(
             esum=esum,
             path=RESULTS_PATH / f"shape_{shape_i}.png",
