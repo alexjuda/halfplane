@@ -2,7 +2,7 @@ main:
 	@echo "hello!"
 
 test:
-	pytest .
+	pytest . $(OPTS)
 
 isort:
 	isort --profile=black src tests
