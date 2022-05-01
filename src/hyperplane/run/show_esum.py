@@ -23,7 +23,7 @@ def main():
     RESULTS_PATH.mkdir(exist_ok=True, parents=True)
 
     for shape_i, esum in enumerate(
-        [common_shapes.letter_c(), common_shapes.c_subset_for_segments()]
+        [common_shapes.letter_c(), common_shapes.letter_chi()]
     ):
         _plot(
             esum=esum,
