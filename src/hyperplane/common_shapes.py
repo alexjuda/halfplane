@@ -1,6 +1,6 @@
 import dataclasses
 
-from .flat import Esum, Pt, Hp, Hpc
+from .flat import Esum, Hp, Hpc, Pt
 
 
 def letter_c():

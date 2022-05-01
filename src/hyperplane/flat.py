@@ -1,15 +1,14 @@
 import dataclasses
-import typing as t
 import itertools
-import more_itertools as mitt
-from numbers import Number
 import math
+import typing as t
+from numbers import Number
 
+import more_itertools as mitt
 import numpy as np
 from sortedcontainers import SortedDict, SortedSet
 
 from .core import Coord
-
 
 # Data structures needed:
 # - [x] pt

@@ -1,11 +1,9 @@
-import more_itertools as mitt
 from pathlib import Path
+
+import more_itertools as mitt
 import numpy as np
 
-from .. import flat
-from .. import plots
-from .. import common_shapes
-
+from .. import common_shapes, flat, plots
 
 RESULTS_PATH = Path("./data/phases")
 

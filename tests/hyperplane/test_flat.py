@@ -1,7 +1,8 @@
 import dataclasses
-from hyperplane.flat import Pt, Hp, Hpc, Esum, BoundsCross, collapse_crosses
 
 import pytest
+
+from hyperplane.flat import BoundsCross, Esum, Hp, Hpc, Pt, collapse_crosses
 
 
 def _translate_point(pt: Pt, dx, dy):

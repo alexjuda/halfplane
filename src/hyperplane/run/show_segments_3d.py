@@ -5,8 +5,7 @@ from pathlib import Path
 import pandas as pd
 import plotly.express as px
 
-from .. import flat, common_shapes
-
+from .. import common_shapes, flat
 
 RESULTS_PATH = Path("./data/segments_3d")
 

@@ -1,7 +1,6 @@
 from pathlib import Path
 
-from .. import plots, common_shapes
-
+from .. import common_shapes, plots
 
 RESULTS_PATH = Path("./data/esums")
 

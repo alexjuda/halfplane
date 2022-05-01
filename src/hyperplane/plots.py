@@ -8,7 +8,7 @@ import matplotlib.ticker
 import numpy as np
 
 from . import flat
-from .flat import Hp, Hpc, Pt, Hs, Esum, BoundsCross
+from .flat import BoundsCross, Esum, Hp, Hpc, Hs, Pt
 
 
 def _datapoints(esum: Esum, x_iter, y_iter) -> np.ndarray:
