@@ -2,7 +2,16 @@ import dataclasses
 
 import pytest
 
-from hyperplane.flat import BoundsCross, Esum, Hp, Hpc, Pt, collapse_crosses
+from hyperplane.flat import (
+    BoundsCross,
+    CrossSegment,
+    Esum,
+    Hp,
+    Hpc,
+    Pt,
+    collapse_crosses,
+    infer_smallest_segments,
+)
 
 
 def _translate_point(pt: Pt, dx, dy):
@@ -333,3 +342,75 @@ class TestDebugNames:
         new_nested = dataclasses.replace(old_nested, debug_name="hello")
         new_root = dataclasses.replace(root_obj, **{root_attr: new_nested})
         assert new_root == root_obj
+
+
+class TestInferSegments:
+    @pytest.fixture
+    def h0(self):
+        return Hpc(
+            p1=Pt(x=2, y=6, debug_name="p_17"),
+            p2=Pt(x=6, y=2, debug_name="p_17"),
+            debug_name="h_0",
+        )
+
+    @pytest.fixture
+    def x13(self, h0):
+        return BoundsCross(
+            hs1=Hp(
+                p1=Pt(x=10, y=4, debug_name="p_17"),
+                p2=Pt(x=6, y=4, debug_name="p_17"),
+                debug_name="h_9",
+            ),
+            hs2=h0,
+            debug_name="x_13",
+        )
+
+    @pytest.fixture
+    def x0(self, h0):
+        return BoundsCross(
+            hs1=h0,
+            hs2=Hp(
+                p1=Pt(x=4, y=0, debug_name="p_17"),
+                p2=Pt(x=4, y=10, debug_name="p_17"),
+                debug_name="h_8",
+            ),
+            debug_name="x_0",
+        )
+
+    @pytest.fixture
+    def x4(self, h0):
+        return BoundsCross(
+            hs1=h0,
+            hs2=Hpc(
+                p1=Pt(x=2, y=10, debug_name="p_17"),
+                p2=Pt(x=2, y=0, debug_name="p_17"),
+                debug_name="h_5",
+            ),
+            debug_name="x_4",
+        )
+
+    @pytest.fixture
+    def x2(self, h0):
+        return BoundsCross(
+            hs1=Hpc(
+                p1=Pt(x=6, y=2, debug_name="p_17"),
+                p2=Pt(x=10, y=2, debug_name="p_17"),
+                debug_name="h_6",
+            ),
+            hs2=h0,
+            debug_name="x_2",
+        )
+
+    @pytest.fixture
+    def xs_problematic(self, h0, x13, x0, x4, x2):
+        return [x13, x0, x4, x2]
+
+    @pytest.fixture
+    def problematic_ref_segments(self, h0, x13, x0, x4, x2):
+        return [
+            CrossSegment(x2, x0),
+            CrossSegment(x0, x4),
+        ]
+
+    def test_examples(self, xs_problematic, problematic_ref_segments):
+        assert infer_smallest_segments(xs_problematic) == problematic_ref_segments
