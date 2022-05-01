@@ -391,31 +391,42 @@ def segments(crosses: t.Iterable[BoundsCross]) -> t.Sequence[CrossSegment]:
             if len(xs_on_this_hs) <= 1:
                 continue
 
-            # 2. order by HS direction
-            # Solution:
-            # - pick any x1 and x2
-            # - treat x1 as the coordinate origin
-            # - treat <x1 x2> vector as the reference vector
-            # - for all xs make vectors anchored at x1
-            # - for all vectors compute the length of their projection on <x1 x2>
-            # - sort points by the corresponding vector's projection lenth
-
-            ref_x, *rest_xs = xs_on_this_hs
-            ref_v = rest_xs[0].point.position - ref_x.point.position
-
-            xs_sorted = sorted(
-                xs_on_this_hs,
-                key=lambda x: np.dot(x.point.position - ref_x.point.position, ref_v),
-            )
-
-            # 3. Connect subsequent pairs to get the smallest segments
-            segments = [
-                CrossSegment(x1, x2) for x1, x2 in mitt.windowed(xs_sorted, n=2)
-            ]
+            segments = infer_smallest_segments(xs_on_this_hs)
             all_segments.extend(segments)
 
-    # TODO: classify segments
     return list(mitt.unique_everseen(all_segments))
+
+
+def infer_smallest_segments(xs: t.Sequence[BoundsCross]) -> t.Sequence[CrossSegment]:
+    """
+    Args:
+        xs: endpoints for segments. These crosses are assumed to be collinear.
+            Need at least 2.
+    Returns:
+        Constructed segments. They should be as small as possible, there should
+            be never an element of `xs` that's in the middle of an inferred
+            segment.
+    """
+    # 2. order by HS direction
+    # Solution:
+    # - pick any x1 and x2
+    # - treat x1 as the coordinate origin
+    # - treat <x1 x2> vector as the reference vector
+    # - for all xs make vectors anchored at x1
+    # - for all vectors compute the length of their projection on <x1 x2>
+    # - sort points by the corresponding vector's projection lenth
+
+    ref_x, *rest_xs = xs
+    ref_v = rest_xs[0].point.position - ref_x.point.position
+
+    xs_sorted = sorted(
+        xs,
+        key=lambda x: np.dot(x.point.position - ref_x.point.position, ref_v),
+    )
+
+    # 3. Connect subsequent pairs to get the smallest segments
+    segments = [CrossSegment(x1, x2) for x1, x2 in mitt.windowed(xs_sorted, n=2)]
+    return segments
 
 
 def segment_on_boundary(esum: Esum, segment: CrossSegment) -> bool:
