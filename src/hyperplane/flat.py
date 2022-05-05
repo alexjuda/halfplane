@@ -419,8 +419,9 @@ def infer_smallest_segments(
 ) -> t.Sequence[CrossSegment]:
     """
     Args:
-        xs: endpoints for segments. These crosses are assumed to be collinear.
+        xs: endpoints for segments. They all need to lie along a single `hs`.
             Need at least 2.
+        hs: halfspace used to determine the sorting direction.
     Returns:
         Constructed segments. They should be as small as possible, there should
             be never an element of `xs` that's in the middle of an inferred
