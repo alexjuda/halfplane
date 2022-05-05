@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from .. import common_shapes, flat, plots
+from .. import common_shapes, flat, plots, shape_gen
 
 RESULTS_PATH = Path("./data/segments")
 
@@ -23,7 +23,13 @@ def _plot(esum, vertices, segments, path, name):
 def main():
     RESULTS_PATH.mkdir(exist_ok=True, parents=True)
 
-    for shape_i, esum in enumerate([common_shapes.letter_c()]):
+    for shape_i, esum in enumerate(
+        [
+            common_shapes.letter_c(),
+            shape_gen.rect_chain(n=4, stride_x=3, stride_y=3),
+            shape_gen.rect_chain(n=20, stride_x=3, stride_y=3),
+        ]
+    ):
         vertices = flat.find_vertices(esum=esum)
         segments = flat.segments(vertices)
         boundary_segments = flat.filter_segments(esum, segments)

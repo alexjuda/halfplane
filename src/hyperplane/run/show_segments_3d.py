@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import plotly.express as px
 
-from .. import common_shapes, flat
+from .. import common_shapes, flat, shape_gen
 
 RESULTS_PATH = Path("./data/segments_3d")
 
@@ -85,7 +85,7 @@ def main():
     for shape_i, esum_start in enumerate(
         [
             common_shapes.letter_c(),
-            # common_shapes.letter_chi(),
+            shape_gen.rect_chain(n=4, stride_x=3, stride_y=3),
         ]
     ):
         esum = flat.named_esum(esum_start)
