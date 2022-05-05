@@ -332,6 +332,23 @@ class CrossSegment(TodoMixin):
     x2: BoundsCross
     debug_name: t.Optional[str] = debug_name_field
 
+    def debug_info(self, names=False, length=True):
+        suffix = ""
+
+        if length:
+            delta = self.x2.point.position - self.x1.point.position
+            suffix += f" l={np.hypot(delta[0], delta[1])}"
+
+        if names:
+            return f"({self.x1.debug_name})-({self.x2.debug_name}){suffix}"
+        else:
+            x1_x = self.x1.point.x
+            x1_y = self.x1.point.y
+            x2_x = self.x2.point.x
+            x2_y = self.x2.point.y
+
+            return f"({x1_x}, {x1_y})-({x2_x}, {x2_y}){suffix}"
+
 
 def hs_crosses_index(
     crosses: t.Iterable[BoundsCross],

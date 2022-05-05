@@ -413,4 +413,5 @@ class TestInferSegments:
         ]
 
     def test_examples(self, xs_problematic, problematic_ref_segments):
-        assert infer_smallest_segments(xs_problematic) == problematic_ref_segments
+        segments = infer_smallest_segments(xs_problematic)
+        assert segments == problematic_ref_segments
