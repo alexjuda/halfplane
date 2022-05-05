@@ -143,7 +143,7 @@ def plot_esum_boundaries(esum: Esum, ax, xlim, ylim):
     # TODO: somehow ensure reproducibility of set order
     for term_i, term in enumerate(esum.terms):
         for hs_i, hs in enumerate(term):
-            label = f"h_{term_i}_{hs_i}"
+            label = hs.debug_name or f"h_{term_i}_{hs_i}"
             _plot_hs(hs, hs_label=label, ax=ax, xlim=xlim, ylim=ylim)
 
     locator = matplotlib.ticker.MaxNLocator(integer=True)

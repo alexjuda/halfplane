@@ -85,7 +85,7 @@ def main():
     for shape_i, esum_start in enumerate(
         [
             common_shapes.letter_c(),
-            common_shapes.letter_chi(),
+            # common_shapes.letter_chi(),
         ]
     ):
         esum = flat.named_esum(esum_start)
