@@ -1,10 +1,7 @@
 import dataclasses
 from pathlib import Path
 
-from .. import flat
-from .. import plots
-from .. import common_shapes
-
+from .. import common_shapes, flat, plots
 
 RESULTS_PATH = Path("./data/groups")
 

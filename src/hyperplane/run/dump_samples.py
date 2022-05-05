@@ -1,9 +1,6 @@
 from pathlib import Path
 
-from .. import flat
-from .. import io
-from .. import plots
-from .. import common_shapes
+from .. import common_shapes, flat, io, plots
 
 
 def _make_basic_shapes():

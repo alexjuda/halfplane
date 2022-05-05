@@ -1,14 +1,14 @@
 import dataclasses
-import typing as t
 import itertools
-import more_itertools as mitt
-from numbers import Number
 import math
+import typing as t
+from numbers import Number
 
+import more_itertools as mitt
 import numpy as np
+from sortedcontainers import SortedDict, SortedSet
 
 from .core import Coord
-
 
 # Data structures needed:
 # - [x] pt
@@ -32,21 +32,22 @@ from .core import Coord
 
 
 frozen_model = dataclasses.dataclass(frozen=True)
+debug_name_field = dataclasses.field(
+    default=None,
+    hash=False,
+    compare=False,
+)
 
 
-class IterableMixin:
+class TodoMixin:
     pass
-    # def __iter__(self):
-    #     return iter(dataclasses.astuple(self))
-
-    # def __len__(self):
-    #     return len(dataclasses.astuple(self))
 
 
 @frozen_model
-class Pt(IterableMixin):
+class Pt(TodoMixin):
     x: Coord
     y: Coord
+    debug_name: t.Optional[str] = debug_name_field
 
     @property
     def position(self) -> np.ndarray:
@@ -60,7 +61,7 @@ class Pt(IterableMixin):
 
 
 @frozen_model
-class Hp(IterableMixin):
+class Hp(TodoMixin):
     """Half plane, where the boundary is a line that crosses p1 & p1. Doesn't
     include the boundary itself. Contains all points "on the left" of the
     P1->P2 vector.
@@ -68,6 +69,7 @@ class Hp(IterableMixin):
 
     p1: Pt
     p2: Pt
+    debug_name: t.Optional[str] = debug_name_field
 
     def contains(self, point: Pt) -> bool:
         return _z_factor(self, point) > 0
@@ -81,13 +83,14 @@ class Hp(IterableMixin):
 
 
 @frozen_model
-class Hpc(IterableMixin):
+class Hpc(TodoMixin):
     """Half plane, where the boundary is a line that crosses p1 & p1. Includes
     the boundary. Contains all points "on the left" of the P1->P2 vector.
     """
 
     p1: Pt
     p2: Pt
+    debug_name: t.Optional[str] = debug_name_field
 
     def contains(self, point: Pt) -> bool:
         return _z_factor(self, point) >= 0
@@ -173,12 +176,8 @@ def _intersection_point(hs1: Hs, hs2: Hs) -> t.Optional[Pt]:
     return Pt(x, y)
 
 
-# A group of intersecting halfspaces.
-Term = t.Set[Hs]
-
-
 @frozen_model
-class Esum(IterableMixin):
+class Esum(TodoMixin):
     """Expression sum. Basic shape representation.
 
     Uses two-level sets of halfspaces. The outer set is considered a union of
@@ -186,8 +185,10 @@ class Esum(IterableMixin):
     halfspaces.
     """
 
-    terms: t.Set[Term]
+    # Each term is a group of intersecting halfspaces.
+    terms: t.FrozenSet[t.FrozenSet[Hs]]
     name: t.Optional[str] = None
+    debug_name: t.Optional[str] = debug_name_field
 
     def union(self, other: "Esum") -> "Esum":
         return Esum(self.terms | other.terms)
@@ -198,7 +199,7 @@ class Esum(IterableMixin):
             for other_term in other.terms:
                 new_terms.append(self_term ^ other_term)
 
-        return Esum(frozenset(new_terms))
+        return Esum(SortedSet(new_terms))
 
     def difference(self, other: "Esum") -> "Esum":
         return self.intersection(other.conjugate)
@@ -213,7 +214,7 @@ class Esum(IterableMixin):
         # 2. Generate Carthesian product of items in terms. Each generated
         #     tuple will be a term in the output Esum.
         # 3. Negate each item in each term.
-        conjugate_terms = set()
+        conjugate_terms = SortedSet()
         for product_term in itertools.product(*self.terms):
             conjugate_term = []
             for hs in product_term:
@@ -228,7 +229,9 @@ class Esum(IterableMixin):
     @property
     def with_boundaries(self) -> "Esum":
         return Esum(
-            {frozenset(Hpc(hs.p1, hs.p2) for hs in term) for term in self.terms}
+            SortedSet(
+                frozenset(Hpc(hs.p1, hs.p2) for hs in term) for term in self.terms
+            )
         )
 
     def contains_cross(self, cross: "BoundsCross") -> bool:
@@ -242,9 +245,10 @@ class Esum(IterableMixin):
 
 
 @frozen_model
-class BoundsCross(IterableMixin):
+class BoundsCross(TodoMixin):
     hs1: Hs
     hs2: Hs
+    debug_name: t.Optional[str] = debug_name_field
 
     @property
     def point(self) -> Pt:
@@ -274,12 +278,35 @@ def _hs_contains_cross(hs: Hs, cross: BoundsCross):
     return Hpc(hs.p1, hs.p2).contains(cross.point)
 
 
+def _hs_contains_pt_strict(hs: Hs, pt: Pt) -> bool:
+    """Numerical check. The strict one."""
+    return Hp(hs.p1, hs.p2).contains(pt)
+
+
+def _hs_contains_pt_with_epsilon(hs: Hs, pt: Pt) -> bool:
+    """Numerical check. The loose one."""
+    return Hpc(hs.p1, hs.p2).contains(pt)
+
+
+def _esum_contains_pt_strict(esum: Esum, pt: Pt) -> bool:
+    """Numerical check."""
+    return any(
+        all(_hs_contains_pt_strict(hs, pt) for hs in group) for group in esum.terms
+    )
+
+
+def _esum_contains_pt_with_epsilon(esum: Esum, pt: Pt) -> bool:
+    """Numerical check."""
+    return any(
+        all(_hs_contains_pt_with_epsilon(hs, pt) for hs in group)
+        for group in esum.terms
+    )
+
+
 def find_vertices(esum: Esum) -> t.Set[BoundsCross]:
     crosses = find_all_crosses([hs for term in esum.terms for hs in term])
     inside = list(
-        mitt.unique_everseen(
-            cross for cross in crosses if esum.contains_cross(cross)
-        )
+        mitt.unique_everseen(cross for cross in crosses if esum.contains_cross(cross))
     )
     collapsed = collapse_crosses(inside)
     return collapsed
@@ -300,9 +327,27 @@ def query_cross(
 
 
 @frozen_model
-class CrossSegment(IterableMixin):
+class CrossSegment(TodoMixin):
     x1: BoundsCross
     x2: BoundsCross
+    debug_name: t.Optional[str] = debug_name_field
+
+    def debug_info(self, names=False, length=True):
+        suffix = ""
+
+        if length:
+            delta = self.x2.point.position - self.x1.point.position
+            suffix += f" l={np.hypot(delta[0], delta[1])}"
+
+        if names:
+            return f"({self.x1.debug_name})-({self.x2.debug_name}){suffix}"
+        else:
+            x1_x = self.x1.point.x
+            x1_y = self.x1.point.y
+            x2_x = self.x2.point.x
+            x2_y = self.x2.point.y
+
+            return f"({x1_x}, {x1_y})-({x2_x}, {x2_y}){suffix}"
 
 
 def hs_crosses_index(
@@ -317,10 +362,11 @@ def hs_crosses_index(
 
 
 @frozen_model
-class GraphEdge(IterableMixin):
+class GraphEdge(TodoMixin):
     node1: t.Any
     node2: t.Any
     meta: t.Any
+    debug_name: t.Optional[str] = debug_name_field
 
 
 class Graph:
@@ -362,31 +408,66 @@ def segments(crosses: t.Iterable[BoundsCross]) -> t.Sequence[CrossSegment]:
             if len(xs_on_this_hs) <= 1:
                 continue
 
-            # 2. order by HS direction
-            # Solution:
-            # - pick any x1 and x2
-            # - treat x1 as the coordinate origin
-            # - treat <x1 x2> vector as the reference vector
-            # - for all xs make vectors anchored at x1
-            # - for all vectors compute the length of their projection on <x1 x2>
-            # - sort points by the corresponding vector's projection lenth
-
-            ref_x, *rest_xs = xs_on_this_hs
-            ref_v = rest_xs[0].point.position - ref_x.point.position
-
-            xs_sorted = sorted(
-                xs_on_this_hs,
-                key=lambda x: np.dot(x.point.position - ref_x.point.position, ref_v),
-            )
-
-            # 3. Connect subsequent pairs to get the smallest segments
-            segments = [
-                CrossSegment(x1, x2) for x1, x2 in mitt.windowed(xs_sorted, n=2)
-            ]
+            segments = infer_smallest_segments(xs_on_this_hs, hs)
             all_segments.extend(segments)
 
-    # TODO: classify segments
     return list(mitt.unique_everseen(all_segments))
+
+
+def infer_smallest_segments(
+    xs: t.Sequence[BoundsCross], hs: Hs
+) -> t.Sequence[CrossSegment]:
+    """
+    Args:
+        xs: endpoints for segments. They all need to lie along a single `hs`.
+            Need at least 2.
+        hs: halfspace used to determine the sorting direction.
+    Returns:
+        Constructed segments. They should be as small as possible, there should
+            be never an element of `xs` that's in the middle of an inferred
+            segment.
+    """
+    # 1. Get a "stencil" vector from the halfspace points we're considering
+    #     (AB). We need this vector to be non-zero. It will be true as long as
+    #     the user defines a non-degenerate halfspace.
+    # 2. Pick one of the halfspace's points as the coordinate origin (A).
+    # 3. For each X, make a vector AX.
+    # 4. Sort xs by the value of "AX . AB".
+    # 5. Construct segments by a rolling window over sorted xs.
+
+    # 1. Get stencil vector
+    stencil_vec = hs.p2.position - hs.p1.position
+
+    # 2. Coordinate origin
+    coord_origin = hs.p1.position
+
+    def _comparator(x: BoundsCross):
+        # 3. Get the AX vector
+        ax_vec = x.point.position - coord_origin
+
+        # 4. Sort by the dot product
+        return np.dot(stencil_vec, ax_vec)
+
+    xs_sorted = sorted(xs, key=_comparator)
+
+    # 5. Connect subsequent pairs to get the smallest segments
+    segments = [CrossSegment(x1, x2) for x1, x2 in mitt.windowed(xs_sorted, n=2)]
+    return segments
+
+
+def segment_on_boundary(esum: Esum, segment: CrossSegment) -> bool:
+    pt1 = segment.x1.point
+    pt2 = segment.x2.point
+    mid_pt = Pt((pt1.x + pt2.x) / 2, (pt1.y + pt2.y) / 2)
+
+    e = _esum_contains_pt_with_epsilon(esum, mid_pt)
+    s = _esum_contains_pt_strict(esum, mid_pt)
+
+    return e and not s
+
+
+def filter_segments(esum, segments):
+    return [s for s in segments if segment_on_boundary(esum, s)]
 
 
 def collapse_crosses(crosses: t.Iterable[BoundsCross]) -> t.Sequence[BoundsCross]:
@@ -403,3 +484,36 @@ def collapse_crosses(crosses: t.Iterable[BoundsCross]) -> t.Sequence[BoundsCross
         filtered.append(cross)
 
     return filtered
+
+
+def named_esum(esum: Esum) -> Esum:
+    """Traverse whole object graph and distribute unique debug names."""
+
+    hs_names = {}
+    pt_names = {}
+    hs_counter = itertools.count()
+    pt_counter = itertools.count()
+
+    for term in esum.terms:
+        for hs in term:
+            if hs not in hs_names:
+                hs_names[hs] = f"h_{next(hs_counter)}"
+
+            for pt in [hs.p1, hs.p2]:
+                if pt not in pt_names:
+                    pt_names[pt] = f"p_{next(pt_counter)}"
+
+    return Esum(
+        SortedSet(
+            frozenset(
+                dataclasses.replace(
+                    hs,
+                    debug_name=hs_names[hs],
+                    p1=dataclasses.replace(hs.p1, debug_name=pt_names[pt]),
+                    p2=dataclasses.replace(hs.p2, debug_name=pt_names[pt]),
+                )
+                for hs in term
+            )
+            for term in esum.terms
+        )
+    )

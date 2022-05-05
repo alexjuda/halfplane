@@ -1,7 +1,17 @@
 import dataclasses
-from hyperplane.flat import Pt, Hp, Hpc, Esum, BoundsCross, collapse_crosses
 
 import pytest
+
+from hyperplane.flat import (
+    BoundsCross,
+    CrossSegment,
+    Esum,
+    Hp,
+    Hpc,
+    Pt,
+    collapse_crosses,
+    infer_smallest_segments,
+)
 
 
 def _translate_point(pt: Pt, dx, dy):
@@ -283,3 +293,126 @@ class TestCollapsingBoundCrosses:
     def test_is_equal_to_reversed_hses(self, bx):
         bx2 = BoundsCross(bx.hs2, bx.hs1)
         assert collapse_crosses([bx, bx2]) == [bx]
+
+
+class TestDebugNames:
+    @pytest.mark.parametrize(
+        "obj",
+        [
+            Pt(-1, 1),
+            Hp(Pt(10, 0), Pt(10, 10)),
+            Hpc(Pt(10, 0), Pt(10, 10)),
+            BoundsCross(
+                Hp(Pt(-1, 0), Pt(-1, -10)),
+                Hp(Pt(10, 0), Pt(10, 10)),
+            ),
+        ],
+    )
+    class TestForAllTypeExamples:
+        def test_equals_despite_different_names(self, obj):
+            assert (
+                obj
+                == dataclasses.replace(obj, debug_name=None)
+                == dataclasses.replace(obj, debug_name="hurrdurr")
+            )
+
+        def test_hash_despite_different_names(self, obj):
+            assert (
+                hash(obj)
+                == hash(dataclasses.replace(obj, debug_name=None))
+                == hash(dataclasses.replace(obj, debug_name="hurrdurr"))
+            )
+
+    @pytest.mark.parametrize(
+        "root_obj,root_attr",
+        [
+            (Hp(Pt(10, 0), Pt(10, 10)), "p1"),
+            (Hpc(Pt(10, 0), Pt(10, 10)), "p1"),
+            (
+                BoundsCross(
+                    Hp(Pt(-1, 0), Pt(-1, -10)),
+                    Hp(Pt(10, 0), Pt(10, 10)),
+                ),
+                "hs1",
+            ),
+        ],
+    )
+    def test_nested_object(self, root_obj, root_attr):
+        old_nested = getattr(root_obj, root_attr)
+        new_nested = dataclasses.replace(old_nested, debug_name="hello")
+        new_root = dataclasses.replace(root_obj, **{root_attr: new_nested})
+        assert new_root == root_obj
+
+
+class TestInferSegments:
+    @pytest.fixture
+    def h0(self):
+        return Hpc(
+            p1=Pt(x=2, y=6, debug_name="p_17"),
+            p2=Pt(x=6, y=2, debug_name="p_17"),
+            debug_name="h_0",
+        )
+
+    @pytest.fixture
+    def x13(self, h0):
+        return BoundsCross(
+            hs1=Hp(
+                p1=Pt(x=10, y=4, debug_name="p_17"),
+                p2=Pt(x=6, y=4, debug_name="p_17"),
+                debug_name="h_9",
+            ),
+            hs2=h0,
+            debug_name="x_13",
+        )
+
+    @pytest.fixture
+    def x0(self, h0):
+        return BoundsCross(
+            hs1=h0,
+            hs2=Hp(
+                p1=Pt(x=4, y=0, debug_name="p_17"),
+                p2=Pt(x=4, y=10, debug_name="p_17"),
+                debug_name="h_8",
+            ),
+            debug_name="x_0",
+        )
+
+    @pytest.fixture
+    def x4(self, h0):
+        return BoundsCross(
+            hs1=h0,
+            hs2=Hpc(
+                p1=Pt(x=2, y=10, debug_name="p_17"),
+                p2=Pt(x=2, y=0, debug_name="p_17"),
+                debug_name="h_5",
+            ),
+            debug_name="x_4",
+        )
+
+    @pytest.fixture
+    def x2(self, h0):
+        return BoundsCross(
+            hs1=Hpc(
+                p1=Pt(x=6, y=2, debug_name="p_17"),
+                p2=Pt(x=10, y=2, debug_name="p_17"),
+                debug_name="h_6",
+            ),
+            hs2=h0,
+            debug_name="x_2",
+        )
+
+    @pytest.fixture
+    def xs_problematic(self, h0, x13, x0, x4, x2):
+        return [x13, x0, x4, x2]
+
+    @pytest.fixture
+    def problematic_ref_segments(self, h0, x13, x0, x4, x2):
+        return [
+            CrossSegment(x4, x13),
+            CrossSegment(x13, x0),
+            CrossSegment(x0, x2),
+        ]
+
+    def test_examples(self, xs_problematic, h0, problematic_ref_segments):
+        segments = infer_smallest_segments(xs_problematic, h0)
+        assert segments == problematic_ref_segments

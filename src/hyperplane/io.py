@@ -1,7 +1,6 @@
+import io
 import json
 import typing as t
-import io
-
 
 from . import flat
 

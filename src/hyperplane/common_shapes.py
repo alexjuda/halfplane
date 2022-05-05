@@ -1,6 +1,6 @@
 import dataclasses
 
-from .flat import Esum, Pt, Hp, Hpc
+from .flat import Esum, Hp, Hpc, Pt
 
 
 def letter_c():
@@ -91,6 +91,73 @@ def letter_c():
     )
 
     return dataclasses.replace(external.difference(internal), name="letter C")
+
+
+def letter_chi():
+    """Originally devised as a subset of letter C that was problematic for
+    segment detection. Later it turned out that it wasn't easy to reproduce the error."""
+
+    vertical = Esum(
+        terms={
+            frozenset(
+                [
+                    # horizontal line (-)
+                    Hpc(
+                        Pt(10, 13),
+                        Pt(6, 13),
+                    ),
+                    # vertical line (|)
+                    Hpc(
+                        Pt(2, 10),
+                        Pt(2, 0),
+                    ),
+                    # vertical line (|)
+                    Hpc(
+                        Pt(4, 0),
+                        Pt(4, 10),
+                    ),
+                    # horizontal line (-)
+                    Hpc(
+                        Pt(6, -1),
+                        Pt(10, -1),
+                    ),
+                ]
+            ),
+        },
+    )
+
+    bottom = Esum(
+        terms={
+            frozenset(
+                [
+                    # vertical line (|)
+                    Hpc(
+                        Pt(-1, 10),
+                        Pt(-1, 0),
+                    ),
+                    # diagonal line (\)
+                    Hpc(
+                        Pt(8, 2),
+                        Pt(4, 6),
+                    ),
+                    # diagonal line (\)
+                    Hpc(
+                        Pt(2, 6),
+                        Pt(6, 2),
+                    ),
+                    # horizontal line (-)
+                    Hpc(
+                        Pt(6, 2),
+                        Pt(10, 2),
+                    ),
+                ]
+            ),
+        },
+    )
+
+    esum = vertical.union(bottom)
+
+    return dataclasses.replace(esum, name="letter Chi")
 
 
 def triangle():
