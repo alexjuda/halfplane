@@ -408,10 +408,11 @@ class TestInferSegments:
     @pytest.fixture
     def problematic_ref_segments(self, h0, x13, x0, x4, x2):
         return [
-            CrossSegment(x2, x0),
-            CrossSegment(x0, x4),
+            CrossSegment(x4, x13),
+            CrossSegment(x13, x0),
+            CrossSegment(x0, x2),
         ]
 
-    def test_examples(self, xs_problematic, problematic_ref_segments):
-        segments = infer_smallest_segments(xs_problematic)
+    def test_examples(self, xs_problematic, h0, problematic_ref_segments):
+        segments = infer_smallest_segments(xs_problematic, h0)
         assert segments == problematic_ref_segments

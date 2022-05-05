@@ -408,13 +408,15 @@ def segments(crosses: t.Iterable[BoundsCross]) -> t.Sequence[CrossSegment]:
             if len(xs_on_this_hs) <= 1:
                 continue
 
-            segments = infer_smallest_segments(xs_on_this_hs)
+            segments = infer_smallest_segments(xs_on_this_hs, hs)
             all_segments.extend(segments)
 
     return list(mitt.unique_everseen(all_segments))
 
 
-def infer_smallest_segments(xs: t.Sequence[BoundsCross]) -> t.Sequence[CrossSegment]:
+def infer_smallest_segments(
+    xs: t.Sequence[BoundsCross], hs: Hs
+) -> t.Sequence[CrossSegment]:
     """
     Args:
         xs: endpoints for segments. These crosses are assumed to be collinear.
@@ -424,24 +426,30 @@ def infer_smallest_segments(xs: t.Sequence[BoundsCross]) -> t.Sequence[CrossSegm
             be never an element of `xs` that's in the middle of an inferred
             segment.
     """
-    # 2. order by HS direction
-    # Solution:
-    # - pick any x1 and x2
-    # - treat x1 as the coordinate origin
-    # - treat <x1 x2> vector as the reference vector
-    # - for all xs make vectors anchored at x1
-    # - for all vectors compute the length of their projection on <x1 x2>
-    # - sort points by the corresponding vector's projection lenth
+    # 1. Get a "stencil" vector from the halfspace points we're considering
+    #     (AB). We need this vector to be non-zero. It will be true as long as
+    #     the user defines a non-degenerate halfspace.
+    # 2. Pick one of the halfspace's points as the coordinate origin (A).
+    # 3. For each X, make a vector AX.
+    # 4. Sort xs by the value of "AX . AB".
+    # 5. Construct segments by a rolling window over sorted xs.
 
-    ref_x, *rest_xs = xs
-    ref_v = rest_xs[0].point.position - ref_x.point.position
+    # 1. Get stencil vector
+    stencil_vec = hs.p2.position - hs.p1.position
 
-    xs_sorted = sorted(
-        xs,
-        key=lambda x: np.dot(x.point.position - ref_x.point.position, ref_v),
-    )
+    # 2. Coordinate origin
+    coord_origin = hs.p1.position
 
-    # 3. Connect subsequent pairs to get the smallest segments
+    def _comparator(x: BoundsCross):
+        # 3. Get the AX vector
+        ax_vec = x.point.position - coord_origin
+
+        # 4. Sort by the dot product
+        return np.dot(stencil_vec, ax_vec)
+
+    xs_sorted = sorted(xs, key=_comparator)
+
+    # 5. Connect subsequent pairs to get the smallest segments
     segments = [CrossSegment(x1, x2) for x1, x2 in mitt.windowed(xs_sorted, n=2)]
     return segments
 
