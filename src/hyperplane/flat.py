@@ -517,3 +517,11 @@ def named_esum(esum: Esum) -> Esum:
             for term in esum.terms
         )
     )
+
+
+def detect_segments(esum: Esum):
+    """Run full algorithm."""
+    vertices = find_vertices(esum=esum)
+    segment_candidates = segments(vertices)
+    boundary_segments = filter_segments(esum, segment_candidates)
+    return boundary_segments
