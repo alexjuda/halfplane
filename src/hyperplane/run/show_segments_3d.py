@@ -86,6 +86,7 @@ def main():
         [
             common_shapes.letter_c(),
             shape_gen.rect_chain(n=4, stride_x=3, stride_y=3),
+            shape_gen.rect_chain(n=10, stride_x=3, stride_y=3),
         ]
     ):
         esum = flat.named_esum(esum_start)
