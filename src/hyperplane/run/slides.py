@@ -1,6 +1,8 @@
 from pathlib import Path
 
-from .. import common_shapes, plots, shape_gen
+import matplotlib.pyplot as plt
+
+from .. import common_shapes, plots
 
 RESULTS_PATH = Path("./data/slides")
 
@@ -11,11 +13,14 @@ def _plot(esum, path, name):
     xlim = ylim = [-2, 14]
 
     plots.plot_esum_boundaries(esum, ax=axes, xlim=xlim, ylim=ylim)
-    axes.get_legend().remove()
 
-    # TODO: vertices if we want
-    # vertices = flat.find_vertices(group_esum)
-    # plots.draw_vertices(vertices, ax=ax_row[0], xlim=xlim, ylim=ylim)
+    axes.xaxis.set_major_locator(plt.NullLocator())
+    axes.yaxis.set_major_locator(plt.NullLocator())
+
+    for spine in ["top", "right", "bottom", "left"]:
+        axes.spines[spine].set_visible(False)
+
+    axes.get_legend().remove()
 
     fig.savefig(path)
 
