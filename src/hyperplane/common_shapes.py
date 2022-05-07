@@ -168,22 +168,23 @@ def triangle():
                     # diagonal line (/)
                     Hpc(
                         Pt(8, 10),
-                        Pt(4, 2),
+                        Pt(3, 1),
                     ),
                     # diagonal line (\)
-                    Hp(
-                        Pt(12, 2),
-                        Pt(10, 10),
+                    Hpc(
+                        Pt(9, 1),
+                        Pt(4, 10),
                     ),
                     # horizontal line (-)
                     Hpc(
                         Pt(2, 2),
-                        Pt(8, 2),
+                        Pt(10, 2),
                     ),
                 ]
             )
         },
         name="triangle",
+        debug_name="triangle",
     )
 
 
@@ -322,3 +323,4 @@ def crude_c():
     )
 
     return part1.union(part2).union(part3)
+
