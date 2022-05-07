@@ -10,7 +10,7 @@ RESULTS_PATH = Path("./data/slides")
 def _plot(esum, path, name):
     fig, axes = plots.subplots(1, 1)
 
-    xlim = ylim = [-2, 14]
+    xlim = ylim = [-1, 16]
 
     plots.plot_esum_boundaries(esum, ax=axes, xlim=xlim, ylim=ylim)
 
@@ -31,6 +31,9 @@ def main():
     for shape_i, esum in enumerate(
         [
             common_shapes.triangle(),
+            common_shapes.letter_c(),
+            common_shapes.letter_c_external(),
+            common_shapes.letter_c_internal(),
         ]
     ):
         esum_name = f"_{esum.debug_name}" if esum.debug_name else ""

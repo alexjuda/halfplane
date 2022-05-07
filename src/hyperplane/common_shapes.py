@@ -3,21 +3,8 @@ import dataclasses
 from .flat import Esum, Hp, Hpc, Pt
 
 
-def letter_c():
-    # letter C:
-    #
-    #      -------
-    #     /      |
-    #    /   -----
-    #   /   /
-    #   |  /
-    #   |  |
-    #   |  \
-    #   \   \
-    #    \   -----
-    #     \      |
-    #      -------
-    external = Esum(
+def letter_c_external():
+    return Esum(
         {
             frozenset(
                 [
@@ -56,7 +43,9 @@ def letter_c():
         }
     )
 
-    internal = Esum(
+
+def letter_c_internal():
+    return Esum(
         {
             frozenset(
                 [
@@ -90,7 +79,30 @@ def letter_c():
         }
     )
 
-    return dataclasses.replace(external.difference(internal), name="letter C")
+
+def letter_c():
+    # letter C:
+    #
+    #      -------
+    #     /      |
+    #    /   -----
+    #   /   /
+    #   |  /
+    #   |  |
+    #   |  \
+    #   \   \
+    #    \   -----
+    #     \      |
+    #      -------
+
+    return dataclasses.replace(
+        letter_c_external().difference(letter_c_internal()),
+        name="letter C",
+    )
+
+
+def extracted_method():
+    return
 
 
 def letter_chi():
@@ -323,4 +335,3 @@ def crude_c():
     )
 
     return part1.union(part2).union(part3)
-
