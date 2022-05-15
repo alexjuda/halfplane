@@ -281,6 +281,11 @@ class Esum(TodoMixin):
         return any(all(_hs_contains_x(hs, x) for hs in term) for term in self.terms)
 
 
+# A sentinel to note that a lazy property hasn't been calculated yet.
+# Allows returning `None` as a valid property value.
+EMPTY_PROP = object()
+
+
 @frozen_model
 class X(TodoMixin):
     """Cross point between two halspaces. Doesn't calculate coordinates until
@@ -291,10 +296,22 @@ class X(TodoMixin):
     hs2: Hs
     debug_name: t.Optional[str] = debug_name_field
 
+    _point: t.Optional[Pt] = dataclasses.field(
+        init=False,
+        repr=False,
+        hash=False,
+        compare=False,
+        default=EMPTY_PROP,
+    )
+
     @property
     def point(self) -> Pt:
-        # return _intersection_point2(self.hs1, self.hs2)
-        return _intersection_point(self.hs1, self.hs2)
+        if self._point == EMPTY_PROP:
+            # _intersection_point2(self.hs1, self.hs2)
+            val = _intersection_point(self.hs1, self.hs2)
+            object.__setattr__(self, '_point', val)
+
+        return self._point
 
     @property
     def halfspaces(self) -> t.Sequence[Hs]:
