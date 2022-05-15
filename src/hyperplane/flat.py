@@ -176,6 +176,45 @@ def _intersection_point(hs1: Hs, hs2: Hs) -> t.Optional[Pt]:
     return Pt(x, y)
 
 
+def _intersection_point2(hs1: Hs, hs2: Hs) -> t.Optional[Pt]:
+    """Reimplementation of `_intersection_point2()`.
+    Turns out it's 2-3 times slower than the original one, so probably we won't
+    be using it.
+    """
+    a1 = [hs1.p1.x, hs1.p1.y]
+    a2 = [hs1.p2.x, hs1.p2.y]
+
+    b1 = [hs2.p1.x, hs2.p1.y]
+    b2 = [hs2.p2.x, hs2.p2.y]
+
+    intersection = _get_intersect(a1, a2, b1, b2)
+    if intersection is not None:
+        return Pt(x=intersection[0], y=intersection[1])
+    else:
+        return None
+
+
+# Taken from https://stackoverflow.com/a/42727584
+# Author: Norbu Tsering
+def _get_intersect(a1, a2, b1, b2):
+    """
+    Returns the point of intersection of the lines passing through a2,a1 and b2,b1.
+    a1: [x, y] a point on the first line
+    a2: [x, y] another point on the first line
+    b1: [x, y] a point on the second line
+    b2: [x, y] another point on the second line
+    """
+    s = np.vstack([a1, a2, b1, b2])  # s for stacked
+    h = np.hstack((s, np.ones((4, 1))))  # h for homogeneous
+    l1 = np.cross(h[0], h[1])  # get first line
+    l2 = np.cross(h[2], h[3])  # get second line
+    x, y, z = np.cross(l1, l2)  # point of intersection
+    if z == 0:  # lines are parallel
+        return None
+        # return (float("inf"), float("inf"))
+    return (x / z, y / z)
+
+
 @frozen_model
 class Esum(TodoMixin):
     """Expression sum. Basic shape representation.
@@ -254,6 +293,7 @@ class X(TodoMixin):
 
     @property
     def point(self) -> Pt:
+        # return _intersection_point2(self.hs1, self.hs2)
         return _intersection_point(self.hs1, self.hs2)
 
     @property
@@ -307,9 +347,10 @@ def _esum_contains_pt_with_epsilon(esum: Esum, pt: Pt) -> bool:
 
 def find_vertices(esum: Esum) -> t.Set[X]:
     crosses = find_all_xs([hs for term in esum.terms for hs in term])
-    inside = list(
-        mitt.unique_everseen(cross for cross in crosses if esum.contains_x(cross))
-    )
+    # inside = list(
+    #     mitt.unique_everseen(cross for cross in crosses if esum.contains_x(cross))
+    # )
+    inside = mitt.unique_everseen(cross for cross in crosses if esum.contains_x(cross))
     collapsed = collapse_xs(inside)
     return collapsed
 
