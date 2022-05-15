@@ -3,21 +3,8 @@ import dataclasses
 from .flat import Esum, Hp, Hpc, Pt
 
 
-def letter_c():
-    # letter C:
-    #
-    #      -------
-    #     /      |
-    #    /   -----
-    #   /   /
-    #   |  /
-    #   |  |
-    #   |  \
-    #   \   \
-    #    \   -----
-    #     \      |
-    #      -------
-    external = Esum(
+def letter_c_external():
+    return Esum(
         {
             frozenset(
                 [
@@ -56,7 +43,9 @@ def letter_c():
         }
     )
 
-    internal = Esum(
+
+def letter_c_internal():
+    return Esum(
         {
             frozenset(
                 [
@@ -90,7 +79,30 @@ def letter_c():
         }
     )
 
-    return dataclasses.replace(external.difference(internal), name="letter C")
+
+def letter_c():
+    # letter C:
+    #
+    #      -------
+    #     /      |
+    #    /   -----
+    #   /   /
+    #   |  /
+    #   |  |
+    #   |  \
+    #   \   \
+    #    \   -----
+    #     \      |
+    #      -------
+
+    return dataclasses.replace(
+        letter_c_external().difference(letter_c_internal()),
+        name="letter C",
+    )
+
+
+def extracted_method():
+    return
 
 
 def letter_chi():
@@ -168,22 +180,23 @@ def triangle():
                     # diagonal line (/)
                     Hpc(
                         Pt(8, 10),
-                        Pt(4, 2),
+                        Pt(3, 1),
                     ),
                     # diagonal line (\)
-                    Hp(
-                        Pt(12, 2),
-                        Pt(10, 10),
+                    Hpc(
+                        Pt(9, 1),
+                        Pt(4, 10),
                     ),
                     # horizontal line (-)
                     Hpc(
                         Pt(2, 2),
-                        Pt(8, 2),
+                        Pt(10, 2),
                     ),
                 ]
             )
         },
         name="triangle",
+        debug_name="triangle",
     )
 
 
