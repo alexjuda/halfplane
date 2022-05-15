@@ -332,7 +332,7 @@ def _hs_contains_x(hs: Hs, x: X):
 
     # Check 2: see if a `hs` contains the cross point. Allow points on
     # boundaries, even for `Hp`.
-    return Hpc(hs.p1, hs.p2).contains(x.point)
+    return _hs_contains_pt_with_epsilon(hs, x.point)
 
 
 def _hs_contains_pt_strict(hs: Hs, pt: Pt) -> bool:
