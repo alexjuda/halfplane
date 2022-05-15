@@ -15,8 +15,8 @@ def _draw_segments_3d(ax, segments: t.Sequence[flat.XSegment], xlim, ylim):
     ax.elev = 70
 
     for segment_i, segment in enumerate(segments):
-        x1, y1, _ = segment.x1.point.position
-        x2, y2, _ = segment.x2.point.position
+        x1, y1 = segment.x1.point.position2d
+        x2, y2 = segment.x2.point.position2d
         # text = str(segment_i)
 
         ax.plot([x1, x2], [y1, y2], [segment_i, segment_i], c="C1", alpha=0.3)
@@ -28,8 +28,8 @@ def _plot(esum, vertices, segments, path, name):
     rows = []
     n_segments = len(segments)
     for segment_i, segment in enumerate(segments):
-        x1, y1, _ = segment.x1.point.position
-        x2, y2, _ = segment.x2.point.position
+        x1, y1 = segment.x1.point.position2d
+        x2, y2 = segment.x2.point.position2d
 
         rows.extend(
             [

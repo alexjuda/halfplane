@@ -50,9 +50,9 @@ class Pt(TodoMixin):
     debug_name: t.Optional[str] = debug_name_field
 
     @property
-    def position(self) -> np.ndarray:
-        """3d position vector."""
-        return np.array([self.x, self.y, 0])
+    def position2d(self) -> np.ndarray:
+        """2d position vector."""
+        return np.array([self.x, self.y])
 
     def distance(self, other: "Pt") -> float:
         dx = other.x - self.x
@@ -110,16 +110,14 @@ def _z_factor(half_space: Hs, point: Pt) -> float:
     """Z coordinate of the cross product between the halfspace's vector and the
     position vector of the tested point.
     """
-    p1, p2 = [p.position for p in [half_space.p1, half_space.p2]]
+    p1, p2 = [p.position2d for p in [half_space.p1, half_space.p2]]
     v_hs = p2 - p1
-    v_test = point.position - p1
-    v_cross = np.cross(v_hs, v_test)
-
-    return v_cross[-1]
+    v_test = point.position2d - p1
+    return np.cross(v_hs, v_test)
 
 
 def _line_params(point1: Pt, point2: Pt) -> t.Optional[t.Tuple[Number, Number]]:
-    p1, p2 = [p.position for p in [point1, point2]]
+    p1, p2 = [p.position2d for p in [point1, point2]]
     d = p2 - p1
 
     try:
@@ -394,7 +392,7 @@ class XSegment(TodoMixin):
         suffix = ""
 
         if length:
-            delta = self.x2.point.position - self.x1.point.position
+            delta = self.x2.point.position2d - self.x1.point.position2d
             suffix += f" l={np.hypot(delta[0], delta[1])}"
 
         if names:
@@ -457,14 +455,14 @@ def infer_smallest_segments(xs: t.Sequence[X], hs: Hs) -> t.Sequence[XSegment]:
     # 5. Construct segments by a rolling window over sorted xs.
 
     # 1. Get stencil vector
-    stencil_vec = hs.p2.position - hs.p1.position
+    stencil_vec = hs.p2.position2d - hs.p1.position2d
 
     # 2. Coordinate origin
-    coord_origin = hs.p1.position
+    coord_origin = hs.p1.position2d
 
     def _comparator(x: X):
         # 3. Get the AX vector
-        ax_vec = x.point.position - coord_origin
+        ax_vec = x.point.position2d - coord_origin
 
         # 4. Sort by the dot product
         return np.dot(stencil_vec, ax_vec)

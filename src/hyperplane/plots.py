@@ -81,7 +81,7 @@ def _plot_hs_line(hs: Hs, hs_label: str, ax: plt.Axes, xlim, ylim, linestyle: st
 
 
 def _plot_hs_arrows(hs: Hs, ax: plt.Axes, color: str):
-    p1, p2 = [p.position for p in [hs.p1, hs.p2]]
+    p1, p2 = [p.position2d for p in [hs.p1, hs.p2]]
 
     delta = p2 - p1
     delta_normalized = delta / np.linalg.norm(delta)
