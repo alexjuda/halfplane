@@ -361,41 +361,6 @@ def hs_xs_index(xs: t.Iterable[X]) -> t.Dict[Hs, t.Set[X]]:
     return index
 
 
-@frozen_model
-class GraphEdge(TodoMixin):
-    node1: t.Any
-    node2: t.Any
-    meta: t.Any
-    debug_name: t.Optional[str] = debug_name_field
-
-
-class Graph:
-    def __init__(self, edges: t.Sequence[GraphEdge]):
-        self.edges = set(edges)
-        self._index = {
-            node: edge for edge in edges for node in [edge.node1, edge.node2]
-        }
-
-    def edge_meta(self, node):
-        return self._index[node].meta
-
-
-class Glossary:
-    def __init__(self, objs: t.Sequence, prefix: str):
-        self._obj_name = {obj: f"{prefix}{obj_i}" for obj_i, obj in enumerate(objs)}
-        self._name_obj = {name: obj for obj, name in self._obj_name.items()}
-
-    def obj(self, name: str):
-        return self._name_obj[name]
-
-    def name(self, obj):
-        return self._obj_name[obj]
-
-    @property
-    def dict(self):
-        return self._name_obj
-
-
 def find_segments(xs: t.Iterable[X]) -> t.Sequence[XSegment]:
     cross_index = hs_xs_index(xs)
 

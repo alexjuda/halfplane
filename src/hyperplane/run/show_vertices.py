@@ -41,8 +41,6 @@ def main():
     for shape_i, esum in enumerate([common_shapes.letter_c()]):
         vertices = flat.find_vertices(esum=esum)
         # segments = flat.segments(vertices)
-        vertex_gls = flat.Glossary(vertices, "v")
-        # seg_gls = flat.Glossary(segments, "segment")
 
         _plot(
             esum=esum,
