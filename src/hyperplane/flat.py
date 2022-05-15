@@ -234,18 +234,20 @@ class Esum(TodoMixin):
             )
         )
 
-    def contains_cross(self, cross: "BoundsCross") -> bool:
-        """Checks if `cross` point is a member of this Esum. This includes
+    def contains_x(self, x: "X") -> bool:
+        """Checks if cross point `x` is a member of this Esum. This includes
         crosspoints lying on the boundary, regardless of Hp/Hpc strictness.
         """
         # TODO: should the inner `all` be switched to an any?
-        return any(
-            all(_hs_contains_cross(hs, cross) for hs in term) for term in self.terms
-        )
+        return any(all(_hs_contains_x(hs, x) for hs in term) for term in self.terms)
 
 
 @frozen_model
-class BoundsCross(TodoMixin):
+class X(TodoMixin):
+    """Cross point between two halspaces. Doesn't calculate coordinates until
+    `point` is called.
+    """
+
     hs1: Hs
     hs2: Hs
     debug_name: t.Optional[str] = debug_name_field
@@ -259,23 +261,23 @@ class BoundsCross(TodoMixin):
         return [self.hs1, self.hs2]
 
 
-def find_all_crosses(halfspaces: t.Iterable[Hs]) -> t.Set[BoundsCross]:
+def find_all_xs(hses: t.Iterable[Hs]) -> t.Set[X]:
     return {
-        cross
-        for hs1, hs2 in itertools.combinations(halfspaces, 2)
-        if (cross := BoundsCross(hs1, hs2)).point is not None
+        x
+        for hs1, hs2 in itertools.combinations(hses, 2)
+        if (x := X(hs1, hs2)).point is not None
     }
 
 
-def _hs_contains_cross(hs: Hs, cross: BoundsCross):
+def _hs_contains_x(hs: Hs, x: X):
     # Check 1: see if `hs` was used to create this `cross`. This should
     # alleviate numerical errors.
-    if hs in {cross.hs1, cross.hs2}:
+    if hs in {x.hs1, x.hs2}:
         return True
 
     # Check 2: see if a `hs` contains the cross point. Allow points on
     # boundaries, even for `Hp`.
-    return Hpc(hs.p1, hs.p2).contains(cross.point)
+    return Hpc(hs.p1, hs.p2).contains(x.point)
 
 
 def _hs_contains_pt_strict(hs: Hs, pt: Pt) -> bool:
@@ -303,33 +305,31 @@ def _esum_contains_pt_with_epsilon(esum: Esum, pt: Pt) -> bool:
     )
 
 
-def find_vertices(esum: Esum) -> t.Set[BoundsCross]:
-    crosses = find_all_crosses([hs for term in esum.terms for hs in term])
+def find_vertices(esum: Esum) -> t.Set[X]:
+    crosses = find_all_xs([hs for term in esum.terms for hs in term])
     inside = list(
-        mitt.unique_everseen(cross for cross in crosses if esum.contains_cross(cross))
+        mitt.unique_everseen(cross for cross in crosses if esum.contains_x(cross))
     )
-    collapsed = collapse_crosses(inside)
+    collapsed = collapse_xs(inside)
     return collapsed
 
 
-def query_crosses(
-    crosses: t.Iterable[BoundsCross], poi: Pt, eps: float = 0.1
-) -> t.Iterable[BoundsCross]:
-    return [x for x in crosses if x.point.distance(poi) < eps]
+def query_xs(xs: t.Iterable[X], poi: Pt, eps: float = 0.1) -> t.Iterable[X]:
+    """Select cross points that are epsilon-close to the point-of-interest."""
+    return [x for x in xs if x.point.distance(poi) < eps]
 
 
-def query_cross(
-    crosses: t.Iterable[BoundsCross], poi: Pt, eps: float = 0.1
-) -> BoundsCross:
-    results = query_crosses(crosses, poi, eps)
+def query_x(crosses: t.Iterable[X], poi: Pt, eps: float = 0.1) -> X:
+    """Find the first cross point that's epsilon-close to the point-of-interest."""
+    results = query_xs(crosses, poi, eps)
     assert len(results) == 1
     return results[0]
 
 
 @frozen_model
-class CrossSegment(TodoMixin):
-    x1: BoundsCross
-    x2: BoundsCross
+class XSegment(TodoMixin):
+    x1: X
+    x2: X
     debug_name: t.Optional[str] = debug_name_field
 
     def debug_info(self, names=False, length=True):
@@ -350,12 +350,12 @@ class CrossSegment(TodoMixin):
             return f"({x1_x}, {x1_y})-({x2_x}, {x2_y}){suffix}"
 
 
-def hs_crosses_index(
-    crosses: t.Iterable[BoundsCross],
-) -> t.Dict[Hs, t.Set[BoundsCross]]:
-    """Cross maps from points to HSes. This maps from HSes to crosses."""
+def hs_xs_index(xs: t.Iterable[X]) -> t.Dict[Hs, t.Set[X]]:
+    """A cross point maps from a point to a pair of HSes. This maps from HSes
+    to crosses.
+    """
     index = {}
-    for cross in crosses:
+    for cross in xs:
         for hs in [cross.hs1, cross.hs2]:
             index.setdefault(hs, set()).add(cross)
     return index
@@ -396,11 +396,11 @@ class Glossary:
         return self._name_obj
 
 
-def segments(crosses: t.Iterable[BoundsCross]) -> t.Sequence[CrossSegment]:
-    cross_index = hs_crosses_index(crosses)
+def find_segments(xs: t.Iterable[X]) -> t.Sequence[XSegment]:
+    cross_index = hs_xs_index(xs)
 
     all_segments = []
-    for x_i, x_of_interest in enumerate(crosses):
+    for x_i, x_of_interest in enumerate(xs):
         for hs in x_of_interest.halfspaces:
             # 1. get neighbors for p1.hs1, p1.hs2
             # We need to retain order.
@@ -414,9 +414,7 @@ def segments(crosses: t.Iterable[BoundsCross]) -> t.Sequence[CrossSegment]:
     return list(mitt.unique_everseen(all_segments))
 
 
-def infer_smallest_segments(
-    xs: t.Sequence[BoundsCross], hs: Hs
-) -> t.Sequence[CrossSegment]:
+def infer_smallest_segments(xs: t.Sequence[X], hs: Hs) -> t.Sequence[XSegment]:
     """
     Args:
         xs: endpoints for segments. They all need to lie along a single `hs`.
@@ -441,7 +439,7 @@ def infer_smallest_segments(
     # 2. Coordinate origin
     coord_origin = hs.p1.position
 
-    def _comparator(x: BoundsCross):
+    def _comparator(x: X):
         # 3. Get the AX vector
         ax_vec = x.point.position - coord_origin
 
@@ -451,11 +449,11 @@ def infer_smallest_segments(
     xs_sorted = sorted(xs, key=_comparator)
 
     # 5. Connect subsequent pairs to get the smallest segments
-    segments = [CrossSegment(x1, x2) for x1, x2 in mitt.windowed(xs_sorted, n=2)]
+    segments = [XSegment(x1, x2) for x1, x2 in mitt.windowed(xs_sorted, n=2)]
     return segments
 
 
-def segment_on_boundary(esum: Esum, segment: CrossSegment) -> bool:
+def segment_on_boundary(esum: Esum, segment: XSegment) -> bool:
     pt1 = segment.x1.point
     pt2 = segment.x2.point
     mid_pt = Pt((pt1.x + pt2.x) / 2, (pt1.y + pt2.y) / 2)
@@ -470,17 +468,17 @@ def filter_segments(esum, segments):
     return [s for s in segments if segment_on_boundary(esum, s)]
 
 
-def collapse_crosses(crosses: t.Iterable[BoundsCross]) -> t.Sequence[BoundsCross]:
+def collapse_xs(xs: t.Iterable[X]) -> t.Sequence[X]:
     """Filters out bound crosses that correspond to the same halfspace pairs."""
     seen_set = set()
     seen_inverted_set = set()
     filtered = []
-    for cross in crosses:
+    for cross in xs:
         if cross in seen_set or cross in seen_inverted_set:
             continue
 
         seen_set.add(cross)
-        seen_inverted_set.add(BoundsCross(cross.hs2, cross.hs1))
+        seen_inverted_set.add(X(cross.hs2, cross.hs1))
         filtered.append(cross)
 
     return filtered
@@ -522,6 +520,6 @@ def named_esum(esum: Esum) -> Esum:
 def detect_segments(esum: Esum):
     """Run full algorithm."""
     vertices = find_vertices(esum=esum)
-    segment_candidates = segments(vertices)
+    segment_candidates = find_segments(vertices)
     boundary_segments = filter_segments(esum, segment_candidates)
     return boundary_segments

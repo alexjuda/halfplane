@@ -31,7 +31,7 @@ def main():
         ]
     ):
         vertices = flat.find_vertices(esum=esum)
-        segments = flat.segments(vertices)
+        segments = flat.find_segments(vertices)
         boundary_segments = flat.filter_segments(esum, segments)
 
         _plot(

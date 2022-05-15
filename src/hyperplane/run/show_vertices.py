@@ -8,7 +8,7 @@ from .. import common_shapes, flat, plots
 RESULTS_PATH = Path("./data/vertices")
 
 
-def _draw_labelled_vertices(ax, vertices: t.Sequence[flat.BoundsCross], glossary, xlim, ylim):
+def _draw_labelled_vertices(ax, vertices: t.Sequence[flat.X], glossary, xlim, ylim):
     for vertex in vertices:
         pt = vertex.point
         patch = matplotlib.patches.Circle((pt.x, pt.y), radius=0.1)

@@ -18,7 +18,7 @@ def _plot(esum, path, name):
 
     plots.draw_vertices(vertices, ax=axes[0][1], xlim=xlim, ylim=ylim)
 
-    index = flat.hs_crosses_index(vertices)
+    index = flat.hs_xses_index(vertices)
     for x_i, x_of_interest in enumerate(vertices):
         hs_segments = []
         for hs in x_of_interest.halfspaces:
@@ -47,7 +47,7 @@ def _plot(esum, path, name):
 
             # 3. Connect subsequent pairs to get the smallest segments
             segments = [
-                flat.CrossSegment(x1, x2) for x1, x2 in mitt.windowed(xs_sorted, n=2)
+                flat.XSegment(x1, x2) for x1, x2 in mitt.windowed(xs_sorted, n=2)
             ]
             hs_segments.append(segments)
 

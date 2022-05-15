@@ -8,7 +8,7 @@ import matplotlib.ticker
 import numpy as np
 
 from . import flat
-from .flat import BoundsCross, Esum, Hp, Hpc, Hs, Pt
+from .flat import X, Esum, Hp, Hpc, Hs, Pt
 
 
 def _datapoints(esum: Esum, x_iter, y_iter) -> np.ndarray:
@@ -197,7 +197,7 @@ def _plot_point_by_point_check(esum1, esum2):
 
 def _find_and_plot_vertices(esum: Esum, ax, xlim, ylim, draw_crosses_outside=True):
     halfspaces = [hs for term in esum.terms for hs in term]
-    crosses = flat.find_all_crosses(halfspaces)
+    crosses = flat.find_all_xs(halfspaces)
 
     vertices = set()
     for cross in crosses:
@@ -221,7 +221,7 @@ def _find_and_plot_vertices(esum: Esum, ax, xlim, ylim, draw_crosses_outside=Tru
 
 
 def draw_vertices(
-    vertices: t.Sequence[BoundsCross], ax, xlim, ylim, crosses_outside=None
+    vertices: t.Sequence[X], ax, xlim, ylim, crosses_outside=None
 ):
     plot_outside = crosses_outside is not None
     if plot_outside:
@@ -251,7 +251,7 @@ def draw_vertices(
 
 def _plot_all_crosses(esum: Esum, ax, xlim, ylim):
     halfspaces = [hs for term in esum.terms for hs in term]
-    crosses = flat.find_all_crosses(halfspaces)
+    crosses = flat.find_all_xs(halfspaces)
 
     ax.scatter(
         [cross.point.x for cross in crosses],
@@ -325,7 +325,7 @@ def _plot_all_crosses_clean(esum: Esum, esum_name: str):
     fig.savefig(plot_path)
 
 
-def draw_segments(ax, segments: t.Sequence[flat.CrossSegment], xlim, ylim):
+def draw_segments(ax, segments: t.Sequence[flat.XSegment], xlim, ylim):
     for segment_i, segment in enumerate(segments):
         x1, y1, _ = segment.x1.point.position
         x2, y2, _ = segment.x2.point.position
