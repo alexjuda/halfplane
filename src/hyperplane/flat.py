@@ -284,6 +284,19 @@ class Esum(TodoMixin):
 EMPTY_PROP = object()
 
 
+def lazy_prop(method):
+    def _inner(self):
+        prop_name = method.__name__
+        attr_name = f"_{prop_name}"
+
+        if getattr(self, attr_name) == EMPTY_PROP:
+            val = method(self)
+            object.__setattr__(self, attr_name, val)
+
+        return getattr(self, attr_name)
+    return _inner
+
+
 @frozen_model
 class X(TodoMixin):
     """Cross point between two halspaces. Doesn't calculate coordinates until
@@ -303,13 +316,9 @@ class X(TodoMixin):
     )
 
     @property
+    @lazy_prop
     def point(self) -> Pt:
-        if self._point == EMPTY_PROP:
-            # _intersection_point2(self.hs1, self.hs2)
-            val = _intersection_point(self.hs1, self.hs2)
-            object.__setattr__(self, '_point', val)
-
-        return self._point
+        return _intersection_point(self.hs1, self.hs2)
 
     @property
     def halfspaces(self) -> t.Sequence[Hs]:

@@ -1,4 +1,5 @@
 import dataclasses
+import random
 
 import pytest
 
@@ -12,6 +13,7 @@ from hyperplane.flat import (
     collapse_xs,
     infer_smallest_segments,
 )
+from hyperplane import flat
 
 
 def _translate_point(pt: Pt, dx, dy):
@@ -259,10 +261,7 @@ class TestHsIntersection:
     def test_conjugate_invariance(self, hs1, hs2):
         assert X(hs1, hs2).point == X(hs1.conjugate, hs2).point
         assert X(hs1, hs2).point == X(hs1, hs2.conjugate).point
-        assert (
-            X(hs1, hs2).point
-            == X(hs1.conjugate, hs2.conjugate).point
-        )
+        assert X(hs1, hs2).point == X(hs1.conjugate, hs2.conjugate).point
 
     @pytest.mark.parametrize("hs1,hs2", HS_HS_EXAMPLES)
     def test_self(self, hs1, hs2):
@@ -416,3 +415,28 @@ class TestInferSegments:
     def test_examples(self, xs_problematic, h0, problematic_ref_segments):
         segments = infer_smallest_segments(xs_problematic, h0)
         assert segments == problematic_ref_segments
+
+
+@dataclasses.dataclass(frozen=True)
+class SampleModel:
+    sample_field: str
+
+    _prop: str = dataclasses.field(
+        init=False,
+        repr=False,
+        hash=False,
+        compare=False,
+        default=flat.EMPTY_PROP,
+    )
+
+    @property
+    @flat.lazy_prop
+    def prop(self):
+        return f"{self.sample_field} {random.random()}"
+
+
+def test_lazy_prop():
+    model = SampleModel("hello")
+    val1 = model.prop
+    val2 = model.prop
+    assert val1 == val2
