@@ -110,10 +110,12 @@ def _z_factor(half_space: Hs, point: Pt) -> float:
     """Z coordinate of the cross product between the halfspace's vector and the
     position vector of the tested point.
     """
-    p1, p2 = [p.position2d for p in [half_space.p1, half_space.p2]]
-    v_hs = p2 - p1
-    v_test = point.position2d - p1
-    return np.cross(v_hs, v_test)
+    a1 = half_space.p2.x - half_space.p1.x
+    a2 = half_space.p2.y - half_space.p1.y
+    b1 = point.x - half_space.p1.x
+    b2 = point.y - half_space.p1.y
+
+    return a1 * b2 - a2 * b1
 
 
 def _line_params(point1: Pt, point2: Pt) -> t.Optional[t.Tuple[Number, Number]]:
