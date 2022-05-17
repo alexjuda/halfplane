@@ -118,16 +118,16 @@ def _z_factor(half_space: Hs, point: Pt) -> float:
     return a1 * b2 - a2 * b1
 
 
-def _line_params(point1: Pt, point2: Pt) -> t.Optional[t.Tuple[Number, Number]]:
-    p1, p2 = [p.position2d for p in [point1, point2]]
-    d = p2 - p1
+def _line_params(p1: Pt, p2: Pt) -> t.Optional[t.Tuple[Number, Number]]:
+    dy = p2.y - p1.y
+    dx = p2.x - p1.x
 
     try:
-        a = float(d[1]) / float(d[0])
+        a = float(dy) / float(dx)
     except ZeroDivisionError:
         return None
 
-    b = p1[1] - a * p1[0]
+    b = p1.y - a * p1.x
 
     return a, b
 
