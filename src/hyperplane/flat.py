@@ -244,7 +244,7 @@ class Esum(TodoMixin):
         return self.intersection(other.conjugate)
 
     def contains(self, point: Pt) -> bool:
-        return any(all(hs.contains(point) for hs in term) for term in self.terms)
+        return _esum_contains_pt_strict(self, point)
 
     @property
     def conjugate(self) -> "Esum":
@@ -296,6 +296,7 @@ def lazy_prop(method):
             object.__setattr__(self, attr_name, val)
 
         return getattr(self, attr_name)
+
     return _inner
 
 
@@ -376,7 +377,7 @@ def find_vertices(esum: Esum) -> t.Set[X]:
     # inside = list(
     #     mitt.unique_everseen(cross for cross in crosses if esum.contains_x(cross))
     # )
-    inside = mitt.unique_everseen(cross for cross in crosses if esum.contains_x(cross))
+    inside = filter(esum.contains_x, crosses)
     collapsed = collapse_xs(inside)
     return collapsed
 
@@ -501,17 +502,17 @@ def filter_segments(esum, segments):
 
 
 def collapse_xs(xs: t.Iterable[X]) -> t.Sequence[X]:
-    """Filters out bound crosses that correspond to the same halfspace pairs."""
+    """Filters out xs that correspond to the same halfspace pairs."""
     seen_set = set()
     seen_inverted_set = set()
     filtered = []
-    for cross in xs:
-        if cross in seen_set or cross in seen_inverted_set:
+    for x in xs:
+        if x in seen_set or x in seen_inverted_set:
             continue
 
-        seen_set.add(cross)
-        seen_inverted_set.add(X(cross.hs2, cross.hs1))
-        filtered.append(cross)
+        seen_set.add(x)
+        seen_inverted_set.add(X(x.hs2, x.hs1))
+        filtered.append(x)
 
     return filtered
 
