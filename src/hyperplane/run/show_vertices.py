@@ -8,7 +8,7 @@ from .. import common_shapes, flat, plots
 RESULTS_PATH = Path("./data/vertices")
 
 
-def _draw_labelled_vertices(ax, vertices: t.Sequence[flat.BoundsCross], glossary, xlim, ylim):
+def _draw_labelled_vertices(ax, vertices: t.Sequence[flat.X], glossary, xlim, ylim):
     for vertex in vertices:
         pt = vertex.point
         patch = matplotlib.patches.Circle((pt.x, pt.y), radius=0.1)
@@ -41,8 +41,6 @@ def main():
     for shape_i, esum in enumerate([common_shapes.letter_c()]):
         vertices = flat.find_vertices(esum=esum)
         # segments = flat.segments(vertices)
-        vertex_gls = flat.Glossary(vertices, "v")
-        # seg_gls = flat.Glossary(segments, "segment")
 
         _plot(
             esum=esum,

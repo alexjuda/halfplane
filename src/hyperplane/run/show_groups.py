@@ -21,7 +21,7 @@ def _plot(esum, path, name):
         plots.draw_vertices(vertices, ax=ax_row[0], xlim=xlim, ylim=ylim)
         ax_row[0].set_title(f"group {group_i}")
 
-        segments = flat.segments(vertices)
+        segments = flat.find_segments(vertices)
         plots.draw_segments(ax_row[1], segments, xlim, ylim)
 
     fig.savefig(path)

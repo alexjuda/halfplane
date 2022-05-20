@@ -5,7 +5,7 @@ import typing as t
 from . import flat
 
 
-def dump_shape(esum: flat.Esum, vertices: t.Sequence[flat.BoundsCross], f):
+def dump_shape(esum: flat.Esum, vertices: t.Sequence[flat.X], f):
     json.dump(
         {
             "esum": [
@@ -26,7 +26,7 @@ def dump_shape(esum: flat.Esum, vertices: t.Sequence[flat.BoundsCross], f):
     )
 
 
-def dumps_shape(esum: flat.Esum, vertices: t.Sequence[flat.BoundsCross]):
+def dumps_shape(esum: flat.Esum, vertices: t.Sequence[flat.X]):
     buf = io.StringIO()
     dump_shape(esum, vertices, buf)
     buf.seek(0)

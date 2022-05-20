@@ -10,13 +10,13 @@ from .. import common_shapes, flat, shape_gen
 RESULTS_PATH = Path("./data/segments_3d")
 
 
-def _draw_segments_3d(ax, segments: t.Sequence[flat.CrossSegment], xlim, ylim):
+def _draw_segments_3d(ax, segments: t.Sequence[flat.XSegment], xlim, ylim):
     ax.azim = -90
     ax.elev = 70
 
     for segment_i, segment in enumerate(segments):
-        x1, y1, _ = segment.x1.point.position
-        x2, y2, _ = segment.x2.point.position
+        x1, y1 = segment.x1.point.position2d
+        x2, y2 = segment.x2.point.position2d
         # text = str(segment_i)
 
         ax.plot([x1, x2], [y1, y2], [segment_i, segment_i], c="C1", alpha=0.3)
@@ -28,8 +28,8 @@ def _plot(esum, vertices, segments, path, name):
     rows = []
     n_segments = len(segments)
     for segment_i, segment in enumerate(segments):
-        x1, y1, _ = segment.x1.point.position
-        x2, y2, _ = segment.x2.point.position
+        x1, y1 = segment.x1.point.position2d
+        x2, y2 = segment.x2.point.position2d
 
         rows.extend(
             [
@@ -91,7 +91,7 @@ def main():
     ):
         esum = flat.named_esum(esum_start)
         vertices = _named(flat.find_vertices(esum=esum), "x")
-        segments = _named(flat.segments(vertices), "seg")
+        segments = _named(flat.find_segments(vertices), "seg")
         boundary_segments = flat.filter_segments(esum, segments)
 
         _plot(

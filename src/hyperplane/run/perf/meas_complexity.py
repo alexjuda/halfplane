@@ -6,7 +6,7 @@ import numpy as np
 import numpy.polynomial
 from tqdm import tqdm
 
-from .. import flat, shape_gen, plots
+from hyperplane import flat, shape_gen, plots
 
 
 RESULTS_PATH = Path("./data/perf")
@@ -62,34 +62,34 @@ def main():
 
     data_rows = []
 
-    #     with open(RESULTS_PATH / "result.csv", "w") as f:
-    #         writer = csv.DictWriter(
-    #             f,
-    #             fieldnames=[
-    #                 "generator",
-    #                 "n_subshapes",
-    #                 "delta_t",
-    #                 "n_segments",
-    #             ],
-    #         )
-    #         writer.writeheader()
+    with open(RESULTS_PATH / "result.csv", "w") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "generator",
+                "n_subshapes",
+                "delta_t",
+                "n_segments",
+            ],
+        )
+        writer.writeheader()
 
-    #         for n in tqdm(range(5, 55, 5), desc="n"):
-    #             esum = shape_gen.rect_chain(n=n)
+        for n in tqdm(range(5, 55, 5), desc="n"):
+            esum = shape_gen.rect_chain(n=n)
 
-    #             start_t = time.time()
-    #             segments = flat.detect_segments(esum)
-    #             end_t = time.time()
+            start_t = time.time()
+            segments = flat.detect_segments(esum)
+            end_t = time.time()
 
-    #             data_row = {
-    #                 "generator": esum.debug_name,
-    #                 "n_subshapes": n,
-    #                 "delta_t": end_t - start_t,
-    #                 "n_segments": len(segments),
-    #             }
+            data_row = {
+                "generator": esum.debug_name,
+                "n_subshapes": n,
+                "delta_t": end_t - start_t,
+                "n_segments": len(segments),
+            }
 
-    #             writer.writerow(data_row)
-    #             data_rows.append(data_row)
+            writer.writerow(data_row)
+            data_rows.append(data_row)
 
     with open(RESULTS_PATH / "result.csv") as f:
         data_rows = list(csv.DictReader(f))

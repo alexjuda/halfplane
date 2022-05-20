@@ -15,8 +15,8 @@ def _plot(esum: flat.Esum, path, name):
     all_hses = list(mitt.unique_everseen(hs for term in esum.terms for hs in term))
 
     for hs_i, hs in enumerate(all_hses):
-        x1, y1, _ = hs.p1.position
-        x2, y2, _ = hs.p2.position
+        x1, y1 = hs.p1.position2d
+        x2, y2 = hs.p2.position2d
 
         rows.extend(
             [

@@ -1,17 +1,19 @@
 import dataclasses
+import random
 
 import pytest
 
 from hyperplane.flat import (
-    BoundsCross,
-    CrossSegment,
+    X,
+    XSegment,
     Esum,
     Hp,
     Hpc,
     Pt,
-    collapse_crosses,
+    collapse_xs,
     infer_smallest_segments,
 )
+from hyperplane import flat
 
 
 def _translate_point(pt: Pt, dx, dy):
@@ -249,31 +251,28 @@ class TestHsIntersection:
 
     @pytest.mark.parametrize("hs1,hs2,expected_point", HS_POINT_EXAMPLES)
     def test_examples(self, hs1, hs2, expected_point):
-        assert BoundsCross(hs1, hs2).point == expected_point
+        assert X(hs1, hs2).point == expected_point
 
     @pytest.mark.parametrize("hs1,hs2", HS_HS_EXAMPLES)
     def test_order_invariance(self, hs1, hs2):
-        assert BoundsCross(hs1, hs2).point == BoundsCross(hs2, hs1).point
+        assert X(hs1, hs2).point == X(hs2, hs1).point
 
     @pytest.mark.parametrize("hs1,hs2", HS_HS_EXAMPLES)
     def test_conjugate_invariance(self, hs1, hs2):
-        assert BoundsCross(hs1, hs2).point == BoundsCross(hs1.conjugate, hs2).point
-        assert BoundsCross(hs1, hs2).point == BoundsCross(hs1, hs2.conjugate).point
-        assert (
-            BoundsCross(hs1, hs2).point
-            == BoundsCross(hs1.conjugate, hs2.conjugate).point
-        )
+        assert X(hs1, hs2).point == X(hs1.conjugate, hs2).point
+        assert X(hs1, hs2).point == X(hs1, hs2.conjugate).point
+        assert X(hs1, hs2).point == X(hs1.conjugate, hs2.conjugate).point
 
     @pytest.mark.parametrize("hs1,hs2", HS_HS_EXAMPLES)
     def test_self(self, hs1, hs2):
-        assert BoundsCross(hs1, hs1).point is None
-        assert BoundsCross(hs2, hs2).point is None
+        assert X(hs1, hs1).point is None
+        assert X(hs2, hs2).point is None
 
 
 @pytest.mark.parametrize(
     "bx",
     [
-        BoundsCross(
+        X(
             Hp(Pt(-1, 0), Pt(-1, -10)),
             Hp(Pt(10, 0), Pt(10, 10)),
         )
@@ -281,18 +280,18 @@ class TestHsIntersection:
 )
 class TestCollapsingBoundCrosses:
     def test_is_equal_to_itself(self, bx):
-        assert collapse_crosses([bx, bx]) == [bx]
+        assert collapse_xs([bx, bx]) == [bx]
 
     def test_not_equal_when_moving_points(self, bx):
         p1 = bx.hs2.p1
         new_p1 = Pt(p1.x + 1, p1.y + 2)
-        bx2 = BoundsCross(bx.hs1, dataclasses.replace(bx.hs2, p1=new_p1))
+        bx2 = X(bx.hs1, dataclasses.replace(bx.hs2, p1=new_p1))
 
-        assert collapse_crosses([bx, bx2]) == [bx, bx2]
+        assert collapse_xs([bx, bx2]) == [bx, bx2]
 
     def test_is_equal_to_reversed_hses(self, bx):
-        bx2 = BoundsCross(bx.hs2, bx.hs1)
-        assert collapse_crosses([bx, bx2]) == [bx]
+        bx2 = X(bx.hs2, bx.hs1)
+        assert collapse_xs([bx, bx2]) == [bx]
 
 
 class TestDebugNames:
@@ -302,7 +301,7 @@ class TestDebugNames:
             Pt(-1, 1),
             Hp(Pt(10, 0), Pt(10, 10)),
             Hpc(Pt(10, 0), Pt(10, 10)),
-            BoundsCross(
+            X(
                 Hp(Pt(-1, 0), Pt(-1, -10)),
                 Hp(Pt(10, 0), Pt(10, 10)),
             ),
@@ -329,7 +328,7 @@ class TestDebugNames:
             (Hp(Pt(10, 0), Pt(10, 10)), "p1"),
             (Hpc(Pt(10, 0), Pt(10, 10)), "p1"),
             (
-                BoundsCross(
+                X(
                     Hp(Pt(-1, 0), Pt(-1, -10)),
                     Hp(Pt(10, 0), Pt(10, 10)),
                 ),
@@ -355,7 +354,7 @@ class TestInferSegments:
 
     @pytest.fixture
     def x13(self, h0):
-        return BoundsCross(
+        return X(
             hs1=Hp(
                 p1=Pt(x=10, y=4, debug_name="p_17"),
                 p2=Pt(x=6, y=4, debug_name="p_17"),
@@ -367,7 +366,7 @@ class TestInferSegments:
 
     @pytest.fixture
     def x0(self, h0):
-        return BoundsCross(
+        return X(
             hs1=h0,
             hs2=Hp(
                 p1=Pt(x=4, y=0, debug_name="p_17"),
@@ -379,7 +378,7 @@ class TestInferSegments:
 
     @pytest.fixture
     def x4(self, h0):
-        return BoundsCross(
+        return X(
             hs1=h0,
             hs2=Hpc(
                 p1=Pt(x=2, y=10, debug_name="p_17"),
@@ -391,7 +390,7 @@ class TestInferSegments:
 
     @pytest.fixture
     def x2(self, h0):
-        return BoundsCross(
+        return X(
             hs1=Hpc(
                 p1=Pt(x=6, y=2, debug_name="p_17"),
                 p2=Pt(x=10, y=2, debug_name="p_17"),
@@ -408,11 +407,36 @@ class TestInferSegments:
     @pytest.fixture
     def problematic_ref_segments(self, h0, x13, x0, x4, x2):
         return [
-            CrossSegment(x4, x13),
-            CrossSegment(x13, x0),
-            CrossSegment(x0, x2),
+            XSegment(x4, x13),
+            XSegment(x13, x0),
+            XSegment(x0, x2),
         ]
 
     def test_examples(self, xs_problematic, h0, problematic_ref_segments):
         segments = infer_smallest_segments(xs_problematic, h0)
         assert segments == problematic_ref_segments
+
+
+@dataclasses.dataclass(frozen=True)
+class SampleModel:
+    sample_field: str
+
+    _prop: str = dataclasses.field(
+        init=False,
+        repr=False,
+        hash=False,
+        compare=False,
+        default=flat.EMPTY_PROP,
+    )
+
+    @property
+    @flat.lazy_prop
+    def prop(self):
+        return f"{self.sample_field} {random.random()}"
+
+
+def test_lazy_prop():
+    model = SampleModel("hello")
+    val1 = model.prop
+    val2 = model.prop
+    assert val1 == val2
