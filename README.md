@@ -37,3 +37,10 @@ python -m build
 python -m twine upload --repository testpypi dist/*
 python -m twine upload dist/*
 ```
+
+# Profiling
+
+```
+python -m cProfile -o rect20.profile -m hyperplane.run.perf.plain_detect 20
+snakeviz rect20.prof
+```
