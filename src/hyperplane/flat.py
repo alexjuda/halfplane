@@ -273,16 +273,11 @@ class Box:
     max_y: Coord
 
 
-def box_contains_pt(box: Box, pt: Pt, tol_factor: float = 0.001):
-    # Using `tol_factor` instead of an +/- epsilon because this caused
-    # representation problems for big floats, like 10^14.
-    #
-    # Using two `if`s instead of a single one for ease of debugging.
-    if box.min_x * (1 - tol_factor) < pt.x < box.max_x * (1 + tol_factor):
-        if box.min_y * (1 - tol_factor) < pt.y < box.max_y * (1 + tol_factor):
-            return True
-
-    return False
+def box_contains_pt(box: Box, pt: Pt, epsilon: float = 0.01):
+    return (
+        box.min_x - epsilon < pt.x < box.max_x + epsilon
+        and box.min_y - epsilon < pt.y < box.max_y + epsilon
+    )
 
 
 @frozen_model
