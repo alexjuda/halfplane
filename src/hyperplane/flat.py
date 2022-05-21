@@ -273,7 +273,7 @@ class Box:
     max_y: Coord
 
 
-def _box_contains_pt(box: Box, pt: Pt, epsilon: float = 0.01):
+def box_contains_pt(box: Box, pt: Pt, epsilon: float = 0.01):
     return (
         box.min_x - epsilon < pt.x < box.max_x + epsilon
         and box.min_y - epsilon < pt.y < box.max_y + epsilon
@@ -290,7 +290,11 @@ class Eterm:
 
     @property
     def xs(self) -> t.FrozenSet[X]:
-        return find_all_xs(self.hses)
+        xs = find_all_xs(self.hses)
+        if len(xs) == 0:
+            raise ValueError(f"No crosses for eterm {self}")
+
+        return xs
 
     @property
     def bbox(self) -> Box:
