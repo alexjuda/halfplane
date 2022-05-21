@@ -615,7 +615,7 @@ def named_esum(esum: Esum) -> Esum:
     )
 
 
-def detect_segments(esum: Esum):
+def detect_boundary(esum: Esum):
     """Run full algorithm."""
     vertices = find_vertices(esum=esum)
     segment_candidates = find_segments(vertices)
