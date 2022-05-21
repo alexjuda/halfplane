@@ -4,6 +4,7 @@ import random
 import pytest
 
 from hyperplane.flat import (
+    Box,
     X,
     XSegment,
     Esum,
@@ -440,3 +441,25 @@ def test_lazy_prop():
     val1 = model.prop
     val2 = model.prop
     assert val1 == val2
+
+
+@pytest.mark.parametrize(
+    "pts,expected_bbox",
+    [
+        (
+            [
+                Pt(1, 2),
+                Pt(8, 9),
+                Pt(5, 4),
+            ],
+            Box(
+                min_x=1,
+                min_y=2,
+                max_x=8,
+                max_y=9,
+            ),
+        ),
+    ],
+)
+def test_points_bbox(pts, expected_bbox):
+    assert flat.points_bbox(pts) == expected_bbox

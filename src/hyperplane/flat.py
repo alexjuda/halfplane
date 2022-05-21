@@ -39,6 +39,25 @@ debug_name_field = dataclasses.field(
 )
 
 
+# A sentinel to note that a lazy property hasn't been calculated yet.
+# Allows returning `None` as a valid property value.
+EMPTY_PROP = object()
+
+
+def lazy_prop(method):
+    def _inner(self):
+        prop_name = method.__name__
+        attr_name = f"_{prop_name}"
+
+        if getattr(self, attr_name) == EMPTY_PROP:
+            val = method(self)
+            object.__setattr__(self, attr_name, val)
+
+        return getattr(self, attr_name)
+
+    return _inner
+
+
 class TodoMixin:
     pass
 
@@ -215,6 +234,99 @@ def _get_intersect(a1, a2, b1, b2):
     return (x / z, y / z)
 
 
+# def _bbox_from_
+
+
+@frozen_model
+class X(TodoMixin):
+    """Cross point between two halspaces. Doesn't calculate coordinates until
+    `point` is called.
+    """
+
+    hs1: Hs
+    hs2: Hs
+    debug_name: t.Optional[str] = debug_name_field
+
+    _point: t.Optional[Pt] = dataclasses.field(
+        init=False,
+        repr=False,
+        hash=False,
+        compare=False,
+        default=EMPTY_PROP,
+    )
+
+    @property
+    @lazy_prop
+    def point(self) -> Pt:
+        return _intersection_point(self.hs1, self.hs2)
+
+    @property
+    def halfspaces(self) -> t.Sequence[Hs]:
+        return [self.hs1, self.hs2]
+
+
+@frozen_model
+class Box:
+    min_x: Coord
+    min_y: Coord
+    max_x: Coord
+    max_y: Coord
+
+
+def _box_contains_pt(box: Box, pt: Pt, epsilon: float = 0.01):
+    return (
+        box.min_x - epsilon < pt.x < box.max_x + epsilon
+        and box.min_y - epsilon < pt.y < box.max_y + epsilon
+    )
+
+
+@frozen_model
+class Eterm:
+    """
+    A group of halfspaces joined with the "and" operation.
+    """
+
+    hses: t.FrozenSet[Hs]
+
+    @property
+    def xs(self) -> t.FrozenSet[X]:
+        return find_all_xs(self.hses)
+
+    @property
+    def bbox(self) -> Box:
+        return points_bbox(map(lambda x: x.point, self.xs))
+
+
+def points_bbox(pts: t.Iterable[Pt]) -> Box:
+    # 1. Get all hs crosses
+    # 2. Get all points
+    # 3. Find min and max by dimension
+    min_x = None
+    min_y = None
+    max_x = None
+    max_y = None
+
+    for pt in pts:
+        # min
+        if min_x is None or pt.x < min_x:
+            min_x = pt.x
+        if min_y is None or pt.y < min_y:
+            min_y = pt.y
+
+        # max
+        if max_x is None or max_x < pt.x:
+            max_x = pt.x
+        if max_y is None or max_y < pt.y:
+            max_y = pt.y
+
+    return Box(
+        min_x=min_x,
+        min_y=min_y,
+        max_x=max_x,
+        max_y=max_y,
+    )
+
+
 @frozen_model
 class Esum(TodoMixin):
     """Expression sum. Basic shape representation.
@@ -225,9 +337,13 @@ class Esum(TodoMixin):
     """
 
     # Each term is a group of intersecting halfspaces.
-    terms: t.FrozenSet[t.FrozenSet[Hs]]
+    terms: t.FrozenSet[Eterm]
     name: t.Optional[str] = None
     debug_name: t.Optional[str] = debug_name_field
+
+    # @property
+    # def bbox(self):
+    #     pass
 
     def union(self, other: "Esum") -> "Esum":
         return Esum(self.terms | other.terms)
@@ -265,67 +381,12 @@ class Esum(TodoMixin):
 
         return Esum(conjugate_terms)
 
-    @property
-    def with_boundaries(self) -> "Esum":
-        return Esum(
-            SortedSet(
-                frozenset(Hpc(hs.p1, hs.p2) for hs in term) for term in self.terms
-            )
-        )
-
     def contains_x(self, x: "X") -> bool:
         """Checks if cross point `x` is a member of this Esum. This includes
         crosspoints lying on the boundary, regardless of Hp/Hpc strictness.
         """
         # TODO: should the inner `all` be switched to an any?
         return any(all(_hs_contains_x(hs, x) for hs in term) for term in self.terms)
-
-
-# A sentinel to note that a lazy property hasn't been calculated yet.
-# Allows returning `None` as a valid property value.
-EMPTY_PROP = object()
-
-
-def lazy_prop(method):
-    def _inner(self):
-        prop_name = method.__name__
-        attr_name = f"_{prop_name}"
-
-        if getattr(self, attr_name) == EMPTY_PROP:
-            val = method(self)
-            object.__setattr__(self, attr_name, val)
-
-        return getattr(self, attr_name)
-
-    return _inner
-
-
-@frozen_model
-class X(TodoMixin):
-    """Cross point between two halspaces. Doesn't calculate coordinates until
-    `point` is called.
-    """
-
-    hs1: Hs
-    hs2: Hs
-    debug_name: t.Optional[str] = debug_name_field
-
-    _point: t.Optional[Pt] = dataclasses.field(
-        init=False,
-        repr=False,
-        hash=False,
-        compare=False,
-        default=EMPTY_PROP,
-    )
-
-    @property
-    @lazy_prop
-    def point(self) -> Pt:
-        return _intersection_point(self.hs1, self.hs2)
-
-    @property
-    def halfspaces(self) -> t.Sequence[Hs]:
-        return [self.hs1, self.hs2]
 
 
 def find_all_xs(hses: t.Iterable[Hs]) -> t.Set[X]:
