@@ -101,10 +101,6 @@ def letter_c():
     )
 
 
-def extracted_method():
-    return
-
-
 def letter_chi():
     """Originally devised as a subset of letter C that was problematic for
     segment detection. Later it turned out that it wasn't easy to reproduce the error."""

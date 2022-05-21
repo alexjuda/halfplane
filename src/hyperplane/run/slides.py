@@ -59,7 +59,7 @@ def main():
             name=esum.name,
         )
 
-        segments = flat.detect_segments(esum)
+        segments = flat.detect_boundary(esum)
 
         _plot_segments(
             esum=esum,

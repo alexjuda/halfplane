@@ -11,7 +11,7 @@ def main():
     args = parser.parse_args()
 
     esum = shape_gen.rect_chain(n=args.n)
-    segments = flat.detect_segments(esum)
+    segments = flat.detect_boundary(esum)
     print(f"Detected {len(segments)} segments")
 
 

@@ -78,7 +78,7 @@ def main():
             esum = shape_gen.rect_chain(n=n)
 
             start_t = time.time()
-            segments = flat.detect_segments(esum)
+            segments = flat.detect_boundary(esum)
             end_t = time.time()
 
             data_row = {
