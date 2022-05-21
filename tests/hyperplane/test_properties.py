@@ -35,6 +35,8 @@ class TestEterm:
             coords=st.floats(
                 allow_infinity=False,
                 allow_nan=False,
+                min_value=-10**10,
+                max_value=10**10,
             )
         )
     )
