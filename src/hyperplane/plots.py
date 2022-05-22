@@ -141,8 +141,8 @@ def _plot_esum_with_content_check(esum: Esum, ax, xlim, ylim):
 
 def plot_esum_boundaries(esum: Esum, ax, xlim, ylim):
     # TODO: somehow ensure reproducibility of set order
-    for term_i, term in enumerate(esum.terms):
-        for hs_i, hs in enumerate(term):
+    for term_i, term in enumerate(esum.eterms):
+        for hs_i, hs in enumerate(term.hses):
             label = hs.debug_name or f"h_{term_i}_{hs_i}"
             _plot_hs(hs, hs_label=label, ax=ax, xlim=xlim, ylim=ylim)
 
@@ -196,7 +196,7 @@ def _plot_point_by_point_check(esum1, esum2):
 
 
 def _find_and_plot_vertices(esum: Esum, ax, xlim, ylim, draw_crosses_outside=True):
-    halfspaces = [hs for term in esum.terms for hs in term]
+    halfspaces = [hs for term in esum.eterms for hs in term.hses]
     crosses = flat.find_all_xs(halfspaces)
 
     vertices = set()
@@ -250,7 +250,7 @@ def draw_vertices(
 
 
 def _plot_all_crosses(esum: Esum, ax, xlim, ylim):
-    halfspaces = [hs for term in esum.terms for hs in term]
+    halfspaces = [hs for term in esum.eterms for hs in term.hses]
     crosses = flat.find_all_xs(halfspaces)
 
     ax.scatter(

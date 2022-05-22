@@ -12,7 +12,7 @@ RESULTS_PATH = Path("./data/lines_3d")
 
 def _plot(esum: flat.Esum, path, name):
     rows = []
-    all_hses = list(mitt.unique_everseen(hs for term in esum.terms for hs in term))
+    all_hses = list(mitt.unique_everseen(hs for term in esum.eterms for hs in term.hses))
 
     for hs_i, hs in enumerate(all_hses):
         x1, y1 = hs.p1.position2d

@@ -7,14 +7,14 @@ RESULTS_PATH = Path("./data/groups")
 
 
 def _plot(esum, path, name):
-    n_groups = len(esum.terms)
+    n_groups = len(esum.eterms)
     fig, axes = plots.subplots(n_groups, 2)
 
     xlim = [0, 20]
     ylim = [0, 20]
 
-    for group_i, (group, ax_row) in enumerate(zip(esum.terms, axes)):
-        group_esum = dataclasses.replace(esum, terms={group})
+    for group_i, (group, ax_row) in enumerate(zip(esum.eterms, axes)):
+        group_esum = flat.Esum.from_terms(group, debug_name=esum.debug_name)
         plots.plot_esum_boundaries(group_esum, ax=ax_row[0], xlim=xlim, ylim=ylim)
 
         vertices = flat.find_vertices(group_esum)

@@ -15,9 +15,9 @@ def dump_shape(esum: flat.Esum, vertices: t.Sequence[flat.X], f):
                         "p2": hs.p2._asdict(),
                         "type": type(hs).__name__,
                     }
-                    for hs in term
+                    for hs in term.hses
                 ]
-                for term in esum.terms
+                for term in esum.eterms
             ],
             "vertices": [v.point._asdict() for v in vertices],
         },
