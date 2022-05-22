@@ -327,8 +327,8 @@ def _plot_all_crosses_clean(esum: Esum, esum_name: str):
 
 def draw_segments(ax, segments: t.Sequence[flat.XSegment], xlim, ylim):
     for segment_i, segment in enumerate(segments):
-        x1, y1, _ = segment.x1.point.position
-        x2, y2, _ = segment.x2.point.position
+        x1, y1 = segment.x1.point.position2d
+        x2, y2 = segment.x2.point.position2d
         text = str(segment_i)
 
         ax.plot([x1, x2], [y1, y2], c="C1")
