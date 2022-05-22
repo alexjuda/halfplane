@@ -28,3 +28,6 @@ class FrozenOrderedSet(collections.abc.Set, collections.abc.Hashable):
     # -------- Hashable --------
     def __hash__(self):
         return hash(self._set)
+
+
+FOSet = FrozenOrderedSet
