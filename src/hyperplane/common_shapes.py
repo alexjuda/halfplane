@@ -1,82 +1,75 @@
 import dataclasses
 
-from .flat import Esum, Hp, Hpc, Pt
+from .flat import Esum, Eterm, Hp, Hpc, Pt
+from .generic_structs import FOSet
 
 
 def letter_c_external():
-    return Esum(
-        {
-            frozenset(
-                [
-                    # vertical line (|)
-                    Hpc(
-                        Pt(2, 10),
-                        Pt(2, 0),
-                    ),
-                    # diagonal line (/)
-                    Hpc(
-                        Pt(6, 14),
-                        Pt(2, 10),
-                    ),
-                    # horizontal line (-)
-                    Hpc(
-                        Pt(10, 14),
-                        Pt(6, 14),
-                    ),
-                    # vertical line (|)
-                    Hpc(
-                        Pt(12, 10),
-                        Pt(12, 14),
-                    ),
-                    # diagonal line (\)
-                    Hpc(
-                        Pt(2, 6),
-                        Pt(6, 2),
-                    ),
-                    # horizontal line (-)
-                    Hpc(
-                        Pt(6, 2),
-                        Pt(10, 2),
-                    ),
-                ]
-            )
-        }
+    return Esum.from_terms(
+        Eterm.from_hses(
+            # vertical line (|)
+            Hpc(
+                Pt(2, 10),
+                Pt(2, 0),
+            ),
+            # diagonal line (/)
+            Hpc(
+                Pt(6, 14),
+                Pt(2, 10),
+            ),
+            # horizontal line (-)
+            Hpc(
+                Pt(10, 14),
+                Pt(6, 14),
+            ),
+            # vertical line (|)
+            Hpc(
+                Pt(12, 10),
+                Pt(12, 14),
+            ),
+            # diagonal line (\)
+            Hpc(
+                Pt(2, 6),
+                Pt(6, 2),
+            ),
+            # horizontal line (-)
+            Hpc(
+                Pt(6, 2),
+                Pt(10, 2),
+            ),
+        ),
     )
 
 
 def letter_c_internal():
-    return Esum(
-        {
-            frozenset(
-                [
-                    # vertical line (|)
-                    Hpc(
-                        Pt(4, 10),
-                        Pt(4, 0),
-                    ),
-                    # diagonal line (/)
-                    Hpc(
-                        Pt(8, 14),
-                        Pt(4, 10),
-                    ),
-                    # horizontal line (-)
-                    Hpc(
-                        Pt(10, 12),
-                        Pt(6, 12),
-                    ),
-                    # diagonal line (\)
-                    Hpc(
-                        Pt(4, 6),
-                        Pt(8, 2),
-                    ),
-                    # horizontal line (-)
-                    Hpc(
-                        Pt(6, 4),
-                        Pt(10, 4),
-                    ),
-                ]
-            )
-        }
+    return Esum.from_terms(
+        Eterm.from_hses(
+            # vertical line (|)
+            Hpc(
+                Pt(4, 10),
+                Pt(4, 0),
+            ),
+            # diagonal line (/)
+            Hpc(
+                Pt(8, 14),
+                Pt(4, 10),
+            ),
+            # horizontal line (-)
+            Hpc(
+                Pt(10, 12),
+                Pt(6, 12),
+            ),
+            # diagonal line (\)
+            Hpc(
+                Pt(4, 6),
+                Pt(8, 2),
+            ),
+            # horizontal line (-)
+            Hpc(
+                Pt(6, 4),
+                Pt(10, 4),
+            ),
+        )
     )
 
 
@@ -105,62 +98,54 @@ def letter_chi():
     """Originally devised as a subset of letter C that was problematic for
     segment detection. Later it turned out that it wasn't easy to reproduce the error."""
 
-    vertical = Esum(
-        terms={
-            frozenset(
-                [
-                    # horizontal line (-)
-                    Hpc(
-                        Pt(10, 13),
-                        Pt(6, 13),
-                    ),
-                    # vertical line (|)
-                    Hpc(
-                        Pt(2, 10),
-                        Pt(2, 0),
-                    ),
-                    # vertical line (|)
-                    Hpc(
-                        Pt(4, 0),
-                        Pt(4, 10),
-                    ),
-                    # horizontal line (-)
-                    Hpc(
-                        Pt(6, -1),
-                        Pt(10, -1),
-                    ),
-                ]
+    vertical = Esum.from_terms(
+        Eterm.from_hses(
+            # horizontal line (-)
+            Hpc(
+                Pt(10, 13),
+                Pt(6, 13),
             ),
-        },
+            # vertical line (|)
+            Hpc(
+                Pt(2, 10),
+                Pt(2, 0),
+            ),
+            # vertical line (|)
+            Hpc(
+                Pt(4, 0),
+                Pt(4, 10),
+            ),
+            # horizontal line (-)
+            Hpc(
+                Pt(6, -1),
+                Pt(10, -1),
+            ),
+        ),
     )
 
-    bottom = Esum(
-        terms={
-            frozenset(
-                [
-                    # vertical line (|)
-                    Hpc(
-                        Pt(-1, 10),
-                        Pt(-1, 0),
-                    ),
-                    # diagonal line (\)
-                    Hpc(
-                        Pt(8, 2),
-                        Pt(4, 6),
-                    ),
-                    # diagonal line (\)
-                    Hpc(
-                        Pt(2, 6),
-                        Pt(6, 2),
-                    ),
-                    # horizontal line (-)
-                    Hpc(
-                        Pt(6, 2),
-                        Pt(10, 2),
-                    ),
-                ]
+    bottom = Esum.from_terms(
+        Eterm.from_hses(
+            # vertical line (|)
+            Hpc(
+                Pt(-1, 10),
+                Pt(-1, 0),
             ),
-        },
+            # diagonal line (\)
+            Hpc(
+                Pt(8, 2),
+                Pt(4, 6),
+            ),
+            # diagonal line (\)
+            Hpc(
+                Pt(2, 6),
+                Pt(6, 2),
+            ),
+            # horizontal line (-)
+            Hpc(
+                Pt(6, 2),
+                Pt(10, 2),
+            ),
+        ),
     )
 
     esum = vertical.union(bottom)
@@ -169,29 +154,24 @@ def letter_chi():
 
 
 def triangle():
-    return Esum(
-        {
-            frozenset(
-                [
-                    # diagonal line (/)
-                    Hpc(
-                        Pt(8, 10),
-                        Pt(3, 1),
-                    ),
-                    # diagonal line (\)
-                    Hpc(
-                        Pt(9, 1),
-                        Pt(4, 10),
-                    ),
-                    # horizontal line (-)
-                    Hpc(
-                        Pt(2, 2),
-                        Pt(10, 2),
-                    ),
-                ]
-            )
-        },
-        name="triangle",
+    return Esum.from_terms(
+        Eterm.from_hses(
+            # diagonal line (/)
+            Hpc(
+                Pt(8, 10),
+                Pt(3, 1),
+            ),
+            # diagonal line (\)
+            Hpc(
+                Pt(9, 1),
+                Pt(4, 10),
+            ),
+            # horizontal line (-)
+            Hpc(
+                Pt(2, 2),
+                Pt(10, 2),
+            ),
+        ),
         debug_name="triangle",
     )
 

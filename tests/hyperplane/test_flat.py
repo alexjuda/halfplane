@@ -8,6 +8,7 @@ from hyperplane.flat import (
     X,
     XSegment,
     Esum,
+    Eterm,
     Hp,
     Hpc,
     Pt,
@@ -114,98 +115,130 @@ class TestHSContainsPt:
 
 class TestMergingEsum:
     @pytest.mark.parametrize(
-        "terms1,terms2,expected_terms",
+        "esum1,esum2,expected_esum",
         [
-            (set(), set(), set()),
+            (Esum.empty, Esum.empty, Esum.empty),
             (
                 # vertical line
-                {frozenset([Hp(Pt(0, 4), Pt(0, 1))])},
+                Esum.from_terms(
+                    Eterm.from_hses(Hp(Pt(0, 4), Pt(0, 1))),
+                ),
                 # horizontal line
-                {frozenset([Hp(Pt(2, 7), Pt(2, 2))])},
-                {
-                    frozenset([Hp(Pt(0, 4), Pt(0, 1))]),
-                    frozenset([Hp(Pt(2, 7), Pt(2, 2))]),
-                },
+                Esum.from_terms(
+                    Eterm.from_hses(Hp(Pt(2, 7), Pt(2, 2))),
+                ),
+                Esum.from_terms(
+                    Eterm.from_hses(Hp(Pt(0, 4), Pt(0, 1))),
+                    Eterm.from_hses(Hp(Pt(2, 7), Pt(2, 2))),
+                ),
             ),
         ],
     )
-    def test_union_examples(self, terms1, terms2, expected_terms):
-        esum1 = Esum(terms1)
-        esum2 = Esum(terms2)
-        assert esum1.union(esum2).terms == expected_terms
+    def test_union_examples(self, esum1, esum2, expected_esum):
+        assert esum1.union(esum2) == expected_esum
 
     @pytest.mark.parametrize(
-        "terms1,terms2",
+        "esum1,esum2",
         [
-            (set(), set()),
+            (Esum.empty, Esum.empty),
             (
                 # vertical line
-                {frozenset([Hp(Pt(0, 4), Pt(0, 1))])},
+                Esum.from_terms(Eterm.from_hses(Hp(Pt(0, 4), Pt(0, 1)))),
                 # horizontal line
-                {frozenset([Hp(Pt(2, 7), Pt(2, 2))])},
+                Esum.from_terms(Eterm.from_hses(Hp(Pt(2, 7), Pt(2, 2)))),
             ),
         ],
     )
-    def test_union_is_superset(self, terms1, terms2):
-        esum1 = Esum(terms1)
-        esum2 = Esum(terms2)
+    def test_union_is_superset(self, esum1, esum2):
         combined = esum1.union(esum2)
 
-        assert combined.terms.issuperset(terms1)
-        assert combined.terms.issuperset(terms2)
+        assert combined.eterms >= esum1.eterms
+        assert combined.eterms >= esum2.eterms
 
     @pytest.mark.parametrize(
-        "terms1,terms2,expected_terms",
+        "esum1,esum2,expected_esum",
         [
-            (set(), set(), set()),
+            (Esum.empty, Esum.empty, Esum.empty),
             (
                 # vertical line
-                {frozenset([Hp(Pt(0, 4), Pt(0, 1))])},
+                Esum.from_terms(
+                    Eterm.from_hses(
+                        Hp(Pt(0, 4), Pt(0, 1)),
+                    )
+                ),
                 # horizontal line
-                {frozenset([Hp(Pt(2, 7), Pt(2, 2))])},
-                {frozenset([Hp(Pt(0, 4), Pt(0, 1)), Hp(Pt(2, 7), Pt(2, 2))])},
+                Esum.from_terms(
+                    Eterm.from_hses(
+                        Hp(Pt(2, 7), Pt(2, 2)),
+                    )
+                ),
+                Esum.from_terms(
+                    Eterm.from_hses(
+                        Hp(Pt(0, 4), Pt(0, 1)),
+                        Hp(Pt(2, 7), Pt(2, 2)),
+                    )
+                ),
             ),
         ],
     )
-    def test_intersection_examples(self, terms1, terms2, expected_terms):
-        esum1 = Esum(terms1)
-        esum2 = Esum(terms2)
-        assert esum1.intersection(esum2).terms == expected_terms
+    def test_intersection_examples(self, esum1, esum2, expected_esum):
+        assert esum1.intersection(esum2) == expected_esum
 
 
 class TestEsumConjugate:
     TERMS_CONJUGATED_EXAMPLES = [
-        (set(), set()),
+        (Esum.empty, Esum.empty),
         (
             # single vertical halfplane
-            {frozenset([Hp(Pt(0, 1), Pt(0, 4))])},
-            {frozenset([Hpc(Pt(0, 4), Pt(0, 1))])},
+            Esum.from_terms(
+                Eterm.from_hses(
+                    Hp(Pt(0, 1), Pt(0, 4)),
+                )
+            ),
+            Esum.from_terms(
+                Eterm.from_hses(
+                    Hpc(Pt(0, 4), Pt(0, 1)),
+                )
+            ),
         ),
         (
             # single vertical halfplane
-            {frozenset([Hpc(Pt(0, 1), Pt(0, 4))])},
-            {frozenset([Hp(Pt(0, 4), Pt(0, 1))])},
+            Esum.from_terms(
+                Eterm.from_hses(
+                    Hpc(Pt(0, 1), Pt(0, 4)),
+                )
+            ),
+            Esum.from_terms(
+                Eterm.from_hses(
+                    Hp(Pt(0, 4), Pt(0, 1)),
+                )
+            ),
         ),
         (
             # vertical halfplane + horizontal halfplane
-            {
-                frozenset([Hp(Pt(0, 4), Pt(0, 1))]),
-                frozenset([Hp(Pt(6, 1), Pt(-2, 1))]),
-            },
-            {
-                frozenset([Hpc(Pt(0, 1), Pt(0, 4)), Hpc(Pt(-2, 1), Pt(6, 1))]),
-            },
+            Esum.from_terms(
+                Eterm.from_hses(
+                    Hp(Pt(0, 4), Pt(0, 1)),
+                ),
+                Eterm.from_hses(
+                    Hp(Pt(6, 1), Pt(-2, 1)),
+                ),
+            ),
+            Esum.from_terms(
+                Eterm.from_hses(
+                    Hpc(Pt(0, 1), Pt(0, 4)),
+                    Hpc(Pt(-2, 1), Pt(6, 1)),
+                )
+            ),
         ),
     ]
 
-    @pytest.mark.parametrize("terms,expected_terms", TERMS_CONJUGATED_EXAMPLES)
-    def test_examples(self, terms, expected_terms):
-        esum = Esum(terms)
-        assert esum.conjugate.terms == expected_terms
+    @pytest.mark.parametrize("esum,expected_esum", TERMS_CONJUGATED_EXAMPLES)
+    def test_examples(self, esum, expected_esum):
+        assert esum.conjugate == expected_esum
 
-    @pytest.mark.parametrize("terms", [term for term, _ in TERMS_CONJUGATED_EXAMPLES])
-    def test_double_conjugate_is_nop(self, terms):
-        esum = Esum(terms)
+    @pytest.mark.parametrize("esum", [esum for esum, _ in TERMS_CONJUGATED_EXAMPLES])
+    def test_double_conjugate_is_nop(self, esum):
         assert esum.conjugate.conjugate == esum
 
 

@@ -6,9 +6,9 @@ from numbers import Number
 
 import more_itertools as mitt
 import numpy as np
-from sortedcontainers import SortedDict, SortedSet
 
 from .core import Coord
+from .generic_structs import FOSet
 
 # Data structures needed:
 # - [x] pt
@@ -286,7 +286,11 @@ class Eterm:
     A group of halfspaces joined with the "and" operation.
     """
 
-    hses: t.FrozenSet[Hs]
+    hses: FOSet[Hs]
+
+    @classmethod
+    def from_hses(cls, *args: Hs):
+        return cls(hses=FOSet(args))
 
     @property
     def xs(self) -> t.FrozenSet[X]:
@@ -340,25 +344,32 @@ class Esum(TodoMixin):
     halfspaces.
     """
 
-    # Each term is a group of intersecting halfspaces.
-    terms: t.FrozenSet[Eterm]
+    eterms: FOSet[Eterm]
+    "Each term is a group of intersecting halfspaces."
+
     name: t.Optional[str] = None
     debug_name: t.Optional[str] = debug_name_field
 
-    # @property
-    # def bbox(self):
-    #     pass
+    @classmethod
+    def from_terms(cls, *args: Eterm, debug_name: t.Optional[str] = None):
+        return cls(eterms=FOSet(args), debug_name=debug_name)
+
+    @classmethod
+    @property
+    def empty(cls):
+        return cls.from_terms()
 
     def union(self, other: "Esum") -> "Esum":
-        return Esum(self.terms | other.terms)
+        return Esum(self.eterms | other.eterms)
 
     def intersection(self, other: "Esum") -> "Esum":
         new_terms = []
-        for self_term in self.terms:
-            for other_term in other.terms:
-                new_terms.append(self_term ^ other_term)
+        for self_term in self.eterms:
+            for other_term in other.eterms:
+                new_hses = self_term.hses ^ other_term.hses
+                new_terms.append(Eterm(new_hses))
 
-        return Esum(SortedSet(new_terms))
+        return Esum(FOSet(new_terms))
 
     def difference(self, other: "Esum") -> "Esum":
         return self.intersection(other.conjugate)
@@ -373,24 +384,26 @@ class Esum(TodoMixin):
         # 2. Generate Carthesian product of items in terms. Each generated
         #     tuple will be a term in the output Esum.
         # 3. Negate each item in each term.
-        conjugate_terms = SortedSet()
-        for product_term in itertools.product(*self.terms):
-            conjugate_term = []
+        conjugate_terms = []
+        for product_term in itertools.product(
+            *map(lambda term: term.hses, self.eterms)
+        ):
+            conjugate_group = []
             for hs in product_term:
-                conjugate_term.append(hs.conjugate)
+                conjugate_group.append(hs.conjugate)
 
             # Avoid empty inner sets
-            if len(conjugate_term) > 0:
-                conjugate_terms.add(frozenset(conjugate_term))
+            if len(conjugate_group) > 0:
+                conjugate_terms.append(Eterm(hses=FOSet(conjugate_group)))
 
-        return Esum(conjugate_terms)
+        return Esum(eterms=FOSet(conjugate_terms))
 
     def contains_x(self, x: "X") -> bool:
         """Checks if cross point `x` is a member of this Esum. This includes
         crosspoints lying on the boundary, regardless of Hp/Hpc strictness.
         """
         # TODO: should the inner `all` be switched to an any?
-        return any(all(_hs_contains_x(hs, x) for hs in term) for term in self.terms)
+        return any(all(_hs_contains_x(hs, x) for hs in term) for term in self.eterms)
 
 
 def find_all_xs(hses: t.Iterable[Hs]) -> t.Set[X]:
@@ -425,7 +438,7 @@ def _hs_contains_pt_with_epsilon(hs: Hs, pt: Pt) -> bool:
 def _esum_contains_pt_strict(esum: Esum, pt: Pt) -> bool:
     """Numerical check."""
     return any(
-        all(_hs_contains_pt_strict(hs, pt) for hs in group) for group in esum.terms
+        all(_hs_contains_pt_strict(hs, pt) for hs in group) for group in esum.eterms
     )
 
 
@@ -433,12 +446,12 @@ def _esum_contains_pt_with_epsilon(esum: Esum, pt: Pt) -> bool:
     """Numerical check."""
     return any(
         all(_hs_contains_pt_with_epsilon(hs, pt) for hs in group)
-        for group in esum.terms
+        for group in esum.eterms
     )
 
 
 def find_vertices(esum: Esum) -> t.Set[X]:
-    crosses = find_all_xs([hs for term in esum.terms for hs in term])
+    crosses = find_all_xs([hs for term in esum.eterms for hs in term])
     # inside = list(
     #     mitt.unique_everseen(cross for cross in crosses if esum.contains_x(cross))
     # )
@@ -590,7 +603,7 @@ def named_esum(esum: Esum) -> Esum:
     hs_counter = itertools.count()
     pt_counter = itertools.count()
 
-    for term in esum.terms:
+    for term in esum.eterms:
         for hs in term:
             if hs not in hs_names:
                 hs_names[hs] = f"h_{next(hs_counter)}"
@@ -600,18 +613,23 @@ def named_esum(esum: Esum) -> Esum:
                     pt_names[pt] = f"p_{next(pt_counter)}"
 
     return Esum(
-        SortedSet(
-            frozenset(
-                dataclasses.replace(
-                    hs,
-                    debug_name=hs_names[hs],
-                    p1=dataclasses.replace(hs.p1, debug_name=pt_names[pt]),
-                    p2=dataclasses.replace(hs.p2, debug_name=pt_names[pt]),
+        eterms=FOSet(
+            [
+                Eterm(
+                    hses=[
+                        dataclasses.replace(
+                            hs,
+                            debug_name=hs_names[hs],
+                            p1=dataclasses.replace(hs.p1, debug_name=pt_names[pt]),
+                            p2=dataclasses.replace(hs.p2, debug_name=pt_names[pt]),
+                        )
+                        for hs in term.hses
+                    ]
                 )
-                for hs in term
-            )
-            for term in esum.terms
-        )
+                for term in esum.eterms
+            ]
+        ),
+        debug_name=esum.debug_name,
     )
 
 
