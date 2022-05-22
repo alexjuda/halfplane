@@ -4,9 +4,10 @@ import collections.abc
 import more_itertools as mitt
 
 
-class FrozenOrderedSet(collections.abc.Set, collections.abc.Hashable):
+class FOSet(collections.abc.Set, collections.abc.Hashable, collections.abc.Collection):
     """
-    Immutable, set-like container that retains the order of elements. Hashable.
+    Frozen Ordered Set. Immutable, set-like container that retains the order of
+    elements. Hashable.
     """
 
     def __init__(self, iterable: t.Iterable):
@@ -29,5 +30,13 @@ class FrozenOrderedSet(collections.abc.Set, collections.abc.Hashable):
     def __hash__(self):
         return hash(self._set)
 
+    # -------- Collection --------
+    def __reversed__(self):
+        return FOSet(reversed(self._list))
 
-FOSet = FrozenOrderedSet
+    def __getitem__(self, index):
+        return self._list[index]
+
+    # -------- Object --------
+    def __repr__(self):
+        return f"{type(self).__name__}({self._list})"

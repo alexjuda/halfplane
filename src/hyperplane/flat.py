@@ -497,6 +497,9 @@ class XSegment(TodoMixin):
 
             return f"({x1_x}, {x1_y})-({x2_x}, {x2_y}){suffix}"
 
+    def __str__(self):
+        return f"<XSegment {self.debug_info(names=False, length=False)}>"
+
 
 def hs_xs_index(xs: t.Iterable[X]) -> t.Dict[Hs, t.Set[X]]:
     """A cross point maps from a point to a pair of HSes. This maps from HSes
