@@ -476,9 +476,25 @@ def query_x(crosses: t.Iterable[X], poi: Pt, eps: float = 0.1) -> X:
 
 @frozen_model
 class XSegment(TodoMixin):
-    x1: X
-    x2: X
+    hs1: Hs
+    common_hs: Hs
+    hs3: Hs
     debug_name: t.Optional[str] = debug_name_field
+
+    @classmethod
+    def from_xs(cls, x1: X, x2: X) -> "XSegment":
+        x1_hses = set(x1.halfspaces)
+        x2_hses = set(x2.halfspaces)
+        common_hses = x1_hses & x2_hses
+        assert len(common_hses) == 1, (
+            "A segment should be formed by exactly 1 common HS. We've "
+            f"got {len(common_hses)}: {common_hses}"
+        )
+        hs1, = x1_hses.difference(common_hses)
+        common_hs, = common_hses
+        hs3, = x2_hses.difference(common_hses)
+
+        return XSegment(hs1, common_hs, hs3)
 
     def debug_info(self, names=False, length=True):
         suffix = ""
@@ -565,11 +581,12 @@ def infer_smallest_segments(xs: t.Sequence[X], hs: Hs) -> t.Sequence[XSegment]:
     xs_sorted = sorted(xs, key=_comparator)
 
     # 5. Connect subsequent pairs to get the smallest segments
-    segments = [XSegment(x1, x2) for x1, x2 in mitt.windowed(xs_sorted, n=2)]
+    segments = [XSegment.from_xs(x1, x2) for x1, x2 in mitt.windowed(xs_sorted, n=2)]
     return segments
 
 
 def segment_on_boundary(esum: Esum, segment: XSegment) -> bool:
+    # FIXME
     pt1 = segment.x1.point
     pt2 = segment.x2.point
     mid_pt = Pt((pt1.x + pt2.x) / 2, (pt1.y + pt2.y) / 2)

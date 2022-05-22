@@ -47,7 +47,7 @@ def _plot(esum, path, name):
 
             # 3. Connect subsequent pairs to get the smallest segments
             segments = [
-                flat.XSegment(x1, x2) for x1, x2 in mitt.windowed(xs_sorted, n=2)
+                flat.XSegment.from_xs(x1, x2) for x1, x2 in mitt.windowed(xs_sorted, n=2)
             ]
             hs_segments.append(segments)
 

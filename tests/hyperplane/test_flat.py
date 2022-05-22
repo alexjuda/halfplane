@@ -441,9 +441,9 @@ class TestInferSegments:
     @pytest.fixture
     def problematic_ref_segments(self, h0, x13, x0, x4, x2):
         return [
-            XSegment(x4, x13),
-            XSegment(x13, x0),
-            XSegment(x0, x2),
+            XSegment.from_xs(x4, x13),
+            XSegment.from_xs(x13, x0),
+            XSegment.from_xs(x0, x2),
         ]
 
     def test_examples(self, xs_problematic, h0, problematic_ref_segments):
@@ -503,7 +503,7 @@ def test_points_bbox(pts, expected_bbox):
     [
         (
             common_shapes.triangle(),
-            XSegment(
+            XSegment.from_xs(
                 x1=X(
                     hs1=Hpc(
                         p1=Pt(x=8, y=10),
