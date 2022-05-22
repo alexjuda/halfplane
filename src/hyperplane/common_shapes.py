@@ -1,7 +1,6 @@
 import dataclasses
 
-from .flat import Esum, Eterm, Hp, Hpc, Pt
-from .generic_structs import FOSet
+from .flat import Esum, Eterm, Hpc, Pt
 
 
 def letter_c_external():
@@ -180,34 +179,30 @@ def triangle():
 
 
 def rect():
-    return Esum(
-        {
-            frozenset(
-                [
-                    # vertical line (|)
-                    Hpc(
-                        Pt(3, 5),
-                        Pt(3, -1),
-                    ),
-                    # vertical line (|)
-                    Hpc(
-                        Pt(15, 1),
-                        Pt(15, 6),
-                    ),
-                    # horizontal line (-)
-                    Hpc(
-                        Pt(1, 10),
-                        Pt(10, 10),
-                    ),
-                    # horizontal line (-)
-                    Hpc(
-                        Pt(11, 17),
-                        Pt(1, 17),
-                    ),
-                ]
-            )
-        },
-        name="rect",
+    return Esum.from_terms(
+        Eterm.from_hses(
+            # vertical line (|)
+            Hpc(
+                Pt(3, 5),
+                Pt(3, -1),
+            ),
+            # vertical line (|)
+            Hpc(
+                Pt(15, 1),
+                Pt(15, 6),
+            ),
+            # horizontal line (-)
+            Hpc(
+                Pt(1, 10),
+                Pt(10, 10),
+            ),
+            # horizontal line (-)
+            Hpc(
+                Pt(11, 17),
+                Pt(1, 17),
+            ),
+        ),
+        debug_name="rect",
     )
 
 
@@ -241,76 +236,64 @@ def crude_c():
     # ───────────────┼
     # ───────────────┼
 
-    part1 = Esum(
-        {
-            frozenset(
-                [
-                    # ---- vertical lines ----
-                    # right-most vertical line (|)
-                    Hpc(
-                        Pt(10, 0),
-                        Pt(10, 11),
-                    ),
-                    # ---- horizontal lines ----
-                    # top-most horizontal line (-)
-                    Hpc(
-                        Pt(0, 9),
-                        Pt(11, 9),
-                    ),
-                    # horizontal line (-)
-                    Hpc(
-                        Pt(12, 10),
-                        Pt(-1, 10),
-                    ),
-                ]
-            )
-        },
+    part1 = Esum.from_terms(
+        Eterm.from_hses(
+            # ---- vertical lines ----
+            # right-most vertical line (|)
+            Hpc(
+                Pt(10, 0),
+                Pt(10, 11),
+            ),
+            # ---- horizontal lines ----
+            # top-most horizontal line (-)
+            Hpc(
+                Pt(0, 9),
+                Pt(11, 9),
+            ),
+            # horizontal line (-)
+            Hpc(
+                Pt(12, 10),
+                Pt(-1, 10),
+            ),
+        )
     )
 
-    part2 = Esum(
-        {
-            frozenset(
-                [
-                    # ---- vertical lines ----
-                    # 1st, left-most vertical line (|)
-                    Hpc(
-                        Pt(1, 11),
-                        Pt(1, 0),
-                    ),
-                    # 2nd vertical line (|)
-                    Hpc(
-                        Pt(2, -1),
-                        Pt(2, 12),
-                    ),
-                ]
-            )
-        },
+    part2 = Esum.from_terms(
+        Eterm.from_hses(
+            # ---- vertical lines ----
+            # 1st, left-most vertical line (|)
+            Hpc(
+                Pt(1, 11),
+                Pt(1, 0),
+            ),
+            # 2nd vertical line (|)
+            Hpc(
+                Pt(2, -1),
+                Pt(2, 12),
+            ),
+        )
     )
 
-    part3 = Esum(
-        {
-            frozenset(
-                [
-                    # ---- vertical lines ----
-                    # right-most vertical line (|)
-                    Hpc(
-                        Pt(10, 0),
-                        Pt(10, 11),
-                    ),
-                    # ---- horizontal lines ----
-                    # bottom-most horizontal line (-)
-                    Hpc(
-                        Pt(0, 1),
-                        Pt(11, 1),
-                    ),
-                    # horizontal line (-)
-                    Hpc(
-                        Pt(12, 2),
-                        Pt(-1, 2),
-                    ),
-                ]
-            )
-        },
+    part3 = Esum.from_terms(
+        Eterm.from_hses(
+            # ---- vertical lines ----
+            # right-most vertical line (|)
+            Hpc(
+                Pt(10, 0),
+                Pt(10, 11),
+            ),
+            # ---- horizontal lines ----
+            # bottom-most horizontal line (-)
+            Hpc(
+                Pt(0, 1),
+                Pt(11, 1),
+            ),
+            # horizontal line (-)
+            Hpc(
+                Pt(12, 2),
+                Pt(-1, 2),
+            ),
+        )
     )
 
     return part1.union(part2).union(part3)
