@@ -15,7 +15,7 @@ from hyperplane.flat import (
     collapse_xs,
     infer_smallest_segments,
 )
-from hyperplane import flat
+from hyperplane import flat, common_shapes
 
 
 def _translate_point(pt: Pt, dx, dy):
@@ -496,3 +496,38 @@ def test_lazy_prop():
 )
 def test_points_bbox(pts, expected_bbox):
     assert flat.points_bbox(pts) == expected_bbox
+
+
+@pytest.mark.parametrize(
+    "esum,segment,expected",
+    [
+        (
+            common_shapes.triangle(),
+            XSegment(
+                x1=X(
+                    hs1=Hpc(
+                        p1=Pt(x=8, y=10),
+                        p2=Pt(x=3, y=1),
+                    ),
+                    hs2=Hpc(
+                        p1=Pt(x=2, y=2),
+                        p2=Pt(x=10, y=2),
+                    ),
+                ),
+                x2=X(
+                    hs1=Hpc(
+                        p1=Pt(x=9, y=1),
+                        p2=Pt(x=4, y=10),
+                    ),
+                    hs2=Hpc(
+                        p1=Pt(x=2, y=2),
+                        p2=Pt(x=10, y=2),
+                    ),
+                ),
+            ),
+            True,
+        ),
+    ],
+)
+def test_segment_on_boundary(esum, segment, expected):
+    assert flat.segment_on_boundary(esum, segment) == expected
