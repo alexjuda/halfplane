@@ -398,14 +398,14 @@ class Esum(TodoMixin):
 
         return Esum(eterms=FOSet(conjugate_terms))
 
-    def contains_x(self, x: "X") -> bool:
-        """Checks if cross point `x` is a member of this Esum. This includes
-        crosspoints lying on the boundary, regardless of Hp/Hpc strictness.
-        """
-        # TODO: should the inner `all` be switched to an any?
-        return any(
-            all(_hs_contains_x(hs, x) for hs in term.hses) for term in self.eterms
-        )
+    # def contains_x(self, x: "X") -> bool:
+    #     """Checks if cross point `x` is a member of this Esum. This includes
+    #     crosspoints lying on the boundary, regardless of Hp/Hpc strictness.
+    #     """
+    #     # TODO: should the inner `all` be switched to an any?
+    #     return any(
+    #         all(_hs_contains_x(hs, x) for hs in term.hses) for term in self.eterms
+    #     )
 
 
 def find_all_xs(hses: t.Iterable[Hs]) -> t.Set[X]:
@@ -416,25 +416,7 @@ def find_all_xs(hses: t.Iterable[Hs]) -> t.Set[X]:
     }
 
 
-def _hs_contains_x(hs: Hs, x: X):
-    # Check 1: see if `hs` was used to create this `cross`. This should
-    # alleviate numerical errors.
-    if hs in {x.hs1, x.hs2}:
-        return True
-
-    # Check 2: see if a `hs` contains the cross point. Allow points on
-    # boundaries, even for `Hp`.
-    return _hs_contains_pt_with_epsilon(hs, x.point)
-
-
-def _hs_contains_pt_strict(hs: Hs, pt: Pt) -> bool:
-    """Numerical check. The strict one."""
-    return Hp(hs.p1, hs.p2).contains(pt)
-
-
-def _hs_contains_pt_with_epsilon(hs: Hs, pt: Pt) -> bool:
-    """Numerical check. The loose one."""
-    return Hpc(hs.p1, hs.p2).contains(pt)
+# ----- esum-pt ------
 
 
 def _esum_contains_pt_strict(esum: Esum, pt: Pt) -> bool:
@@ -444,12 +426,108 @@ def _esum_contains_pt_strict(esum: Esum, pt: Pt) -> bool:
     )
 
 
-def _esum_contains_pt_with_epsilon(esum: Esum, pt: Pt) -> bool:
+def _esum_contains_pt_with_eps(esum: Esum, pt: Pt) -> bool:
     """Numerical check."""
     return any(
-        all(_hs_contains_pt_with_epsilon(hs, pt) for hs in term.hses)
+        all(_hs_contains_pt_with_eps(hs, pt) for hs in term.hses)
         for term in esum.eterms
     )
+
+
+# ----- esum-seg ------
+
+
+def _esum_contains_seg_with_eps(esum: Esum, segment: "XSegment") -> bool:
+    # This lazy check should work with both HPs and HPCs
+    common_hp = Hp(p1=segment.common_hs.p1, p2=segment.common_hs.p2)
+    common_hpc = Hpc(common_hp.p1, common_hp.p2)
+
+    p1 = segment.x1.point
+    p2 = segment.x2.point
+    mid_pt = Pt(
+        x=(p1.x + p2.x) / 2,
+        y=(p1.y + p2.y) / 2,
+    )
+
+    for eterm in esum.eterms:
+        # lazy check
+        if common_hp in eterm.hses or common_hpc in eterm.hses:
+            # This assumes that each term is a convex polygon.
+            # TODO: should we also check the segment endpoints?
+            return True
+
+        # numerical check
+        if _eterm_contains_pt_with_eps(eterm, mid_pt):
+            return True
+
+    return False
+
+
+def _esum_contains_seg_strict(esum: Esum, segment: "XSegment") -> bool:
+    # TODO: lazy check
+    p1 = segment.x1.point
+    p2 = segment.x2.point
+    mid_pt = Pt(
+        x=(p1.x + p2.x) / 2,
+        y=(p1.y + p2.y) / 2,
+    )
+
+    for eterm in esum.eterms:
+        # numerical check
+        if _eterm_contains_pt_strict(eterm, mid_pt):
+            return True
+
+    return False
+
+
+# ----- eterm-pt ------
+
+
+def _eterm_contains_pt_with_eps(eterm: Eterm, pt: Pt) -> bool:
+    """Numerical check."""
+    return all(_hs_contains_pt_with_eps(hs, pt) for hs in eterm.hses)
+
+
+def _eterm_contains_pt_strict(eterm: Eterm, pt: Pt) -> bool:
+    """Numerical check."""
+    return all(_hs_contains_pt_strict(hs, pt) for hs in eterm.hses)
+
+
+# ----- esum-x ------
+
+
+def _esum_contains_x_with_eps(esum: Esum, x: X):
+    return any(
+        all(_hs_contains_x_with_eps(hs, x) for hs in eterm.hses)
+        for eterm in esum.eterms
+    )
+
+
+# ----- hs-x ------
+
+
+def _hs_contains_x_with_eps(hs: Hs, x: X):
+    # Check 1: see if `hs` was used to create this `cross`. This should
+    # alleviate numerical errors.
+    if hs in {x.hs1, x.hs2}:
+        return True
+
+    # Check 2: see if a `hs` contains the cross point. Allow points on
+    # boundaries, even for `Hp`.
+    return _hs_contains_pt_with_eps(hs, x.point)
+
+
+# ----- hs-pt ------
+
+
+def _hs_contains_pt_strict(hs: Hs, pt: Pt) -> bool:
+    """Numerical check. The strict one."""
+    return Hp(hs.p1, hs.p2).contains(pt)
+
+
+def _hs_contains_pt_with_eps(hs: Hs, pt: Pt) -> bool:
+    """Numerical check. The loose one."""
+    return Hpc(hs.p1, hs.p2).contains(pt)
 
 
 def find_vertices(esum: Esum) -> t.Set[X]:
@@ -457,7 +535,7 @@ def find_vertices(esum: Esum) -> t.Set[X]:
     # inside = list(
     #     mitt.unique_everseen(cross for cross in crosses if esum.contains_x(cross))
     # )
-    inside = filter(esum.contains_x, crosses)
+    inside = filter(lambda x: _esum_contains_x_with_eps(esum, x), crosses)
     collapsed = collapse_xs(inside)
     return collapsed
 
@@ -490,11 +568,19 @@ class XSegment(TodoMixin):
             "A segment should be formed by exactly 1 common HS. We've "
             f"got {len(common_hses)}: {common_hses}"
         )
-        hs1, = x1_hses.difference(common_hses)
-        common_hs, = common_hses
-        hs3, = x2_hses.difference(common_hses)
+        (hs1,) = x1_hses.difference(common_hses)
+        (common_hs,) = common_hses
+        (hs3,) = x2_hses.difference(common_hses)
 
         return XSegment(hs1, common_hs, hs3)
+
+    @property
+    def x1(self) -> X:
+        return X(self.hs1, self.common_hs)
+
+    @property
+    def x2(self) -> X:
+        return X(self.common_hs, self.hs3)
 
     def debug_info(self, names=False, length=True):
         suffix = ""
@@ -587,12 +673,15 @@ def infer_smallest_segments(xs: t.Sequence[X], hs: Hs) -> t.Sequence[XSegment]:
 
 def segment_on_boundary(esum: Esum, segment: XSegment) -> bool:
     # FIXME
-    pt1 = segment.x1.point
-    pt2 = segment.x2.point
-    mid_pt = Pt((pt1.x + pt2.x) / 2, (pt1.y + pt2.y) / 2)
+    # pt1 = segment.x1.point
+    # pt2 = segment.x2.point
+    # mid_pt = Pt((pt1.x + pt2.x) / 2, (pt1.y + pt2.y) / 2)
 
-    e = _esum_contains_pt_with_epsilon(esum, mid_pt)
-    s = _esum_contains_pt_strict(esum, mid_pt)
+    # e = _esum_contains_pt_with_epsilon(esum, mid_pt)
+    # s = _esum_contains_pt_strict(esum, mid_pt)
+
+    e = _esum_contains_seg_with_eps(esum, segment)
+    s = _esum_contains_seg_strict(esum, segment)
 
     return e and not s
 
