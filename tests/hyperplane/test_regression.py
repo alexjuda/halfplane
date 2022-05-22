@@ -8,32 +8,32 @@ def _triangle_boundary():
     return [
         XSegment.from_xs(
             x1=X(
-                hs1=Hpc(p1=Pt(x=2, y=2), p2=Pt(x=10, y=2)),
-                hs2=Hpc(p1=Pt(x=8, y=10), p2=Pt(x=3, y=1)),
+                hs1=Hpc(p1=Pt(x=2, y=2), p2=Pt(x=10, y=2), debug_name="-"),
+                hs2=Hpc(p1=Pt(x=8, y=10), p2=Pt(x=3, y=1), debug_name="/"),
             ),
             x2=X(
-                hs1=Hpc(p1=Pt(x=2, y=2), p2=Pt(x=10, y=2)),
-                hs2=Hpc(p1=Pt(x=9, y=1), p2=Pt(x=4, y=10)),
+                hs1=Hpc(p1=Pt(x=2, y=2), p2=Pt(x=10, y=2), debug_name="-"),
+                hs2=Hpc(p1=Pt(x=9, y=1), p2=Pt(x=4, y=10), debug_name="\\"),
             ),
         ),
         XSegment.from_xs(
             x1=X(
-                hs1=Hpc(p1=Pt(x=2, y=2), p2=Pt(x=10, y=2)),
-                hs2=Hpc(p1=Pt(x=9, y=1), p2=Pt(x=4, y=10)),
+                hs1=Hpc(p1=Pt(x=2, y=2), p2=Pt(x=10, y=2), debug_name="-"),
+                hs2=Hpc(p1=Pt(x=9, y=1), p2=Pt(x=4, y=10), debug_name="\\"),
             ),
             x2=X(
-                hs1=Hpc(p1=Pt(x=8, y=10), p2=Pt(x=3, y=1)),
-                hs2=Hpc(p1=Pt(x=9, y=1), p2=Pt(x=4, y=10)),
+                hs1=Hpc(p1=Pt(x=8, y=10), p2=Pt(x=3, y=1), debug_name="/"),
+                hs2=Hpc(p1=Pt(x=9, y=1), p2=Pt(x=4, y=10), debug_name="\\"),
             ),
         ),
         XSegment.from_xs(
             x1=X(
-                hs1=Hpc(p1=Pt(x=8, y=10), p2=Pt(x=3, y=1)),
-                hs2=Hpc(p1=Pt(x=9, y=1), p2=Pt(x=4, y=10)),
+                hs1=Hpc(p1=Pt(x=8, y=10), p2=Pt(x=3, y=1), debug_name="/"),
+                hs2=Hpc(p1=Pt(x=9, y=1), p2=Pt(x=4, y=10), debug_name="\\"),
             ),
             x2=X(
-                hs1=Hpc(p1=Pt(x=2, y=2), p2=Pt(x=10, y=2)),
-                hs2=Hpc(p1=Pt(x=8, y=10), p2=Pt(x=3, y=1)),
+                hs1=Hpc(p1=Pt(x=2, y=2), p2=Pt(x=10, y=2), debug_name="-"),
+                hs2=Hpc(p1=Pt(x=8, y=10), p2=Pt(x=3, y=1), debug_name="/"),
             ),
         ),
     ]
@@ -495,4 +495,4 @@ def _letter_c_boundary():
 )
 def test_detect_boundary(esum, expected_segments):
     segments = flat.detect_boundary(esum)
-    assert segments == expected_segments
+    assert set(segments) == set(expected_segments)

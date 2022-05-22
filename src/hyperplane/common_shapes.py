@@ -160,16 +160,19 @@ def triangle():
             Hpc(
                 Pt(8, 10),
                 Pt(3, 1),
+                debug_name="/",
             ),
             # diagonal line (\)
             Hpc(
                 Pt(9, 1),
                 Pt(4, 10),
+                debug_name="\\",
             ),
             # horizontal line (-)
             Hpc(
                 Pt(2, 2),
                 Pt(10, 2),
+                debug_name="-",
             ),
         ),
         debug_name="triangle",

@@ -438,7 +438,7 @@ def _esum_contains_pt_with_eps(esum: Esum, pt: Pt) -> bool:
 
 
 def _esum_contains_seg_with_eps(esum: Esum, segment: "XSegment") -> bool:
-    # This lazy check should work with both HPs and HPCs
+    # The lazy check should work with both HPs and HPCs
     common_hp = Hp(p1=segment.common_hs.p1, p2=segment.common_hs.p2)
     common_hpc = Hpc(common_hp.p1, common_hp.p2)
 
@@ -464,7 +464,10 @@ def _esum_contains_seg_with_eps(esum: Esum, segment: "XSegment") -> bool:
 
 
 def _esum_contains_seg_strict(esum: Esum, segment: "XSegment") -> bool:
-    # TODO: lazy check
+    # The lazy check should work with both HPs and HPCs
+    common_hp = Hp(p1=segment.common_hs.p1, p2=segment.common_hs.p2)
+    common_hpc = Hpc(common_hp.p1, common_hp.p2)
+
     p1 = segment.x1.point
     p2 = segment.x2.point
     mid_pt = Pt(
@@ -473,6 +476,13 @@ def _esum_contains_seg_strict(esum: Esum, segment: "XSegment") -> bool:
     )
 
     for eterm in esum.eterms:
+        # lazy check
+        if common_hp in eterm.hses or common_hpc in eterm.hses:
+            # This assumes that each term is a convex polygon.
+            # TODO: should we also check the segment endpoints?
+            return False
+
+
         # numerical check
         if _eterm_contains_pt_strict(eterm, mid_pt):
             return True
