@@ -17,17 +17,13 @@ def rect(min_x: float, min_y: float, width: float, height: float) -> flat.Esum:
     p3 = flat.Pt(min_x + width, min_y, debug_name="p3")
     p4 = flat.Pt(min_x, min_y, debug_name="p4")
 
-    return flat.Esum(
-        {
-            frozenset(
-                [
-                    flat.Hpc(p2, p1, debug_name="h1"),
-                    flat.Hpc(p3, p2, debug_name="h2"),
-                    flat.Hpc(p4, p3, debug_name="h3"),
-                    flat.Hpc(p1, p4, debug_name="h4"),
-                ]
-            )
-        },
+    return flat.Esum.from_terms(
+        flat.Eterm.from_hses(
+            flat.Hpc(p2, p1, debug_name="h1"),
+            flat.Hpc(p3, p2, debug_name="h2"),
+            flat.Hpc(p4, p3, debug_name="h3"),
+            flat.Hpc(p1, p4, debug_name="h4"),
+        ),
         debug_name="rect",
     )
 

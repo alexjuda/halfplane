@@ -403,7 +403,9 @@ class Esum(TodoMixin):
         crosspoints lying on the boundary, regardless of Hp/Hpc strictness.
         """
         # TODO: should the inner `all` be switched to an any?
-        return any(all(_hs_contains_x(hs, x) for hs in term) for term in self.eterms)
+        return any(
+            all(_hs_contains_x(hs, x) for hs in term.hses) for term in self.eterms
+        )
 
 
 def find_all_xs(hses: t.Iterable[Hs]) -> t.Set[X]:
@@ -438,20 +440,20 @@ def _hs_contains_pt_with_epsilon(hs: Hs, pt: Pt) -> bool:
 def _esum_contains_pt_strict(esum: Esum, pt: Pt) -> bool:
     """Numerical check."""
     return any(
-        all(_hs_contains_pt_strict(hs, pt) for hs in group) for group in esum.eterms
+        all(_hs_contains_pt_strict(hs, pt) for hs in term.hses) for term in esum.eterms
     )
 
 
 def _esum_contains_pt_with_epsilon(esum: Esum, pt: Pt) -> bool:
     """Numerical check."""
     return any(
-        all(_hs_contains_pt_with_epsilon(hs, pt) for hs in group)
-        for group in esum.eterms
+        all(_hs_contains_pt_with_epsilon(hs, pt) for hs in term.hses)
+        for term in esum.eterms
     )
 
 
 def find_vertices(esum: Esum) -> t.Set[X]:
-    crosses = find_all_xs([hs for term in esum.eterms for hs in term])
+    crosses = find_all_xs([hs for term in esum.eterms for hs in term.hses])
     # inside = list(
     #     mitt.unique_everseen(cross for cross in crosses if esum.contains_x(cross))
     # )
@@ -604,7 +606,7 @@ def named_esum(esum: Esum) -> Esum:
     pt_counter = itertools.count()
 
     for term in esum.eterms:
-        for hs in term:
+        for hs in term.hses:
             if hs not in hs_names:
                 hs_names[hs] = f"h_{next(hs_counter)}"
 
@@ -615,8 +617,8 @@ def named_esum(esum: Esum) -> Esum:
     return Esum(
         eterms=FOSet(
             [
-                Eterm(
-                    hses=[
+                Eterm.from_hses(
+                    *[
                         dataclasses.replace(
                             hs,
                             debug_name=hs_names[hs],
