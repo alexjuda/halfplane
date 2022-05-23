@@ -329,7 +329,7 @@ def draw_segments(ax, segments: t.Sequence[flat.XSegment], xlim, ylim):
     for segment_i, segment in enumerate(segments):
         x1, y1 = segment.x1.point.position2d
         x2, y2 = segment.x2.point.position2d
-        text = str(segment_i)
+        text = segment.debug_name or str(segment_i)
 
         ax.plot([x1, x2], [y1, y2], c="C1")
         ax.text(

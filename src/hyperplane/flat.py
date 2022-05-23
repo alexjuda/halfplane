@@ -482,7 +482,6 @@ def _esum_contains_seg_strict(esum: Esum, segment: "XSegment") -> bool:
             # TODO: should we also check the segment endpoints?
             return False
 
-
         # numerical check
         if _eterm_contains_pt_strict(eterm, mid_pt):
             return True
@@ -639,7 +638,11 @@ def find_segments(xs: t.Iterable[X]) -> t.Sequence[XSegment]:
             segments = infer_smallest_segments(xs_on_this_hs, hs)
             all_segments.extend(segments)
 
-    return list(mitt.unique_everseen(all_segments))
+    named_segments = [
+        dataclasses.replace(seg, debug_name=f"{seg_i}")
+        for seg_i, seg in enumerate(mitt.unique_everseen(all_segments))
+    ]
+    return named_segments
 
 
 def infer_smallest_segments(xs: t.Sequence[X], hs: Hs) -> t.Sequence[XSegment]:

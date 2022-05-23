@@ -1,6 +1,6 @@
 import dataclasses
 
-from .flat import Esum, Eterm, Hpc, Pt, Hs
+from .flat import Esum, Eterm, Hpc, Pt, Hs, named_esum
 
 
 def letter_c_external():
@@ -335,4 +335,4 @@ def big_l() -> Esum:
             _flip_hs(_vertical_hpc_facing_right(x=10)),
         )
     )
-    return vertical.union(horizontal).intersection(bound)
+    return named_esum(vertical.union(horizontal).intersection(bound))
