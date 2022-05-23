@@ -1,6 +1,6 @@
 import dataclasses
 
-from .flat import Esum, Eterm, Hpc, Pt
+from .flat import Esum, Eterm, Hpc, Pt, Hs
 
 
 def letter_c_external():
@@ -297,3 +297,42 @@ def crude_c():
     )
 
     return part1.union(part2).union(part3)
+
+
+def _vertical_hpc_facing_right(x: float) -> Hpc:
+    return Hpc(p1=Pt(x=x, y=10), p2=Pt(x=x, y=0))
+
+
+def _horizontal_hpc_facing_up(y: float) -> Hpc:
+    return Hpc(p1=Pt(x=0, y=y), p2=Pt(x=10, y=y))
+
+
+def _flip_hs(hs: Hs) -> Hs:
+    """
+    Flip the order without changing the strictness.
+    """
+    return type(hs)(p1=hs.p2, p2=hs.p1)
+
+
+def big_l() -> Esum:
+    vertical = Esum.from_terms(
+        Eterm.from_hses(
+            _vertical_hpc_facing_right(x=2),
+            _flip_hs(_vertical_hpc_facing_right(x=3)),
+        ),
+    )
+    horizontal = Esum.from_terms(
+        Eterm.from_hses(
+            _horizontal_hpc_facing_up(y=2),
+            _flip_hs(_horizontal_hpc_facing_up(y=3)),
+        )
+    )
+    bound = Esum.from_terms(
+        Eterm.from_hses(
+            _horizontal_hpc_facing_up(y=1),
+            _flip_hs(_horizontal_hpc_facing_up(y=10)),
+            _vertical_hpc_facing_right(x=1),
+            _flip_hs(_vertical_hpc_facing_right(x=10)),
+        )
+    )
+    return vertical.union(horizontal).intersection(bound)
