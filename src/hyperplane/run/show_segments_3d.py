@@ -84,14 +84,16 @@ def main():
 
     for shape_i, esum_start in enumerate(
         [
+
+            common_shapes.big_l(),
             common_shapes.letter_c(),
-            shape_gen.rect_chain(n=4, stride_x=3, stride_y=3),
-            shape_gen.rect_chain(n=10, stride_x=3, stride_y=3),
+            # shape_gen.rect_chain(n=4, stride_x=3, stride_y=3),
+            # shape_gen.rect_chain(n=10, stride_x=3, stride_y=3),
         ]
     ):
         esum = flat.named_esum(esum_start)
         vertices = _named(flat.find_vertices(esum=esum), "x")
-        segments = _named(flat.find_segments(vertices), "seg")
+        segments = flat.find_segments(vertices)
         boundary_segments = flat.filter_segments(esum, segments)
 
         _plot(

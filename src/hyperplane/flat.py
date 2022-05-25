@@ -366,7 +366,7 @@ class Esum(TodoMixin):
         new_terms = []
         for self_term in self.eterms:
             for other_term in other.eterms:
-                new_hses = self_term.hses ^ other_term.hses
+                new_hses = self_term.hses | other_term.hses
                 new_terms.append(Eterm(new_hses))
 
         return Esum(FOSet(new_terms))
@@ -438,23 +438,19 @@ def _esum_contains_pt_with_eps(esum: Esum, pt: Pt) -> bool:
 
 
 def _esum_contains_seg_with_eps(esum: Esum, segment: "XSegment") -> bool:
-    # The lazy check should work with both HPs and HPCs
-    common_hp = Hp(p1=segment.common_hs.p1, p2=segment.common_hs.p2)
-    common_hpc = Hpc(common_hp.p1, common_hp.p2)
-
     p1 = segment.x1.point
     p2 = segment.x2.point
     mid_pt = Pt(
         x=(p1.x + p2.x) / 2,
         y=(p1.y + p2.y) / 2,
     )
-
     for eterm in esum.eterms:
-        # lazy check
-        if common_hp in eterm.hses or common_hpc in eterm.hses:
-            # This assumes that each term is a convex polygon.
-            # TODO: should we also check the segment endpoints?
-            return True
+        # NOTE: we could add a symbolic/lazy check here, but we need an
+        # additional assumption. If we assume that:
+        # - every `eterm` is a convex polygon
+        # - that every `eterm` consists only of non-redundant halfspaces
+        # this means that every halfspace in the `eterm` is a part of the
+        # eterm's boundary. This would allow us to compare halfspaces directly.
 
         # numerical check
         if _eterm_contains_pt_with_eps(eterm, mid_pt):
@@ -464,10 +460,6 @@ def _esum_contains_seg_with_eps(esum: Esum, segment: "XSegment") -> bool:
 
 
 def _esum_contains_seg_strict(esum: Esum, segment: "XSegment") -> bool:
-    # The lazy check should work with both HPs and HPCs
-    common_hp = Hp(p1=segment.common_hs.p1, p2=segment.common_hs.p2)
-    common_hpc = Hpc(common_hp.p1, common_hp.p2)
-
     p1 = segment.x1.point
     p2 = segment.x2.point
     mid_pt = Pt(
@@ -476,11 +468,12 @@ def _esum_contains_seg_strict(esum: Esum, segment: "XSegment") -> bool:
     )
 
     for eterm in esum.eterms:
-        # lazy check
-        if common_hp in eterm.hses or common_hpc in eterm.hses:
-            # This assumes that each term is a convex polygon.
-            # TODO: should we also check the segment endpoints?
-            return False
+        # NOTE: we could add a symbolic/lazy check here, but we need an
+        # additional assumption. If we assume that:
+        # - every `eterm` is a convex polygon
+        # - that every `eterm` consists only of non-redundant halfspaces
+        # this means that every halfspace in the `eterm` is a part of the
+        # eterm's boundary. This would allow us to compare halfspaces directly.
 
         # numerical check
         if _eterm_contains_pt_strict(eterm, mid_pt):

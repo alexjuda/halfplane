@@ -139,12 +139,10 @@ def _plot_esum_with_content_check(esum: Esum, ax, xlim, ylim):
     ax.legend(loc="upper right")
 
 
-def plot_esum_boundaries(esum: Esum, ax, xlim, ylim):
-    # TODO: somehow ensure reproducibility of set order
-    for term_i, term in enumerate(esum.eterms):
-        for hs_i, hs in enumerate(term.hses):
-            label = hs.debug_name or f"h_{term_i}_{hs_i}"
-            _plot_hs(hs, hs_label=label, ax=ax, xlim=xlim, ylim=ylim)
+def draw_eterm(ax, eterm: flat.Eterm, xlim, ylim):
+    for hs_i, hs in enumerate(eterm.hses):
+        label = hs.debug_name
+        _plot_hs(hs, hs_label=label, ax=ax, xlim=xlim, ylim=ylim)
 
     locator = matplotlib.ticker.MaxNLocator(integer=True)
     ax.xaxis.set_major_locator(locator)
@@ -154,6 +152,11 @@ def plot_esum_boundaries(esum: Esum, ax, xlim, ylim):
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
     ax.set_aspect("equal")
+
+
+def plot_esum_boundaries(esum: Esum, ax, xlim, ylim):
+    for eterm in esum.eterms:
+        draw_eterm(ax, eterm, xlim, ylim)
 
 
 def subplots(n_rows, n_cols, size=12, **kwargs):
@@ -220,9 +223,7 @@ def _find_and_plot_vertices(esum: Esum, ax, xlim, ylim, draw_crosses_outside=Tru
     ax.legend()
 
 
-def draw_vertices(
-    vertices: t.Sequence[X], ax, xlim, ylim, crosses_outside=None
-):
+def draw_vertices(vertices: t.Sequence[X], ax, xlim, ylim, crosses_outside=None):
     plot_outside = crosses_outside is not None
     if plot_outside:
         ax.scatter(
