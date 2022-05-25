@@ -1,6 +1,10 @@
+import typing as t
+
 from hyperplane import flat, common_shapes
 from hyperplane.flat import Pt, Hp, Hpc, X, XSegment
 
+import numpy as np
+import numpy.testing
 import pytest
 
 
@@ -485,6 +489,23 @@ def _letter_c_boundary():
     ]
 
 
+def _endpoints_arr(segments: t.Sequence[XSegment]) -> np.ndarray:
+    """
+    Returns:
+        [n_segments x 4] array of endpoint coordinates
+    """
+    arr = np.zeros((len(segments), 4))
+
+    for segment_i, segment in enumerate(segments):
+        arr[segment_i, 0:2] = segment.x1.point.position2d
+        arr[segment_i, 2:4] = segment.x2.point.position2d
+
+    # We wanna make the comparisons independent on the order of segments.
+    arr.sort(axis=0)
+
+    return arr
+
+
 @pytest.mark.parametrize(
     "esum,expected_segments",
     [
@@ -495,4 +516,6 @@ def _letter_c_boundary():
 )
 def test_detect_boundary(esum, expected_segments):
     segments = flat.detect_boundary(esum)
-    assert set(segments) == set(expected_segments)
+    np.testing.assert_array_almost_equal(
+        _endpoints_arr(segments), _endpoints_arr(expected_segments)
+    )
