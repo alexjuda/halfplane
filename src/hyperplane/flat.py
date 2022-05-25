@@ -134,6 +134,7 @@ def _z_factor(half_space: Hs, point: Pt) -> float:
     b1 = point.x - half_space.p1.x
     b2 = point.y - half_space.p1.y
 
+    # breakpoint()
     return a1 * b2 - a2 * b1
 
 
@@ -522,14 +523,14 @@ def _hs_contains_x_with_eps(hs: Hs, x: X):
 # ----- hs-pt ------
 
 
-def _hs_contains_pt_strict(hs: Hs, pt: Pt) -> bool:
+def _hs_contains_pt_strict(hs: Hs, pt: Pt, eps: float = 10e-7) -> bool:
     """Numerical check. The strict one."""
-    return Hp(hs.p1, hs.p2).contains(pt)
+    return _z_factor(hs, pt) > eps
 
 
-def _hs_contains_pt_with_eps(hs: Hs, pt: Pt) -> bool:
+def _hs_contains_pt_with_eps(hs: Hs, pt: Pt, eps: float = 10e-7) -> bool:
     """Numerical check. The loose one."""
-    return Hpc(hs.p1, hs.p2).contains(pt)
+    return _z_factor(hs, pt) > -eps
 
 
 def find_vertices(esum: Esum) -> t.Set[X]:
