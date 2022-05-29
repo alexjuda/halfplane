@@ -122,4 +122,5 @@ def play_button_chain(min_x, min_y, n, stride):
         for i in range(n)
     ]
 
-    return reduce(lambda acc, e: acc.intersection(e), shapes)
+    esum = reduce(lambda acc, e: acc.intersection(e), shapes)
+    return dataclasses.replace(esum, debug_name=f"play_chain_n{n}")
