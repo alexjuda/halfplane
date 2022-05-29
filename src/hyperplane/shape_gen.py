@@ -63,3 +63,47 @@ def rect_chain(
         union = union.union(a_rect)
 
     return dataclasses.replace(union, debug_name="rect_chain")
+
+
+def triangle_pointing_right(tip_x: float, tip_y: float, width: float) -> flat.Esum:
+    """
+    Isosceles triangle, like:
+    |\\
+    | \\
+    |  \\
+    |  (tip)
+    |  /
+    | /
+    |/
+    """
+
+    left_x = tip_x - width
+    height = width
+    bottom_y = tip_y - height / 2
+    top_y = tip_y + height / 2
+
+    return flat.Esum.from_terms(
+        flat.Eterm.from_hses(
+            # left side
+            flat.Hpc(flat.Pt(left_x, top_y), flat.Pt(left_x, bottom_y)),
+            # top side
+            flat.Hpc(flat.Pt(tip_x, tip_y), flat.Pt(left_x, top_y)),
+            # bottom side
+            flat.Hpc(flat.Pt(left_x, bottom_y), flat.Pt(tip_x, tip_y)),
+        ),
+    )
+
+
+def play_button_shape(min_x, min_y, width, height):
+    """
+    Rect without a triangle, looks something like a "play button. Should result
+    in 3 eterms, conceptually.
+    """
+    a_rect = rect(min_x=min_x, min_y=min_y, width=width, height=height)
+    a_triangle = triangle_pointing_right(
+        tip_x=min_x + width * 1.1,
+        tip_y=min_y + height / 2,
+        width=width * 3 / 4,
+    )
+
+    return a_rect.difference(a_triangle)
