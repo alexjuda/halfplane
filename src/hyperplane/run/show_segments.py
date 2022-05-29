@@ -28,8 +28,9 @@ def main():
             # common_shapes.big_l(),
             # common_shapes.letter_c(),
             # shape_gen.rect_chain(n=4, stride_x=3, stride_y=3),
-            # shape_gen.rect_chain(n=10, stride_x=3, stride_y=3),
-            shape_gen.play_button_shape(min_x=4.0, min_y=3.0, width=8.0, height=6.0),
+            shape_gen.play_button_shape(min_x=4.0, min_y=3.0, width=10.0, height=6.0),
+            shape_gen.play_button_chain(min_x=4.0, min_y=3.0, n=2, stride=1.0),
+            shape_gen.play_button_chain(min_x=4.0, min_y=3.0, n=3, stride=1.0),
         ]
     ):
         vertices = flat.find_vertices(esum=esum)

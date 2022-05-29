@@ -1,5 +1,6 @@
 import dataclasses
 from . import flat
+from functools import reduce
 
 
 def rect(min_x: float, min_y: float, width: float, height: float) -> flat.Esum:
@@ -100,10 +101,25 @@ def play_button_shape(min_x, min_y, width, height):
     in 3 eterms, conceptually.
     """
     a_rect = rect(min_x=min_x, min_y=min_y, width=width, height=height)
+
     a_triangle = triangle_pointing_right(
         tip_x=min_x + width * 1.1,
-        tip_y=min_y + height / 2,
+        tip_y=min_y + height / 2 + height / 10,
         width=width * 3 / 4,
     )
 
     return a_rect.difference(a_triangle)
+
+
+def play_button_chain(min_x, min_y, n, stride):
+    shapes = [
+        play_button_shape(
+            min_x=min_x + i * stride,
+            min_y=min_y + i * stride,
+            width=10.0,
+            height=6.0,
+        )
+        for i in range(n)
+    ]
+
+    return reduce(lambda acc, e: acc.intersection(e), shapes)
