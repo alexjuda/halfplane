@@ -27,7 +27,7 @@ def main():
             shape_gen.play_button_chain(min_x=4.0, min_y=3.0, n=2, stride=0.2),
             shape_gen.play_button_chain(min_x=4.0, min_y=3.0, n=3, stride=0.2),
             shape_gen.play_button_chain(min_x=4.0, min_y=3.0, n=4, stride=0.2),
-            shape_gen.play_button_chain(min_x=4.0, min_y=3.0, n=5, stride=0.2),
+            # shape_gen.play_button_chain(min_x=4.0, min_y=3.0, n=5, stride=0.2),
         ]
     ):
         vertices = flat.find_vertices(esum=esum)

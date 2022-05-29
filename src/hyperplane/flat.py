@@ -302,8 +302,22 @@ class Eterm:
         return xs
 
     @property
-    def bbox(self) -> Box:
-        return points_bbox(map(lambda x: x.point, self.xs))
+    def bbox(self) -> t.Optional[Box]:
+        """
+        Tight bounding box over this eterm's hs intersection points. None if
+        there's not enough crosses.
+        """
+        # TODO: add test for 0 crosses
+        # TODO: add test for 1 cross
+        # TODO: add test for 2 crosses
+        # TODO: add test for 3 crosses
+        # TODO: add test for 4 crosses
+        try:
+            xs = self.xs
+        except ValueError:
+            return None
+
+        return points_bbox(map(lambda x: x.point, xs))
 
 
 def points_bbox(pts: t.Iterable[Pt]) -> Box:
@@ -364,13 +378,7 @@ class Esum(TodoMixin):
         return Esum(self.eterms | other.eterms)
 
     def intersection(self, other: "Esum") -> "Esum":
-        new_terms = []
-        for self_term in self.eterms:
-            for other_term in other.eterms:
-                new_hses = self_term.hses | other_term.hses
-                new_terms.append(Eterm(new_hses))
-
-        return Esum(FOSet(new_terms))
+        return _esum_intersect_esum(self, other)
 
     def difference(self, other: "Esum") -> "Esum":
         return self.intersection(other.conjugate)
@@ -407,6 +415,31 @@ class Esum(TodoMixin):
     #     return any(
     #         all(_hs_contains_x(hs, x) for hs in term.hses) for term in self.eterms
     #     )
+
+
+# ------- esum ^ esum ---------
+def _esum_intersect_esum(e1: Esum, e2: Esum) -> Esum:
+    new_terms = []
+    for self_term in e1.eterms:
+        for other_term in e2.eterms:
+            # Check bounding box collision
+            bbox1 = self_term.bbox
+            bbox2 = other_term.bbox
+            # ...but only if both terms have enough xs.
+            if bbox1 is not None and bbox2 is not None:
+                if not _boxes_collide(bbox1, bbox2):
+                    continue
+
+            new_hses = self_term.hses | other_term.hses
+            eterm = Eterm(FOSet(new_hses))
+            new_terms.append(eterm)
+
+    return Esum(FOSet(new_terms))
+
+
+def _boxes_collide(box1: Box, box2: Box, eps: float) -> bool:
+    # TODO
+    return True
 
 
 def find_all_xs(hses: t.Iterable[Hs]) -> t.Set[X]:
