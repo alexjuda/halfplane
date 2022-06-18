@@ -13,6 +13,7 @@ from hyperplane import plots
 
 
 def main():
+    # 1. Define shapes
     triangle1 = Esum.from_terms(
         Eterm.from_hses(
             # diagonal line (/)
@@ -53,13 +54,15 @@ def main():
         ),
     )
 
+    # 2. Combine shapes using CSG operations
+
     combined_shape = triangle1.union(triangle2)
     # combined_shape = triangle1.intersection(triangle2)
 
-    # Run algorithm
+    # 3. Run the algorithm - boundary detection
     boundary_segments = detect_boundary(combined_shape)
 
-    # Plot
+    # 4. Plot the detected boundary
     _plot(combined_shape, boundary_segments)
 
 
