@@ -164,7 +164,7 @@ def subplots(n_rows, n_cols, size=12, **kwargs):
         n_rows,
         n_cols,
         figsize=(size * n_cols, size * n_rows),
-        dpi=200,
+        dpi=100,
         **kwargs,
     )
 
