@@ -437,7 +437,7 @@ def _esum_intersect_esum(e1: Esum, e2: Esum) -> Esum:
     return Esum(FOSet(new_terms))
 
 
-def _boxes_collide(box1: Box, box2: Box, eps: float) -> bool:
+def _boxes_collide(box1: Box, box2: Box, eps: float = 0.1) -> bool:
     # TODO
     return True
 

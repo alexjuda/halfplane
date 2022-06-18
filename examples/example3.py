@@ -46,8 +46,8 @@ def main():
         ),
     )
 
-    combined_shape = triangle1.union(triangle2)
-    # combined = triangle1.intersection(triangle2)
+    # combined_shape = triangle1.union(triangle2)
+    combined_shape = triangle1.intersection(triangle2)
 
     # Run algorithm
     boundary_segments = detect_boundary(combined_shape)
@@ -57,7 +57,7 @@ def main():
 
 
 def _plot(shape: Esum, segments: t.Sequence[XSegment]):
-    fig, axes = plots.subplots(1, 2)
+    fig, axes = plots.subplots(1, 2, size=24)
 
     xlim = [0, 20]
     ylim = [0, 20]
