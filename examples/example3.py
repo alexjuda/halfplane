@@ -1,3 +1,10 @@
+"""
+Demonstration of an example usage.
+
+Input: a shape defined using datastructures from the library.
+
+Output: a plot of the inferred shape boundary.
+"""
 import typing as t
 import matplotlib.pyplot as plt
 
@@ -46,8 +53,8 @@ def main():
         ),
     )
 
-    # combined_shape = triangle1.union(triangle2)
-    combined_shape = triangle1.intersection(triangle2)
+    combined_shape = triangle1.union(triangle2)
+    # combined_shape = triangle1.intersection(triangle2)
 
     # Run algorithm
     boundary_segments = detect_boundary(combined_shape)
