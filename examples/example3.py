@@ -67,7 +67,7 @@ def main():
 
 
 def _plot(shape: Esum, segments: t.Sequence[XSegment]):
-    fig, axes = plots.subplots(1, 2, size=24)
+    fig, axes = plots.subplots(1, 2, size=12)
 
     xlim = [0, 20]
     ylim = [0, 20]
