@@ -326,30 +326,32 @@ def _plot_all_crosses_clean(esum: Esum, esum_name: str):
     fig.savefig(plot_path)
 
 
-def draw_segments(ax, segments: t.Sequence[flat.XSegment], xlim, ylim):
-    ax.set_aspect("equal")
+def draw_segments(ax, segments: t.Sequence[flat.XSegment], xlim, ylim, seg_ids=True):
     for segment_i, segment in enumerate(segments):
         x1, y1 = segment.x1.point.position2d
         x2, y2 = segment.x2.point.position2d
-        text = segment.debug_name or str(segment_i)
 
         ax.plot([x1, x2], [y1, y2], c="C1")
-        ax.text(
-            x=x1,
-            y=y1,
-            s=text,
-            alpha=0.3,
-            verticalalignment="bottom",
-        )
-        ax.text(
-            x=x2,
-            y=y2,
-            s=text,
-            alpha=0.3,
-            verticalalignment="top",
-        )
+
+        if seg_ids:
+            text = segment.debug_name or str(segment_i)
+            ax.text(
+                x=x1,
+                y=y1,
+                s=text,
+                alpha=0.3,
+                verticalalignment="bottom",
+            )
+            ax.text(
+                x=x2,
+                y=y2,
+                s=text,
+                alpha=0.3,
+                verticalalignment="top",
+            )
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
+    ax.set_aspect("equal")
 
 
 def main():

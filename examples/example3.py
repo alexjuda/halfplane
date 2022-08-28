@@ -67,7 +67,7 @@ def main():
 
 
 def _plot(shape: Esum, segments: t.Sequence[XSegment]):
-    fig, axes = plots.subplots(1, 2, size=12)
+    fig, axes = plots.subplots(2, 1, size=12)
 
     xlim = [0, 14]
     ylim = [0, 14]
@@ -75,7 +75,7 @@ def _plot(shape: Esum, segments: t.Sequence[XSegment]):
     plots.plot_esum_boundaries(shape, ax=axes[0], xlim=xlim, ylim=ylim)
     axes[0].set_title("Halfspaces")
 
-    plots.draw_segments(axes[1], segments, xlim, ylim)
+    plots.draw_segments(axes[1], segments, xlim, ylim, seg_ids=False)
     axes[1].set_title("Boundary")
 
     plt.show()
