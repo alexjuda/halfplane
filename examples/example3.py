@@ -69,8 +69,8 @@ def main():
 def _plot(shape: Esum, segments: t.Sequence[XSegment]):
     fig, axes = plots.subplots(1, 2, size=12)
 
-    xlim = [0, 20]
-    ylim = [0, 20]
+    xlim = [0, 14]
+    ylim = [0, 14]
 
     plots.plot_esum_boundaries(shape, ax=axes[0], xlim=xlim, ylim=ylim)
     axes[0].set_title("Halfspaces")
