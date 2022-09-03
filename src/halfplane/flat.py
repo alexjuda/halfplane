@@ -319,15 +319,11 @@ class Eterm:
 
     @property
     def closure(self) -> "Eterm":
-        return Eterm(
-            hses=FOSet(hs.closure for hs in self.hses)
-        )
+        return Eterm(hses=FOSet(hs.closure for hs in self.hses))
 
     @property
     def interior(self) -> "Eterm":
-        return Eterm(
-            hses=FOSet(hs.interior for hs in self.hses)
-        )
+        return Eterm(hses=FOSet(hs.interior for hs in self.hses))
 
     @property
     def bbox(self) -> t.Optional[Box]:
@@ -645,8 +641,17 @@ def find_vertices(esum: Esum) -> t.Set[X]:
     return collapsed
 
 
-def filter_xs_on_boundary(xs: t.Iterable[X]) -> t.Iterable[X]:
-    pass
+def _x_is_on_boundary(closed_esum: Esum, int_esum: Esum, x: X) -> bool:
+    e = _esum_contains_x_with_eps(closed_esum, x)
+    s = _esum_contains_x_strict(int_esum, x)
+
+    return e and not s
+
+
+def filter_xs_on_boundary(
+    closed_esum: Esum, int_esum: Esum, xs: t.Iterable[X]
+) -> t.Sequence[X]:
+    return [x for x in xs if _x_is_on_boundary(closed_esum, int_esum, x)]
 
 
 def query_xs(xs: t.Iterable[X], poi: Pt, eps: float = 0.1) -> t.Iterable[X]:
@@ -859,7 +864,13 @@ def named_esum(esum: Esum) -> Esum:
 
 def detect_boundary(esum: Esum):
     """Run full algorithm."""
-    vertices = find_vertices(esum=esum)
-    segment_candidates = find_segments(vertices)
+    all_xs = find_vertices(esum=esum)
+
+    closed_esum = esum.closure
+    int_esum = esum.interior
+
+    boundary_xs = filter_xs_on_boundary(closed_esum, int_esum, all_xs)
+
+    segment_candidates = find_segments(boundary_xs)
     boundary_segments = filter_segments(esum, segment_candidates)
     return boundary_segments
