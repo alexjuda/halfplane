@@ -26,11 +26,12 @@ def main():
     for shape_i, esum in enumerate(
         [
             # common_shapes.big_l(),
-            # common_shapes.letter_c(),
+            common_shapes.letter_c(),
+            common_shapes.hourglass(),
             # shape_gen.rect_chain(n=4, stride_x=3, stride_y=3),
-            shape_gen.play_button_shape(min_x=4.0, min_y=3.0, width=10.0, height=6.0),
-            shape_gen.play_button_chain(min_x=4.0, min_y=3.0, n=1, stride=0.2),
-            shape_gen.play_button_chain(min_x=4.0, min_y=3.0, n=2, stride=0.2)
+            # shape_gen.play_button_shape(min_x=4.0, min_y=3.0, width=10.0, height=6.0),
+            # shape_gen.play_button_chain(min_x=4.0, min_y=3.0, n=1, stride=0.2),
+            # shape_gen.play_button_chain(min_x=4.0, min_y=3.0, n=2, stride=0.2)
         ]
     ):
         vertices = flat.find_vertices(esum=esum)

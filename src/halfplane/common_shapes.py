@@ -336,3 +336,57 @@ def big_l() -> Esum:
         )
     )
     return named_esum(vertical.union(horizontal).intersection(bound))
+
+
+def hourglass():
+    """
+    Two overlapping inverted triangles
+    """
+    triangle1 = Esum.from_terms(
+        Eterm.from_hses(
+            # diagonal line (/)
+            Hpc(
+                Pt(8, 10),
+                Pt(3, 1),
+                debug_name="/",
+            ),
+            # diagonal line (\)
+            Hpc(
+                Pt(9, 1),
+                Pt(4, 10),
+                debug_name="\\",
+            ),
+            # horizontal line (-)
+            Hpc(
+                Pt(2, 2),
+                Pt(10, 2),
+                debug_name="-",
+            ),
+        ),
+        debug_name="triangle1",
+    )
+    triangle2 = Esum.from_terms(
+        Eterm.from_hses(
+            # horizontal line (-)
+            Hpc(
+                Pt(10, 9),
+                Pt(2, 9),
+                debug_name="-",
+            ),
+            # diagonal line (/)
+            Hpc(
+                Pt(3, -1),
+                Pt(8, 8),
+                debug_name="/",
+            ),
+            # diagonal line (\)
+            Hpc(
+                Pt(4, 8),
+                Pt(9, -1),
+                debug_name="\\",
+            ),
+        ),
+        debug_name="triangle2",
+    )
+
+    return dataclasses.replace(triangle1.union(triangle2), name="hourglass")
