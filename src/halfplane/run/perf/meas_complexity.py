@@ -128,7 +128,7 @@ def main():
         generator_results_path = ALL_RESULTS_PATH / generator_name
         generator_results_path.mkdir(parents=True, exist_ok=True)
 
-        run = False
+        run = True
         if run:
             with open(generator_results_path / "result.csv", "w") as f:
                 writer = csv.DictWriter(
@@ -144,7 +144,7 @@ def main():
                 )
                 writer.writeheader()
 
-                for n in [*range(1, 5), *range(5, 60, 5)]:
+                for n in [*range(1, 5), *range(20, 120, 20)]:
                     for trial_i in tqdm(range(N_TRIALS), desc=f"{n=}, trial"):
                         esum = generator_fn(n=n)
 
