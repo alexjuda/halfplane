@@ -100,6 +100,14 @@ class Hp(TodoMixin):
     def y(self, x: Number) -> t.Optional[Number]:
         return _extrapolate_line(self.p1, self.p2, x)
 
+    @property
+    def closure(self) -> "Hpc":
+        return Hpc(self.p1, self.p2)
+
+    @property
+    def interior(self) -> "Hp":
+        return self
+
 
 @frozen_model
 class Hpc(TodoMixin):
@@ -117,6 +125,14 @@ class Hpc(TodoMixin):
     @property
     def conjugate(self) -> Hp:
         return Hp(self.p2, self.p1)
+
+    @property
+    def closure(self) -> "Hpc":
+        return self
+
+    @property
+    def interior(self) -> Hp:
+        return Hp(self.p1, self.p2)
 
     def y(self, x: Number) -> t.Optional[Number]:
         return _extrapolate_line(self.p1, self.p2, x)
@@ -302,6 +318,18 @@ class Eterm:
         return xs
 
     @property
+    def closure(self) -> "Eterm":
+        return Eterm(
+            hses=FOSet(hs.closure for hs in self.hses)
+        )
+
+    @property
+    def interior(self) -> "Eterm":
+        return Eterm(
+            hses=FOSet(hs.interior for hs in self.hses)
+        )
+
+    @property
     def bbox(self) -> t.Optional[Box]:
         """
         Tight bounding box over this eterm's hs intersection points. None if
@@ -406,6 +434,30 @@ class Esum(TodoMixin):
                 conjugate_terms.append(Eterm(hses=FOSet(conjugate_group)))
 
         return Esum(eterms=FOSet(conjugate_terms))
+
+    @property
+    def closure(self) -> "Esum":
+        """
+        Ensures that every halfspace is an Hpc, so that the result esum
+        contains the boundary.
+        """
+        return Esum(
+            eterms=FOSet(t.closure for t in self.eterms),
+            name=self.name,
+            debug_name=self.debug_name,
+        )
+
+    @property
+    def interior(self) -> "Esum":
+        """
+        Ensures that every halfspace is an Hp, so that the result esum
+        doesn't contain the boundary.
+        """
+        return Esum(
+            eterms=FOSet(t.interior for t in self.eterms),
+            name=self.name,
+            debug_name=self.debug_name,
+        )
 
     # def contains_x(self, x: "X") -> bool:
     #     """Checks if cross point `x` is a member of this Esum. This includes
@@ -539,6 +591,12 @@ def _esum_contains_x_with_eps(esum: Esum, x: X):
     )
 
 
+def _esum_contains_x_strict(esum: Esum, x: X):
+    return any(
+        all(_hs_contains_x_strict(hs, x) for hs in eterm.hses) for eterm in esum.eterms
+    )
+
+
 # ----- hs-x ------
 
 
@@ -551,6 +609,17 @@ def _hs_contains_x_with_eps(hs: Hs, x: X):
     # Check 2: see if a `hs` contains the cross point. Allow points on
     # boundaries, even for `Hp`.
     return _hs_contains_pt_with_eps(hs, x.point)
+
+
+def _hs_contains_x_strict(hs: Hs, x: X):
+    # Check 1: see if `hs` was used to create this `cross`. This should
+    # alleviate numerical errors.
+    if hs in {x.hs1, x.hs2}:
+        return False
+
+    # Check 2: see if a `hs` contains the cross point. Allow points on
+    # boundaries, even for `Hp`.
+    return _hs_contains_pt_strict(hs, x.point)
 
 
 # ----- hs-pt ------
@@ -574,6 +643,10 @@ def find_vertices(esum: Esum) -> t.Set[X]:
     inside = filter(lambda x: _esum_contains_x_with_eps(esum, x), crosses)
     collapsed = collapse_xs(inside)
     return collapsed
+
+
+def filter_xs_on_boundary(xs: t.Iterable[X]) -> t.Iterable[X]:
+    pass
 
 
 def query_xs(xs: t.Iterable[X], poi: Pt, eps: float = 0.1) -> t.Iterable[X]:
