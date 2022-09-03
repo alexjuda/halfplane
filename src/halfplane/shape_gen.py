@@ -99,7 +99,7 @@ def rect_intersection_chain(
     stride_x: float = 1.0,
     stride_y: float = 1.0,
 ):
-    union = _rect_chain(
+    esum = _rect_chain(
         n=n,
         reducer=flat.Esum.intersection,
         start_x=start_x,
@@ -109,7 +109,7 @@ def rect_intersection_chain(
         stride_x=stride_x,
         stride_y=stride_y,
     )
-    return dataclasses.replace(union, debug_name="rect_intersection_chain")
+    return dataclasses.replace(esum, debug_name="rect_intersection_chain")
 
 
 def triangle_pointing_right(tip_x: float, tip_y: float, width: float) -> flat.Esum:

@@ -131,7 +131,7 @@ def main():
                 writer.writeheader()
 
                 for n in tqdm([*range(1, 5), *range(5, 60, 5)], desc="n"):
-                    esum = shape_gen.rect_union_chain(n=n)
+                    esum = generator_fn(n=n)
 
                     start_t = time.time()
                     segments = flat.detect_boundary(esum)
@@ -152,24 +152,24 @@ def main():
                     writer.writerow(data_row)
                     data_rows.append(data_row)
 
-        with open(generator_results_path / "result.csv") as f:
-            data_rows = list(csv.DictReader(f))
+            with open(generator_results_path / "result.csv") as f:
+                data_rows = list(csv.DictReader(f))
 
-        _plot_complexity(data_rows, generator_results_path / "time_complexity.png")
+            _plot_complexity(data_rows, generator_results_path / "time_complexity.png")
 
-        _plot_generic(
-            data_rows,
-            x_name="n_subshapes",
-            y_name="n_eterms",
-            path=generator_results_path / "n_eterms.png",
-        )
+            _plot_generic(
+                data_rows,
+                x_name="n_subshapes",
+                y_name="n_eterms",
+                path=generator_results_path / "n_eterms.png",
+            )
 
-        _plot_generic(
-            data_rows,
-            x_name="n_subshapes",
-            y_name="n_halfspaces",
-            path=generator_results_path / "n_hses.png",
-        )
+            _plot_generic(
+                data_rows,
+                x_name="n_subshapes",
+                y_name="n_halfspaces",
+                path=generator_results_path / "n_hses.png",
+            )
 
 
 if __name__ == "__main__":
