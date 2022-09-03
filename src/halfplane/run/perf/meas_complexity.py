@@ -52,7 +52,6 @@ def _plot_complexity(data_df: pd.DataFrame, path):
         color="C1",
     )
 
-    coef_1 = np.polynomial.polynomial.polyfit(median_df[col_x], median_df[col_y], deg=1)
     coef_2 = np.polynomial.polynomial.polyfit(median_df[col_x], median_df[col_y], deg=2)
     coef_3 = np.polynomial.polynomial.polyfit(median_df[col_x], median_df[col_y], deg=3)
 
@@ -60,21 +59,12 @@ def _plot_complexity(data_df: pd.DataFrame, path):
 
     ax.plot(
         poly_xs,
-        np.polynomial.polynomial.polyval(poly_xs, coef_1),
-        label=(
-            f"linear interpolation ({_format_coef(coef_1)}), "
-            f"MSE = {_mse(median_df[col_x], median_df[col_y], coef_1):.2g}"
-        ),
-        color="C2",
-    )
-    ax.plot(
-        poly_xs,
         np.polynomial.polynomial.polyval(poly_xs, coef_2),
         label=(
             f"quadratic interpolation ({_format_coef(coef_2)}), "
             f"MSE = {_mse(median_df[col_x], median_df[col_y], coef_2):.2g}"
         ),
-        color="C3",
+        color="C2",
     )
 
     ax.plot(
@@ -84,7 +74,7 @@ def _plot_complexity(data_df: pd.DataFrame, path):
             f"cubic interpolation ({_format_coef(coef_3)}), "
             f"MSE = {_mse(median_df[col_x], median_df[col_y], coef_3):.2g}"
         ),
-        color="C4",
+        color="C3",
     )
 
     ax.set_title("Time complexity of detect_boundary()")
