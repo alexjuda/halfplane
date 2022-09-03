@@ -15,7 +15,7 @@ from tqdm import tqdm
 from halfplane import flat, shape_gen, plots
 
 
-RESULTS_PATH = Path("./data/perf")
+ALL_RESULTS_PATH = Path("./data/perf")
 
 
 def _format_coef(coef):
@@ -85,43 +85,52 @@ def _plot_complexity(records, path):
 
 
 def main():
-    RESULTS_PATH.mkdir(parents=True, exist_ok=True)
 
     data_rows = []
 
-    with open(RESULTS_PATH / "result.csv", "w") as f:
-        writer = csv.DictWriter(
-            f,
-            fieldnames=[
-                "generator",
-                "n_subshapes",
-                "delta_t",
-                "n_segments",
-            ],
-        )
-        writer.writeheader()
+    for generator_fn in [
+        shape_gen.rect_union_chain,
+        shape_gen.rect_intersection_chain,
+    ]:
+        generator_name = generator_fn.__name__
+        print(f"Running generator {generator_name}")
 
-        for n in tqdm([*range(1, 5), *range(5, 60, 5)], desc="n"):
-            esum = shape_gen.rect_union_chain(n=n)
+        generator_results_path = ALL_RESULTS_PATH / generator_name
+        generator_results_path.mkdir(parents=True, exist_ok=True)
 
-            start_t = time.time()
-            segments = flat.detect_boundary(esum)
-            end_t = time.time()
+        with open(generator_results_path / "result.csv", "w") as f:
+            writer = csv.DictWriter(
+                f,
+                fieldnames=[
+                    "generator",
+                    "n_subshapes",
+                    "delta_t",
+                    "n_segments",
+                ],
+            )
+            writer.writeheader()
 
-            data_row = {
-                "generator": esum.debug_name,
-                "n_subshapes": n,
-                "delta_t": end_t - start_t,
-                "n_segments": len(segments),
-            }
+            for n in tqdm([*range(1, 5), *range(5, 60, 5)], desc="n"):
+                esum = shape_gen.rect_union_chain(n=n)
 
-            writer.writerow(data_row)
-            data_rows.append(data_row)
+                start_t = time.time()
+                segments = flat.detect_boundary(esum)
+                end_t = time.time()
 
-    with open(RESULTS_PATH / "result.csv") as f:
-        data_rows = list(csv.DictReader(f))
+                data_row = {
+                    "generator": esum.debug_name,
+                    "n_subshapes": n,
+                    "delta_t": end_t - start_t,
+                    "n_segments": len(segments),
+                }
 
-    _plot_complexity(data_rows, RESULTS_PATH / "result.png")
+                writer.writerow(data_row)
+                data_rows.append(data_row)
+
+        with open(generator_results_path / "result.csv") as f:
+            data_rows = list(csv.DictReader(f))
+
+        _plot_complexity(data_rows, generator_results_path / "result.png")
 
 
 if __name__ == "__main__":
