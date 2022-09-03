@@ -1,3 +1,9 @@
+"""
+Runs a series of experiments with shape generator, measures the execution time,
+and stores the results in a csv. The generator is 'rect_chain'. At the end,
+plots the time complexity chart.
+"""
+
 import csv
 import time
 from pathlib import Path
