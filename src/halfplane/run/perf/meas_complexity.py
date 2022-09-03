@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 import numpy.polynomial
 from tqdm import tqdm
+import pandas as pd
 
 from halfplane import flat, shape_gen, plots
 
@@ -29,41 +30,51 @@ def _mse(x, ref_y, poly_coef):
     return mse
 
 
-def _plot_complexity(records, path):
+def _plot_complexity(data_df: pd.DataFrame, path):
     fig, ax = plots.subplots(1, 1)
 
-    ns = np.array([int(r["n_subshapes"]) for r in records])
-    delta_ts = np.array([float(r["delta_t"]) for r in records])
+    col_x = "n_subshapes"
+    col_y = "delta_t"
+    raw_df = data_df[[col_x, col_y]]
 
     ax.scatter(
-        ns,
-        delta_ts,
+        raw_df[col_x],
+        raw_df[col_y],
         label="measured",
+        color="C0",
     )
 
-    coef_1 = np.polynomial.polynomial.polyfit(ns, delta_ts, deg=1)
-    coef_2 = np.polynomial.polynomial.polyfit(ns, delta_ts, deg=2)
-    coef_3 = np.polynomial.polynomial.polyfit(ns, delta_ts, deg=3)
+    median_df = raw_df.groupby("n_subshapes").median().reset_index()
+    ax.plot(
+        median_df[col_x],
+        median_df[col_y],
+        label="median for given $n$",
+        color="C1",
+    )
 
-    poly_xs = np.linspace(0, np.max(ns), 20)
+    coef_1 = np.polynomial.polynomial.polyfit(median_df[col_x], median_df[col_y], deg=1)
+    coef_2 = np.polynomial.polynomial.polyfit(median_df[col_x], median_df[col_y], deg=2)
+    coef_3 = np.polynomial.polynomial.polyfit(median_df[col_x], median_df[col_y], deg=3)
+
+    poly_xs = np.linspace(0, np.max(median_df[col_x]), 20)
 
     ax.plot(
         poly_xs,
         np.polynomial.polynomial.polyval(poly_xs, coef_1),
         label=(
             f"linear interpolation ({_format_coef(coef_1)}), "
-            f"MSE = {_mse(ns, delta_ts, coef_1):.2g}"
+            f"MSE = {_mse(median_df[col_x], median_df[col_y], coef_1):.2g}"
         ),
-        color="C1",
+        color="C2",
     )
     ax.plot(
         poly_xs,
         np.polynomial.polynomial.polyval(poly_xs, coef_2),
         label=(
             f"quadratic interpolation ({_format_coef(coef_2)}), "
-            f"MSE = {_mse(ns, delta_ts, coef_2):.2g}"
+            f"MSE = {_mse(median_df[col_x], median_df[col_y], coef_2):.2g}"
         ),
-        color="C2",
+        color="C3",
     )
 
     ax.plot(
@@ -71,12 +82,12 @@ def _plot_complexity(records, path):
         np.polynomial.polynomial.polyval(poly_xs, coef_3),
         label=(
             f"cubic interpolation ({_format_coef(coef_3)}), "
-            f"MSE = {_mse(ns, delta_ts, coef_3):.2g}"
+            f"MSE = {_mse(median_df[col_x], median_df[col_y], coef_3):.2g}"
         ),
-        color="C3",
+        color="C4",
     )
 
-    ax.set_title("Time complexity, rect_chain")
+    ax.set_title("Time complexity of detect_boundary()")
     ax.set_xlabel("n rectangles")
     ax.set_ylabel("time [s]")
     ax.legend()
@@ -117,7 +128,7 @@ def main():
         generator_results_path = ALL_RESULTS_PATH / generator_name
         generator_results_path.mkdir(parents=True, exist_ok=True)
 
-        run = True
+        run = False
         if run:
             with open(generator_results_path / "result.csv", "w") as f:
                 writer = csv.DictWriter(
@@ -159,7 +170,15 @@ def main():
         with open(generator_results_path / "result.csv") as f:
             data_rows = list(csv.DictReader(f))
 
-        _plot_complexity(data_rows, generator_results_path / "time_complexity.png")
+        data_df = pd.DataFrame.from_dict(data_rows).astype(
+            {
+                "n_subshapes": int,
+                "delta_t": float,
+                "n_eterms": int,
+                "n_halfspaces": int,
+            }
+        )
+        _plot_complexity(data_df, generator_results_path / "time_complexity.png")
 
         _plot_generic(
             data_rows,
