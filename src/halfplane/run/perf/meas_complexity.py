@@ -106,6 +106,8 @@ def main():
                     "n_subshapes",
                     "delta_t",
                     "n_segments",
+                    "n_eterms",
+                    "n_halfspaces",
                 ],
             )
             writer.writeheader()
@@ -117,11 +119,16 @@ def main():
                 segments = flat.detect_boundary(esum)
                 end_t = time.time()
 
+                n_eterms = len(esum.eterms)
+                n_hses = sum(len(eterm.hses) for eterm in esum.eterms)
+
                 data_row = {
                     "generator": esum.debug_name,
                     "n_subshapes": n,
                     "delta_t": end_t - start_t,
                     "n_segments": len(segments),
+                    "n_eterms": n_eterms,
+                    "n_halfspaces": n_hses,
                 }
 
                 writer.writerow(data_row)
