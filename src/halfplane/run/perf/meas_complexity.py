@@ -84,6 +84,22 @@ def _plot_complexity(records, path):
     fig.savefig(path)
 
 
+def _plot_generic(records, x_name, y_name, path: Path):
+    fig, ax = plots.subplots(1, 1)
+
+    x = np.array([int(r[x_name]) for r in records])
+    y = np.array([float(r[y_name]) for r in records])
+
+    ax.plot(x, y, marker="o")
+
+    # ax.set_title("Time complexity, rect_chain")
+    # ax.set_xlabel("n rectangles")
+    # ax.set_ylabel("time [s]")
+    # ax.legend()
+
+    fig.savefig(path)
+
+
 def main():
 
     data_rows = []
@@ -98,46 +114,62 @@ def main():
         generator_results_path = ALL_RESULTS_PATH / generator_name
         generator_results_path.mkdir(parents=True, exist_ok=True)
 
-        with open(generator_results_path / "result.csv", "w") as f:
-            writer = csv.DictWriter(
-                f,
-                fieldnames=[
-                    "generator",
-                    "n_subshapes",
-                    "delta_t",
-                    "n_segments",
-                    "n_eterms",
-                    "n_halfspaces",
-                ],
-            )
-            writer.writeheader()
+        run = True
+        if run:
+            with open(generator_results_path / "result.csv", "w") as f:
+                writer = csv.DictWriter(
+                    f,
+                    fieldnames=[
+                        "generator",
+                        "n_subshapes",
+                        "delta_t",
+                        "n_segments",
+                        "n_eterms",
+                        "n_halfspaces",
+                    ],
+                )
+                writer.writeheader()
 
-            for n in tqdm([*range(1, 5), *range(5, 60, 5)], desc="n"):
-                esum = shape_gen.rect_union_chain(n=n)
+                for n in tqdm([*range(1, 5), *range(5, 60, 5)], desc="n"):
+                    esum = shape_gen.rect_union_chain(n=n)
 
-                start_t = time.time()
-                segments = flat.detect_boundary(esum)
-                end_t = time.time()
+                    start_t = time.time()
+                    segments = flat.detect_boundary(esum)
+                    end_t = time.time()
 
-                n_eterms = len(esum.eterms)
-                n_hses = sum(len(eterm.hses) for eterm in esum.eterms)
+                    n_eterms = len(esum.eterms)
+                    n_hses = sum(len(eterm.hses) for eterm in esum.eterms)
 
-                data_row = {
-                    "generator": esum.debug_name,
-                    "n_subshapes": n,
-                    "delta_t": end_t - start_t,
-                    "n_segments": len(segments),
-                    "n_eterms": n_eterms,
-                    "n_halfspaces": n_hses,
-                }
+                    data_row = {
+                        "generator": esum.debug_name,
+                        "n_subshapes": n,
+                        "delta_t": end_t - start_t,
+                        "n_segments": len(segments),
+                        "n_eterms": n_eterms,
+                        "n_halfspaces": n_hses,
+                    }
 
-                writer.writerow(data_row)
-                data_rows.append(data_row)
+                    writer.writerow(data_row)
+                    data_rows.append(data_row)
 
         with open(generator_results_path / "result.csv") as f:
             data_rows = list(csv.DictReader(f))
 
-        _plot_complexity(data_rows, generator_results_path / "result.png")
+        _plot_complexity(data_rows, generator_results_path / "time_complexity.png")
+
+        _plot_generic(
+            data_rows,
+            x_name="n_subshapes",
+            y_name="n_eterms",
+            path=generator_results_path / "n_eterms.png",
+        )
+
+        _plot_generic(
+            data_rows,
+            x_name="n_subshapes",
+            y_name="n_halfspaces",
+            path=generator_results_path / "n_hses.png",
+        )
 
 
 if __name__ == "__main__":
