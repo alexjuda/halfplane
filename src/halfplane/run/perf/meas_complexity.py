@@ -52,7 +52,7 @@ def _plot_complexity(records, path):
         np.polynomial.polynomial.polyval(poly_xs, coef_1),
         label=(
             f"linear interpolation ({_format_coef(coef_1)}), "
-            f"MSE = {_mse(ns, delta_ts, coef_1):.1f}"
+            f"MSE = {_mse(ns, delta_ts, coef_1):.4f}"
         ),
         color="C1",
     )
@@ -61,7 +61,7 @@ def _plot_complexity(records, path):
         np.polynomial.polynomial.polyval(poly_xs, coef_2),
         label=(
             f"quadratic interpolation ({_format_coef(coef_2)}), "
-            f"MSE = {_mse(ns, delta_ts, coef_2):.1f}"
+            f"MSE = {_mse(ns, delta_ts, coef_2):.4f}"
         ),
         color="C2",
     )
@@ -71,7 +71,7 @@ def _plot_complexity(records, path):
         np.polynomial.polynomial.polyval(poly_xs, coef_3),
         label=(
             f"cubic interpolation ({_format_coef(coef_3)}), "
-            f"MSE = {_mse(ns, delta_ts, coef_3):.1f}"
+            f"MSE = {_mse(ns, delta_ts, coef_3):.4f}"
         ),
         color="C3",
     )
@@ -87,36 +87,36 @@ def _plot_complexity(records, path):
 def main():
     RESULTS_PATH.mkdir(parents=True, exist_ok=True)
 
-    # data_rows = []
+    data_rows = []
 
-    # with open(RESULTS_PATH / "result.csv", "w") as f:
-    #     writer = csv.DictWriter(
-    #         f,
-    #         fieldnames=[
-    #             "generator",
-    #             "n_subshapes",
-    #             "delta_t",
-    #             "n_segments",
-    #         ],
-    #     )
-    #     writer.writeheader()
+    with open(RESULTS_PATH / "result.csv", "w") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "generator",
+                "n_subshapes",
+                "delta_t",
+                "n_segments",
+            ],
+        )
+        writer.writeheader()
 
-    #     for n in tqdm(range(5, 55, 5), desc="n"):
-    #         esum = shape_gen.rect_chain(n=n)
+        for n in tqdm([*range(1, 5), *range(5, 60, 5)], desc="n"):
+            esum = shape_gen.rect_chain(n=n)
 
-    #         start_t = time.time()
-    #         segments = flat.detect_boundary(esum)
-    #         end_t = time.time()
+            start_t = time.time()
+            segments = flat.detect_boundary(esum)
+            end_t = time.time()
 
-    #         data_row = {
-    #             "generator": esum.debug_name,
-    #             "n_subshapes": n,
-    #             "delta_t": end_t - start_t,
-    #             "n_segments": len(segments),
-    #         }
+            data_row = {
+                "generator": esum.debug_name,
+                "n_subshapes": n,
+                "delta_t": end_t - start_t,
+                "n_segments": len(segments),
+            }
 
-    #         writer.writerow(data_row)
-    #         data_rows.append(data_row)
+            writer.writerow(data_row)
+            data_rows.append(data_row)
 
     with open(RESULTS_PATH / "result.csv") as f:
         data_rows = list(csv.DictReader(f))
