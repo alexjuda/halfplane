@@ -35,7 +35,7 @@ def _plot_complexity(records, path):
     ns = np.array([int(r["n_subshapes"]) for r in records])
     delta_ts = np.array([float(r["delta_t"]) for r in records])
 
-    ax.plot(
+    ax.scatter(
         ns,
         delta_ts,
         label="measured",
@@ -44,10 +44,6 @@ def _plot_complexity(records, path):
     coef_1 = np.polynomial.polynomial.polyfit(ns, delta_ts, deg=1)
     coef_2 = np.polynomial.polynomial.polyfit(ns, delta_ts, deg=2)
     coef_3 = np.polynomial.polynomial.polyfit(ns, delta_ts, deg=3)
-    coef_4 = np.polynomial.polynomial.polyfit(ns, delta_ts, deg=4)
-
-    # (x - 10)(x - 20) = x^2 - 30x + 200
-    # coef_2 = np.array([200, -30, 1])
 
     poly_xs = np.linspace(0, np.max(ns), 20)
 
@@ -58,6 +54,7 @@ def _plot_complexity(records, path):
             f"linear interpolation ({_format_coef(coef_1)}), "
             f"MSE = {_mse(ns, delta_ts, coef_1):.1f}"
         ),
+        color="C1",
     )
     ax.plot(
         poly_xs,
@@ -66,6 +63,7 @@ def _plot_complexity(records, path):
             f"quadratic interpolation ({_format_coef(coef_2)}), "
             f"MSE = {_mse(ns, delta_ts, coef_2):.1f}"
         ),
+        color="C2",
     )
 
     ax.plot(
@@ -75,6 +73,7 @@ def _plot_complexity(records, path):
             f"cubic interpolation ({_format_coef(coef_3)}), "
             f"MSE = {_mse(ns, delta_ts, coef_3):.1f}"
         ),
+        color="C3",
     )
 
     ax.set_title("Time complexity, rect_chain")
