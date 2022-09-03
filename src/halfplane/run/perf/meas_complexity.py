@@ -52,7 +52,7 @@ def _plot_complexity(records, path):
         np.polynomial.polynomial.polyval(poly_xs, coef_1),
         label=(
             f"linear interpolation ({_format_coef(coef_1)}), "
-            f"MSE = {_mse(ns, delta_ts, coef_1):.4f}"
+            f"MSE = {_mse(ns, delta_ts, coef_1):.2g}"
         ),
         color="C1",
     )
@@ -61,7 +61,7 @@ def _plot_complexity(records, path):
         np.polynomial.polynomial.polyval(poly_xs, coef_2),
         label=(
             f"quadratic interpolation ({_format_coef(coef_2)}), "
-            f"MSE = {_mse(ns, delta_ts, coef_2):.4f}"
+            f"MSE = {_mse(ns, delta_ts, coef_2):.2g}"
         ),
         color="C2",
     )
@@ -71,7 +71,7 @@ def _plot_complexity(records, path):
         np.polynomial.polynomial.polyval(poly_xs, coef_3),
         label=(
             f"cubic interpolation ({_format_coef(coef_3)}), "
-            f"MSE = {_mse(ns, delta_ts, coef_3):.4f}"
+            f"MSE = {_mse(ns, delta_ts, coef_3):.2g}"
         ),
         color="C3",
     )
@@ -156,24 +156,24 @@ def main():
                         writer.writerow(data_row)
                         data_rows.append(data_row)
 
-            with open(generator_results_path / "result.csv") as f:
-                data_rows = list(csv.DictReader(f))
+        with open(generator_results_path / "result.csv") as f:
+            data_rows = list(csv.DictReader(f))
 
-            _plot_complexity(data_rows, generator_results_path / "time_complexity.png")
+        _plot_complexity(data_rows, generator_results_path / "time_complexity.png")
 
-            _plot_generic(
-                data_rows,
-                x_name="n_subshapes",
-                y_name="n_eterms",
-                path=generator_results_path / "n_eterms.png",
-            )
+        _plot_generic(
+            data_rows,
+            x_name="n_subshapes",
+            y_name="n_eterms",
+            path=generator_results_path / "n_eterms.png",
+        )
 
-            _plot_generic(
-                data_rows,
-                x_name="n_subshapes",
-                y_name="n_halfspaces",
-                path=generator_results_path / "n_hses.png",
-            )
+        _plot_generic(
+            data_rows,
+            x_name="n_subshapes",
+            y_name="n_halfspaces",
+            path=generator_results_path / "n_hses.png",
+        )
 
 
 if __name__ == "__main__":
