@@ -6,7 +6,7 @@ import numpy as np
 import numpy.polynomial
 from tqdm import tqdm
 
-from hyperplane import flat, shape_gen, plots
+from halfplane import flat, shape_gen, plots
 
 
 RESULTS_PATH = Path("./data/perf")

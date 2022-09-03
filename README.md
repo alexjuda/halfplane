@@ -9,7 +9,7 @@ pip install halfplane
 ## Plot examples
 
 ```
-python -m hyperplane.plots
+python -m halfplane.plots
 ```
 
 The results are dumped to `./plots/`.
@@ -41,6 +41,6 @@ python -m twine upload dist/*
 # Profiling
 
 ```
-python -m cProfile -o rect20.profile -m hyperplane.run.perf.plain_detect 20
+python -m cProfile -o rect20.profile -m halfplane.run.perf.plain_detect 20
 snakeviz rect20.prof
 ```

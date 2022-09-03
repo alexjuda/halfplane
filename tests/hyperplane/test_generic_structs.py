@@ -1,4 +1,4 @@
-from hyperplane import generic_structs
+from halfplane import generic_structs
 import hypothesis as h
 import hypothesis.strategies as st
 

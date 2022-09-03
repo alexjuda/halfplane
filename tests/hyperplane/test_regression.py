@@ -1,7 +1,7 @@
 import typing as t
 
-from hyperplane import flat, common_shapes
-from hyperplane.flat import Pt, Hp, Hpc, X, XSegment
+from halfplane import flat, common_shapes
+from halfplane.flat import Pt, Hp, Hpc, X, XSegment
 
 import numpy as np
 import numpy.testing

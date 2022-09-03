@@ -3,7 +3,7 @@ import random
 
 import pytest
 
-from hyperplane.flat import (
+from halfplane.flat import (
     Box,
     X,
     XSegment,
@@ -15,7 +15,7 @@ from hyperplane.flat import (
     collapse_xs,
     infer_smallest_segments,
 )
-from hyperplane import flat, common_shapes
+from halfplane import flat, common_shapes
 
 
 def _translate_point(pt: Pt, dx, dy):

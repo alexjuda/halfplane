@@ -1,5 +1,5 @@
-import hyperplane.flat as hp
-from hyperplane.flat import Esum, Hp, Hpc, Pt
+import halfplane.flat as hp
+from halfplane.flat import Esum, Hp, Hpc, Pt
 
 # define a shape
 esum1 = Esum(

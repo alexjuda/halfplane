@@ -1,7 +1,7 @@
 from hypothesis import given, strategies as st
 import numpy as np
 
-from hyperplane import flat
+from halfplane import flat
 
 
 @st.composite

@@ -8,8 +8,8 @@ Output: a plot of the inferred shape boundary.
 import typing as t
 import matplotlib.pyplot as plt
 
-from hyperplane.flat import Pt, Hpc, Eterm, Esum, XSegment, detect_boundary
-from hyperplane import plots
+from halfplane.flat import Pt, Hpc, Eterm, Esum, XSegment, detect_boundary
+from halfplane import plots
 
 
 def main():

@@ -1,8 +1,8 @@
 # Running:
-# python -m cProfile -o plain.profile -m hyperplane.run.perf.plain_detect 10
+# python -m cProfile -o plain.profile -m halfplane.run.perf.plain_detect 10
 from argparse import ArgumentParser
 
-from hyperplane import flat, shape_gen
+from halfplane import flat, shape_gen
 
 
 def main():
