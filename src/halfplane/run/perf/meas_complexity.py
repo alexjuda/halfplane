@@ -100,6 +100,9 @@ def _plot_generic(records, x_name, y_name, path: Path):
     fig.savefig(path)
 
 
+N_TRIALS = 3
+
+
 def main():
 
     data_rows = []
@@ -130,27 +133,28 @@ def main():
                 )
                 writer.writeheader()
 
-                for n in tqdm([*range(1, 5), *range(5, 60, 5)], desc="n"):
-                    esum = generator_fn(n=n)
+                for n in [*range(1, 5), *range(5, 60, 5)]:
+                    for trial_i in tqdm(range(N_TRIALS), desc=f"{n=}, trial"):
+                        esum = generator_fn(n=n)
 
-                    start_t = time.time()
-                    segments = flat.detect_boundary(esum)
-                    end_t = time.time()
+                        start_t = time.time()
+                        segments = flat.detect_boundary(esum)
+                        end_t = time.time()
 
-                    n_eterms = len(esum.eterms)
-                    n_hses = sum(len(eterm.hses) for eterm in esum.eterms)
+                        n_eterms = len(esum.eterms)
+                        n_hses = sum(len(eterm.hses) for eterm in esum.eterms)
 
-                    data_row = {
-                        "generator": esum.debug_name,
-                        "n_subshapes": n,
-                        "delta_t": end_t - start_t,
-                        "n_segments": len(segments),
-                        "n_eterms": n_eterms,
-                        "n_halfspaces": n_hses,
-                    }
+                        data_row = {
+                            "generator": esum.debug_name,
+                            "n_subshapes": n,
+                            "delta_t": end_t - start_t,
+                            "n_segments": len(segments),
+                            "n_eterms": n_eterms,
+                            "n_halfspaces": n_hses,
+                        }
 
-                    writer.writerow(data_row)
-                    data_rows.append(data_row)
+                        writer.writerow(data_row)
+                        data_rows.append(data_row)
 
             with open(generator_results_path / "result.csv") as f:
                 data_rows = list(csv.DictReader(f))
