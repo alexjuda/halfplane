@@ -23,6 +23,12 @@ def _format_coef(coef):
     return ", ".join(f"$ {c:.2f}x^{c_i} $" for c_i, c in enumerate(coef))
 
 
+def _mse(x, ref_y, poly_coef):
+    pred_y = np.polynomial.polynomial.polyval(x, poly_coef)
+    mse = np.mean((pred_y - ref_y) ** 2)
+    return mse
+
+
 def _plot_complexity(records, path):
     fig, ax = plots.subplots(1, 1)
 
@@ -35,8 +41,10 @@ def _plot_complexity(records, path):
         label="measured",
     )
 
+    coef_1 = np.polynomial.polynomial.polyfit(ns, delta_ts, deg=1)
     coef_2 = np.polynomial.polynomial.polyfit(ns, delta_ts, deg=2)
     coef_3 = np.polynomial.polynomial.polyfit(ns, delta_ts, deg=3)
+    coef_4 = np.polynomial.polynomial.polyfit(ns, delta_ts, deg=4)
 
     # (x - 10)(x - 20) = x^2 - 30x + 200
     # coef_2 = np.array([200, -30, 1])
@@ -45,14 +53,28 @@ def _plot_complexity(records, path):
 
     ax.plot(
         poly_xs,
+        np.polynomial.polynomial.polyval(poly_xs, coef_1),
+        label=(
+            f"linear interpolation ({_format_coef(coef_1)}), "
+            f"MSE = {_mse(ns, delta_ts, coef_1):.1f}"
+        ),
+    )
+    ax.plot(
+        poly_xs,
         np.polynomial.polynomial.polyval(poly_xs, coef_2),
-        label=f"quadratic interpolation ({_format_coef(coef_2)})",
+        label=(
+            f"quadratic interpolation ({_format_coef(coef_2)}), "
+            f"MSE = {_mse(ns, delta_ts, coef_2):.1f}"
+        ),
     )
 
     ax.plot(
         poly_xs,
         np.polynomial.polynomial.polyval(poly_xs, coef_3),
-        label=f"cubic interpolation ({_format_coef(coef_3)})",
+        label=(
+            f"cubic interpolation ({_format_coef(coef_3)}), "
+            f"MSE = {_mse(ns, delta_ts, coef_3):.1f}"
+        ),
     )
 
     ax.set_title("Time complexity, rect_chain")
@@ -66,36 +88,36 @@ def _plot_complexity(records, path):
 def main():
     RESULTS_PATH.mkdir(parents=True, exist_ok=True)
 
-    data_rows = []
+    # data_rows = []
 
-    with open(RESULTS_PATH / "result.csv", "w") as f:
-        writer = csv.DictWriter(
-            f,
-            fieldnames=[
-                "generator",
-                "n_subshapes",
-                "delta_t",
-                "n_segments",
-            ],
-        )
-        writer.writeheader()
+    # with open(RESULTS_PATH / "result.csv", "w") as f:
+    #     writer = csv.DictWriter(
+    #         f,
+    #         fieldnames=[
+    #             "generator",
+    #             "n_subshapes",
+    #             "delta_t",
+    #             "n_segments",
+    #         ],
+    #     )
+    #     writer.writeheader()
 
-        for n in tqdm(range(5, 55, 5), desc="n"):
-            esum = shape_gen.rect_chain(n=n)
+    #     for n in tqdm(range(5, 55, 5), desc="n"):
+    #         esum = shape_gen.rect_chain(n=n)
 
-            start_t = time.time()
-            segments = flat.detect_boundary(esum)
-            end_t = time.time()
+    #         start_t = time.time()
+    #         segments = flat.detect_boundary(esum)
+    #         end_t = time.time()
 
-            data_row = {
-                "generator": esum.debug_name,
-                "n_subshapes": n,
-                "delta_t": end_t - start_t,
-                "n_segments": len(segments),
-            }
+    #         data_row = {
+    #             "generator": esum.debug_name,
+    #             "n_subshapes": n,
+    #             "delta_t": end_t - start_t,
+    #             "n_segments": len(segments),
+    #         }
 
-            writer.writerow(data_row)
-            data_rows.append(data_row)
+    #         writer.writerow(data_row)
+    #         data_rows.append(data_row)
 
     with open(RESULTS_PATH / "result.csv") as f:
         data_rows = list(csv.DictReader(f))
