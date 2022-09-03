@@ -10,7 +10,7 @@ def main():
     parser.add_argument("n", type=int, help="Size of the rect chain")
     args = parser.parse_args()
 
-    esum = shape_gen.rect_chain(n=args.n)
+    esum = shape_gen.rect_union_chain(n=args.n)
     segments = flat.detect_boundary(esum)
     print(f"Detected {len(segments)} segments")
 

@@ -25,8 +25,8 @@ def main():
     for shape_i, esum in enumerate(
         [
             common_shapes.letter_c(),
-            shape_gen.rect_chain(n=4, stride_x=3, stride_y=3),
-            shape_gen.rect_chain(n=10, stride_x=3, stride_y=3),
+            shape_gen.rect_union_chain(n=4, stride_x=3, stride_y=3),
+            shape_gen.rect_union_chain(n=10, stride_x=3, stride_y=3),
         ]
     ):
         esum_name = f"_{esum.debug_name}" if esum.debug_name else ""

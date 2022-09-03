@@ -102,7 +102,7 @@ def main():
         writer.writeheader()
 
         for n in tqdm([*range(1, 5), *range(5, 60, 5)], desc="n"):
-            esum = shape_gen.rect_chain(n=n)
+            esum = shape_gen.rect_union_chain(n=n)
 
             start_t = time.time()
             segments = flat.detect_boundary(esum)

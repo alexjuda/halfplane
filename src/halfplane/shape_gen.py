@@ -1,3 +1,4 @@
+import typing as t
 import dataclasses
 from . import flat
 from functools import reduce
@@ -38,8 +39,9 @@ def _update(dc, **prop_fns):
     )
 
 
-def rect_chain(
+def _rect_chain(
     n: int,
+    reducer: t.Callable[[flat.Esum, flat.Esum], flat.Esum],
     start_x: float = 0.0,
     start_y: float = 0.0,
     width: float = 4.0,
@@ -59,11 +61,55 @@ def rect_chain(
         rects.append(a_rect)
 
     first_rect, *rest_rects = rects
-    union = first_rect
+    reduced = first_rect
     for a_rect in rest_rects:
-        union = union.union(a_rect)
+        reduced = reducer(reduced, a_rect)
 
-    return dataclasses.replace(union, debug_name="rect_chain")
+    return reduced
+
+
+def rect_union_chain(
+    n: int,
+    start_x: float = 0.0,
+    start_y: float = 0.0,
+    width: float = 4.0,
+    height: float = 4.0,
+    stride_x: float = 1.0,
+    stride_y: float = 1.0,
+):
+    union = _rect_chain(
+        n=n,
+        reducer=flat.Esum.union,
+        start_x=start_x,
+        start_y=start_y,
+        width=width,
+        height=height,
+        stride_x=stride_x,
+        stride_y=stride_y,
+    )
+    return dataclasses.replace(union, debug_name="rect_union_chain")
+
+
+def rect_intersection_chain(
+    n: int,
+    start_x: float = 0.0,
+    start_y: float = 0.0,
+    width: float = 4.0,
+    height: float = 4.0,
+    stride_x: float = 1.0,
+    stride_y: float = 1.0,
+):
+    union = _rect_chain(
+        n=n,
+        reducer=flat.Esum.intersection,
+        start_x=start_x,
+        start_y=start_y,
+        width=width,
+        height=height,
+        stride_x=stride_x,
+        stride_y=stride_y,
+    )
+    return dataclasses.replace(union, debug_name="rect_intersection_chain")
 
 
 def triangle_pointing_right(tip_x: float, tip_y: float, width: float) -> flat.Esum:
