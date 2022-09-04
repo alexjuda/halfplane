@@ -85,18 +85,31 @@ def _plot_complexity(data_df: pd.DataFrame, path):
     fig.savefig(path)
 
 
-def _plot_generic(records, x_name, y_name, path: Path):
-    fig, ax = plots.subplots(1, 1)
+def _plot_generic(
+    records,
+    x_name,
+    y_name,
+    path: Path,
+    title=None,
+    x_title=None,
+    y_title=None,
+    size=12,
+):
+    fig, ax = plots.subplots(1, 1, size=size)
 
     x = np.array([int(r[x_name]) for r in records])
     y = np.array([float(r[y_name]) for r in records])
 
     ax.plot(x, y, marker="o")
 
-    # ax.set_title("Time complexity, rect_chain")
-    # ax.set_xlabel("n rectangles")
-    # ax.set_ylabel("time [s]")
-    # ax.legend()
+    if title is not None:
+        ax.set_title(title)
+
+    if x_title is not None:
+        ax.set_xlabel(x_title)
+
+    if y_title is not None:
+        ax.set_ylabel(y_title)
 
     fig.savefig(path)
 
@@ -174,6 +187,13 @@ def main():
             data_rows,
             x_name="n_subshapes",
             y_name="n_eterms",
+            title=(
+                "Total number of eterms vs number of rectangles "
+                "in the generated esum $e$"
+            ),
+            x_title="$n$",
+            y_title="$|T(e)|$",
+            size=8,
             path=generator_results_path / "n_eterms.png",
         )
 
@@ -181,6 +201,13 @@ def main():
             data_rows,
             x_name="n_subshapes",
             y_name="n_halfspaces",
+            title=(
+                "Total number of halfspaces vs number of rectangles "
+                "in the generated esum $e$"
+            ),
+            x_title="$n$",
+            y_title=r"$\Sigma_{t \in T(e)} |H(t)|$",
+            size=8,
             path=generator_results_path / "n_hses.png",
         )
 
