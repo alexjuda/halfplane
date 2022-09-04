@@ -147,7 +147,7 @@ def main():
                 )
                 writer.writeheader()
 
-                for n in [*range(1, 5), *range(20, 120, 20)]:
+                for n in [*range(1, 5), *range(20, 140, 20)]:
                     for trial_i in tqdm(range(N_TRIALS), desc=f"{n=}, trial"):
                         esum = generator_fn(n=n)
 
