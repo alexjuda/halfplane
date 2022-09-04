@@ -114,7 +114,7 @@ def _plot_generic(
     fig.savefig(path)
 
 
-N_TRIALS = 3
+N_TRIALS = 5
 
 
 def main():
