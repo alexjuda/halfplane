@@ -139,24 +139,30 @@ def _plot_esum_with_content_check(esum: Esum, ax, xlim, ylim):
     ax.legend(loc="upper right")
 
 
-def draw_eterm(ax, eterm: flat.Eterm, xlim, ylim):
+def draw_eterm(ax, eterm: flat.Eterm, xlim, ylim, clean=False):
     for hs_i, hs in enumerate(eterm.hses):
         label = hs.debug_name
-        _plot_hs(hs, hs_label=label, ax=ax, xlim=xlim, ylim=ylim)
+        if clean:
+            _plot_hpc(hs, hs_label=label, ax=ax, xlim=xlim, ylim=ylim)
+        else:
+            _plot_hs(hs, hs_label=label, ax=ax, xlim=xlim, ylim=ylim)
 
-    locator = matplotlib.ticker.MaxNLocator(integer=True)
-    ax.xaxis.set_major_locator(locator)
-    ax.yaxis.set_major_locator(locator)
-
-    ax.legend()
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
     ax.set_aspect("equal")
 
+    if clean:
+        ax.set_axis_off()
+    else:
+        locator = matplotlib.ticker.MaxNLocator(integer=True)
+        ax.xaxis.set_major_locator(locator)
+        ax.yaxis.set_major_locator(locator)
+        ax.legend()
 
-def plot_esum_boundaries(esum: Esum, ax, xlim, ylim):
+
+def plot_esum_boundaries(esum: Esum, ax, xlim, ylim, clean=False):
     for eterm in esum.eterms:
-        draw_eterm(ax, eterm, xlim, ylim)
+        draw_eterm(ax, eterm, xlim, ylim, clean=clean)
 
 
 def subplots(n_rows, n_cols, size=12, **kwargs):

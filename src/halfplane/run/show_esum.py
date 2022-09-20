@@ -10,7 +10,7 @@ def _plot(esum, path, name):
 
     xlim = ylim = [-2, 18]
 
-    plots.plot_esum_boundaries(esum, ax=axes, xlim=xlim, ylim=ylim)
+    plots.plot_esum_boundaries(esum, ax=axes, xlim=xlim, ylim=ylim, clean=True)
 
     # TODO: vertices if we want
     # vertices = flat.find_vertices(group_esum)
