@@ -40,7 +40,7 @@ def _plot_complexity(data_df: pd.DataFrame, path):
     ax.scatter(
         raw_df[col_x],
         raw_df[col_y],
-        label="measured",
+        label="measured time",
         color="C0",
     )
 
@@ -48,7 +48,7 @@ def _plot_complexity(data_df: pd.DataFrame, path):
     ax.plot(
         median_df[col_x],
         median_df[col_y],
-        label="median for given $n$",
+        label="median time for given $n$",
         color="C1",
     )
 
@@ -61,7 +61,7 @@ def _plot_complexity(data_df: pd.DataFrame, path):
         poly_xs,
         np.polynomial.polynomial.polyval(poly_xs, coef_2),
         label=(
-            f"quadratic interpolation ({_format_coef(coef_2)}), "
+            "quadratic fit, "
             f"MSE = {_mse(median_df[col_x], median_df[col_y], coef_2):.2g}"
         ),
         color="C2",
@@ -71,15 +71,15 @@ def _plot_complexity(data_df: pd.DataFrame, path):
         poly_xs,
         np.polynomial.polynomial.polyval(poly_xs, coef_3),
         label=(
-            f"cubic interpolation ({_format_coef(coef_3)}), "
+            "cubic fit, "
             f"MSE = {_mse(median_df[col_x], median_df[col_y], coef_3):.2g}"
         ),
         color="C3",
     )
 
     ax.set_title("Time complexity of detect_boundary()")
-    ax.set_xlabel("n rectangles")
-    ax.set_ylabel("time [s]")
+    ax.set_xlabel("$n$ rectangles")
+    ax.set_ylabel("execution time [s]")
     ax.legend()
 
     fig.savefig(path)
@@ -193,7 +193,7 @@ def main():
             ),
             x_title="$n$",
             y_title="$|T(e)|$",
-            size=8,
+            size=6,
             path=generator_results_path / "n_eterms.png",
         )
 
@@ -207,7 +207,7 @@ def main():
             ),
             x_title="$n$",
             y_title=r"$\Sigma_{t \in T(e)} |H(t)|$",
-            size=8,
+            size=6,
             path=generator_results_path / "n_hses.png",
         )
 
