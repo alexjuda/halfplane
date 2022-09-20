@@ -8,7 +8,7 @@ RESULTS_PATH = Path("./data/esums")
 def _plot(esum, path, name):
     fig, axes = plots.subplots(1, 1)
 
-    xlim = ylim = [-2, 14]
+    xlim = ylim = [-2, 18]
 
     plots.plot_esum_boundaries(esum, ax=axes, xlim=xlim, ylim=ylim)
 
@@ -24,9 +24,11 @@ def main():
 
     for shape_i, esum in enumerate(
         [
+            common_shapes.single_hs(),
+            common_shapes.single_eterm(),
             common_shapes.letter_c(),
-            shape_gen.rect_union_chain(n=4, stride_x=3, stride_y=3),
-            shape_gen.rect_union_chain(n=10, stride_x=3, stride_y=3),
+            # shape_gen.rect_union_chain(n=4, stride_x=3, stride_y=3),
+            # shape_gen.rect_union_chain(n=10, stride_x=3, stride_y=3),
         ]
     ):
         esum_name = f"_{esum.debug_name}" if esum.debug_name else ""

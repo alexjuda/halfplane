@@ -93,6 +93,16 @@ def letter_c():
     )
 
 
+def single_eterm():
+    c_esum = letter_c()
+    return Esum.from_terms(c_esum.eterms[0])
+
+
+def single_hs():
+    c_esum = letter_c()
+    return Esum.from_terms(Eterm.from_hses(c_esum.eterms[0].hses[0]))
+
+
 def letter_chi():
     """Originally devised as a subset of letter C that was problematic for
     segment detection. Later it turned out that it wasn't easy to reproduce the error."""
